@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.3"
+revision: "0.4"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -18,13 +18,35 @@ tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence"
 bibliography_audit:
   verified_at: "2026-05-03"
   verified_by: "Academic Writer (OMN-34)"
-  total_entries: 14
-  entries_with_doi: 8
+  total_entries: 16
+  entries_with_doi: 10
   entries_url_only: 6  # protocol whitepapers + canonical docs + industry blog post
+  added_in_v0_4:
+    - cite_key: "ganescu2024trust"
+      reason: "fills the zero-knowledge ML verification gap flagged in academic review (related work §4.4); verified against arXiv 2402.06414 abstract page on 2026-05-03"
+    - cite_key: "werner2022sok"
+      reason: "fills the broader DeFi oracle/data-verification context gap flagged in academic review (related work §4.5); verified against arXiv 2101.08778 abstract page on 2026-05-03"
   intentionally_excluded:
     - cite_key: "rao2020bittensor"
       reason: "arXiv:2003.03917 was withdrawn by its authors on 2021-11-10 as obsolete; the canonical replacement is rao2021bittensor (bittensor.com/whitepaper)."
-  every_cite_key_in_manuscript: true   # all 13 entries are cited; no orphans
+  every_cite_key_in_manuscript: true   # all 16 entries are cited; no orphans
+
+# Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
+revision_log:
+  v0_4:
+    date: "2026-05-03"
+    summary: "Address academic deep-research review forwarded from OMN-21."
+    changes:
+      - "Abstract: explicit research question + sharpened novelty claim (verification architecture, not agentic AI alone)"
+      - "Introduction §1: explicit research question paragraph + novelty claim paragraph + expanded contributions list (4→5)"
+      - "New §3 'Research Questions and Hypotheses': RQ1, RQ2, H1, H2 stated as falsifiable claims with operationalisation"
+      - "New §4 'Related Work' (six sub-areas): bridge security SoKs, attack detection (BridgeGuard), multichain fraud, decentralised ML verification (opML + snarkGPT), oracle/DeFi systematisation (Werner et al. SoK), Bittensor mechanisms — with explicit gap statement"
+      - "New §6 'Formal Definitions': Route q (Eq. 1), risk score s(q,t) (Eq. 2), realised loss decomposed into E1-E4, material chain-state change, confidence calibration via Brier (Eq. 3), validator loss L_i (Eq. 4)"
+      - "§7 Miner Protocol: now references the formal q from Eq. 1 instead of redefining"
+      - "§8 Validator Mechanism: now references L_i from Eq. 4; each scoring component grounded in a §6 sub-definition"
+      - "§11 Evaluation: new sub-section §11.1 'Baselines' — B1 random, B2 single-chain liquidity-only, B3 static bridge-risk heuristic, B4 generic anomaly detector"
+      - "§17 Limitations: explicit acknowledgement that H1/H2 are stated as falsifiable claims, not established results"
+      - "Bibliography: +2 entries (ganescu2024trust, werner2022sok); total 16; both added to fill review-flagged related-work gaps"
 
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:
@@ -33,3 +55,4 @@ pending_before_submission:
   - "Engineering review of §9 (Subtensor EVM anchoring contracts: confirm chain ID 945 is the intended target — verify mainnet vs testnet)"
   - "Compile manuscript on a TeX Live host (run `make pdf`); resolve any unresolved-reference warnings"
   - "Subnet partner identification (Bittensor cross-chain risk subnet sponsor)"
+  - "Empirical follow-up paper: instantiate baselines B1-B4 and report H1/H2 outcomes against historical RayaChain flows"

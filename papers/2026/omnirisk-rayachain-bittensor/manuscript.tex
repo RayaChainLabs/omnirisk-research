@@ -27,7 +27,7 @@
 \title{Verifiable Cross-Chain Risk Intelligence:\\
        An Agentic Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.3}}
+\date{May 2026 \\ \textbf{Working paper, v0.4}}
 
 \begin{document}
 \maketitle
@@ -37,24 +37,32 @@ Cross-chain bridges have become the single largest concentrated source of value 
 decentralised finance: industry trackers attribute roughly USD~2B of theft in the first
 eight months of 2022 alone to bridge attacks~\cite{chainalysis2022bridges}, and the most
 recent peer-reviewed systematisation places cumulative losses at approximately
-USD~3.1B~\cite{augusto2024sok}. At the same time, the risk telemetry that participants
-need to navigate this environment remains \emph{siloed per chain} and
-\emph{non-verifiable}: there is no widely deployed mechanism that lets a downstream user
-confirm that a route- or token-level risk signal was produced honestly. We present
-\textsc{OmniRisk}, a deployed agentic risk-intelligence layer that ingests cross-chain
-flow data from \textsc{RayaChain}, an Omnichain Fungible Token (OFT) deployment on
-LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}, and emits structured route and
-token risk signals. Our contribution is an architecture in which (i)~OmniRisk is the
-intelligence layer, (ii)~RayaChain is the cross-chain data and execution layer, and
-(iii)~Bittensor's Yuma Consensus~\cite{rao2021bittensor,steeves2022incentivizing,
-opentensor2024yuma} acts as the decentralised verification layer for the intelligence
-itself. We argue that anchoring the verification layer on the Subtensor EVM
-(chain~ID~945)~\cite{opentensor2024evm} is the natural fit because it is the only
-production EVM whose validator set is already economically aligned to scoring the
-quality of AI outputs. The paper formalises the miner and validator protocols required
-to make this work, situates the design against the recent cross-chain bridge security
-literature~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding}, and lays out the
-evaluation framework we will use against historical RayaChain flows.
+USD~3.1B~\cite{augusto2024sok}. The risk telemetry that participants need to navigate
+this environment remains \emph{siloed per chain} and \emph{non-verifiable}: there is no
+widely deployed mechanism that lets a downstream user confirm that a route- or
+token-level risk signal was produced honestly. This paper asks a single research
+question: \emph{can cross-chain risk intelligence be made verifiable through
+Bittensor-style decentralised validation, and at what cost in latency, calibration, and
+adversarial robustness?} Our central claim is that the answer is yes, and that the
+correct primitive is not yet another risk API but a \textbf{verification architecture in
+which route-level risk outputs are economically evaluated by decentralised validators}.
+We present \textsc{OmniRisk}, a deployed agentic risk-intelligence layer that ingests
+cross-chain flow data from \textsc{RayaChain}, an Omnichain Fungible Token (OFT)
+deployment on LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}, and emits
+structured route and token risk signals. The architecture splits responsibility into
+(i)~OmniRisk as the intelligence layer, (ii)~RayaChain as the cross-chain data and
+execution layer, and (iii)~Bittensor's Yuma Consensus~\cite{rao2021bittensor,
+steeves2022incentivizing,opentensor2024yuma} as the decentralised verification layer
+for the intelligence itself. We argue that anchoring the verification layer on the
+Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm} is the natural fit because it is
+the only production EVM whose validator set is already economically aligned to scoring
+the quality of AI outputs. The paper formalises the route, risk-score, and validator-loss
+primitives, specifies the miner and validator protocols required to make this work,
+situates the design against the cross-chain bridge security and decentralised-ML
+verification literatures~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding,
+conway2024opml,ganescu2024trust}, and lays out the evaluation framework --- including
+the four baselines required to support a publication-grade empirical claim --- that
+will be applied to historical RayaChain flows.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -82,19 +90,43 @@ operator to be honest. This is the same primitive failure that gave rise to the
 oracle-design literature in the early DeFi era, and we argue it now calls for a
 verification layer that is itself decentralised.
 
-\paragraph{Contributions.} This paper makes four contributions.
+\paragraph{Research question.} The paper is organised around one question:
+\begin{quote}
+\emph{Can cross-chain risk intelligence be made verifiable through Bittensor-style
+decentralised validation?}
+\end{quote}
+This is a hypothesis, not a result. The architecture, the formal definitions
+(Section~\ref{sec:formal}), and the evaluation framework (Section~\ref{sec:eval}) are
+the apparatus needed to answer it; the answer itself is deferred to follow-up empirical
+work. We make the hypothesis falsifiable by stating two specific research questions and
+two hypotheses in Section~\ref{sec:rq}.
+
+\paragraph{Novelty claim.} The strongest novelty is not ``agentic AI'' or ``cross-chain
+data'' considered separately. The contribution is the \textbf{verification architecture}:
+route-level risk outputs are produced by a heterogeneous population of miners and
+\emph{economically evaluated} by decentralised validators, with rewards proportional to
+agreement with realised cross-chain events. This is, to our knowledge, the first such
+construction for cross-chain risk; we situate it precisely against prior work in
+Section~\ref{sec:related}.
+
+\paragraph{Contributions.} Concretely, the paper makes five contributions.
 \begin{enumerate}
   \item \textbf{An architectural separation of concerns}: OmniRisk = intelligence,
         RayaChain = data and execution, Bittensor = verification (Section~\ref{sec:arch}).
+  \item \textbf{A formalisation of the cross-chain risk-scoring task} in terms of
+        routes $q$, the risk-score function $s(q,t)$, and a validator loss $L_i$ that
+        decomposes into accuracy, consistency, and calibration terms
+        (Section~\ref{sec:formal}).
   \item \textbf{A miner protocol specification} for thin OmniRisk-API wrappers that meet
         the determinism and structured-reasoning requirements of Yuma
         scoring~\cite{opentensor2024yuma} (Section~\ref{sec:miner}).
   \item \textbf{A validator-side scoring rule} that evaluates miner outputs against
         ground-truth realised cross-chain risk events, expressed in the Yuma weight-vector
-        format (Section~\ref{sec:validator}).
-  \item \textbf{An evaluation framework} grounded in replayed historical RayaChain
-        flows, with an honest discussion of what we cannot yet prove
-        (Section~\ref{sec:eval} and Section~\ref{sec:limitations}).
+        format with precise definitions of \emph{realised loss}, \emph{material chain-state
+        change}, and \emph{confidence calibration} (Section~\ref{sec:validator}).
+  \item \textbf{An evaluation framework with explicit baselines} grounded in replayed
+        historical RayaChain flows, with an honest discussion of what we cannot yet
+        prove (Section~\ref{sec:eval} and Section~\ref{sec:limitations}).
 \end{enumerate}
 
 This is a working paper. We are explicit throughout about which components are deployed
@@ -121,11 +153,128 @@ exploited one.
 
 \paragraph{Verifiable intelligence is missing.} Existing route-risk APIs are
 \emph{black-box}: a downstream contract must trust that the API operator scored honestly.
-Recent work on optimistic and zero-knowledge ML on blockchain
-(\cite{conway2024opml}, among others) and on multichain ML-based fraud
+Recent work on optimistic and zero-knowledge ML on
+blockchain~\cite{conway2024opml,ganescu2024trust} and on multichain ML-based fraud
 detection~\cite{palaiokrassas2023multichain} addresses parts of this gap, but no system
 that we are aware of combines (a)~live cross-chain risk scoring with (b)~a decentralised
 verification layer for the scores themselves.
+
+\section{Research Questions and Hypotheses}\label{sec:rq}
+
+We make the architectural claim of Section~\ref{sec:intro} falsifiable by reducing it to
+two research questions and two hypotheses. Each is operationalised by a quantity that the
+evaluation framework of Section~\ref{sec:eval} produces.
+
+\paragraph{RQ1.} Does cross-chain route-level telemetry --- the joint state of source-chain
+liquidity, destination-chain liquidity, and the OFT lane configuration --- improve risk
+prediction relative to single-chain risk features for the same route?
+
+\paragraph{RQ2.} Can decentralised validators reliably distinguish calibrated risk
+outputs from uncalibrated or adversarial miner outputs over repeated replay evaluation?
+That is: under the validator scoring rule of Section~\ref{sec:validator}, does the Yuma
+emission share converge onto miners whose realised-event accuracy and confidence
+calibration are independently good?
+
+\paragraph{H1.} Cross-chain liquidity-fragmentation features improve the early-detection
+lead time (number of blocks between threshold crossing and the realised event) for
+adverse route events, relative to a single-chain liquidity-only model. This hypothesis is
+falsified if the lead-time distribution under the cross-chain feature set is statistically
+indistinguishable from the lead-time distribution under the single-chain baseline.
+
+\paragraph{H2.} Confidence-calibrated miners receive monotonically higher validator
+weights than uncalibrated miners over repeated replay evaluation. That is: holding the
+realised-event accuracy term constant, miners whose Brier score on $(s, c)$ is lower
+must achieve a strictly higher Yuma reward share. This hypothesis is falsified if the
+correlation is non-significant or has the wrong sign.
+
+The deferred empirical paper will report on RQ1 and RQ2 directly and will accept or reject
+H1 and H2 against the baselines specified in Section~\ref{sec:eval:baselines}.
+
+\section{Related Work}\label{sec:related}
+
+We organise the literature into six sub-areas, distinguish what each contributes, and
+identify the gap that this paper addresses.
+
+\subsection{Cross-chain bridge security surveys}\label{sec:related:bridge-sok}
+
+Two systematisations frame the bridge-security landscape. \cite{augusto2024sok} is the
+peer-reviewed SoK at IEEE S\&P 2024: it surveys 212 documents (58 peer-reviewed and 154
+grey), enumerates a security/privacy taxonomy across 57 interoperability solutions, and
+reports cumulative cross-chain hack losses of approximately USD~3.1B. \cite{zhang2023sok}
+provides a complementary attack-surface taxonomy organised by bridge architecture
+(lock-and-mint, burn-and-mint, atomic swap, light-client) and identifies recurring
+defence gaps. Both are descriptive; neither proposes a verifiable risk-scoring primitive.
+
+\subsection{Bridge attack-detection systems}\label{sec:related:bridge-detection}
+
+\cite{wu2025safeguarding} introduces \textsc{BridgeGuard}, a graph-motif detector trained
+on 203 attack transactions across 49 cross-chain bridge incidents (June~2021 --
+September~2024). \textsc{BridgeGuard} operates retrospectively on transaction-graph
+features and is the closest existing analogue to one component of OmniRisk's
+realised-event channel. We use its labelled corpus as one of the ground-truth sources for
+validator scoring (Section~\ref{sec:eval}). Two differences from our work are essential:
+(i)~it is a single-operator detector with no verification layer over its outputs, and
+(ii)~it is event-detection rather than ex-ante route-risk prediction.
+
+\subsection{Multichain fraud detection}\label{sec:related:multichain}
+
+\cite{palaiokrassas2023multichain} releases a labelled multichain fraud-detection dataset
+spanning 23 DeFi protocols and 12 chains, with baseline gradient-boosted and deep
+classifiers. The contribution is the dataset and baselines, not a route-level risk model
+or a verification mechanism. We adopt their multichain framing and note that route-level
+telemetry (the OFT lane and its DVN configuration) is an additional feature class not
+present in their corpus.
+
+\subsection{Decentralised ML verification}\label{sec:related:dml}
+
+Two complementary verification primitives have appeared in 2024.
+\cite{conway2024opml} (\textsc{opML}) verifies off-chain ML inference via an
+optimistic-rollup-style fraud-proof challenge game on chain. \cite{ganescu2024trust}
+(\textsc{snarkGPT}) verifies transformer inference via zero-knowledge succinct
+arguments. Both are general-purpose ML-verification primitives; neither targets
+cross-chain risk scoring specifically and neither relies on an economic
+validator-quorum mechanism. Bittensor's Yuma consensus is a third verification
+primitive --- an economic-validator-quorum mechanism --- and our contribution is to apply
+it to the cross-chain risk-scoring task.
+
+\subsection{Oracle and data-verification mechanisms}\label{sec:related:oracle}
+
+The broader DeFi systematisation~\cite{werner2022sok} catalogues data-feed and oracle
+mechanisms as a core DeFi primitive: trusted-feeder oracles, Schelling-point oracles, and
+zk-attested feeds. The route-risk primitive proposed in this paper is structurally a
+\emph{decentralised attestation feed}: it makes a claim of the form ``route $q$ has risk
+$s$ at time $t$'', and that claim is meant to be consumed by downstream contracts. The
+gap is that existing oracle taxonomies cover \emph{prices} (sourced from venues) and
+\emph{external events} (sourced from APIs), but not \emph{model outputs} produced by an
+agentic risk pipeline. The Bittensor verification layer of Section~\ref{sec:arch:bittensor}
+is the first economic-validator-quorum primitive deployed at production scale that
+naturally accommodates model-output attestations of this form.
+
+\subsection{Bittensor incentive mechanisms}\label{sec:related:bittensor}
+
+The Bittensor incentive mechanism is specified canonically in
+\cite{rao2021bittensor} and analysed formally in \cite{steeves2022incentivizing}, which
+proves collusion-resistance up to coalitions controlling less than 50\% of stake-weighted
+rank. The current production specification is documented in
+\cite{opentensor2024yuma}, with the Subtensor EVM execution environment in
+\cite{opentensor2024evm}. \cite{lui2025bittensor} is the most recent critical empirical
+analysis: it documents real centralisation pressure under the dynamic-TAO regime and
+should be read alongside the formal collusion-resistance bound rather than as a
+contradiction of it. We treat the formal bound as a property of the algorithm and the
+empirical findings as a property of the deployed network's stake distribution; both
+matter for the security analysis of Section~\ref{sec:security}.
+
+\subsection{Where the gap is}\label{sec:related:gap}
+
+Existing work covers (a)~bridge security descriptively, (b)~retrospective attack
+detection, (c)~multichain fraud-detection datasets, (d)~general-purpose ML-verification
+primitives, (e)~oracle taxonomies for prices and events, and (f)~the Bittensor incentive
+mechanism in isolation. No published system simultaneously
+(i)~scores route-level cross-chain risk in real time,
+(ii)~submits those scores to a decentralised validator quorum that scores them against
+realised events, and
+(iii)~anchors the resulting consensus on chain so it can be consumed verifiably by
+downstream contracts. That intersection is what this paper proposes.
 
 \section{System Architecture}\label{sec:arch}
 
@@ -193,20 +342,147 @@ deadline), return a structured risk score. We do not require miners to all use t
 internal model --- the discipline comes from the validator scoring rule
 (Section~\ref{sec:validator}), not from the miner implementation.
 
+\section{Formal Definitions}\label{sec:formal}
+
+We fix notation that the miner specification (Section~\ref{sec:miner}) and the validator
+specification (Section~\ref{sec:validator}) both refer to.
+
+\subsection{Route}\label{sec:formal:route}
+
+A \emph{route} is a tuple
+\begin{equation}
+  q \;=\; (c_s,\; c_d,\; a,\; x,\; t)
+  \label{eq:route}
+\end{equation}
+where $c_s$ is the source chain identifier, $c_d$ the destination chain identifier, $a$
+the asset (an OFT in the RayaChain deployment), $x \in \mathbb{R}_{>0}$ the transfer
+size denominated in $a$, and $t$ the query time (a wall-clock instant; in
+implementation, the most recent finalised block on each of $c_s$ and $c_d$, paired). The
+chain identifiers are drawn from the set of RayaChain-active chains
+\(
+  \mathcal{C} = \{\text{Ethereum},\; \text{Arbitrum},\; \text{Base},\; \text{BNB},\;
+  \text{Polygon},\; \text{Optimism},\; \text{Solana}\}
+\)
+plus the proposed $c = 945$ Subtensor EVM lane (Section~\ref{sec:subtensor}).
+
+\subsection{Risk score}\label{sec:formal:score}
+
+Let $E_{q, t+\Delta} \in \{0, 1\}$ be the indicator of a \emph{realised adverse event}
+on route $q$ over the horizon $[t, t + \Delta]$ (the precise event definition is
+operationalised in Section~\ref{sec:formal:realised} below). Let $X_{q, t}$ denote the
+information set observable on chain at time $t$ that is relevant to $q$ (source/destination
+liquidity snapshots, recent OFT throughput, the lane's DVN configuration, recent
+incident-cluster proximity).
+
+The route risk score is
+\begin{equation}
+  s(q, t) \;=\; \Pr\bigl(\, E_{q, t+\Delta} = 1 \;\bigm|\; X_{q, t} \,\bigr) \,.
+  \label{eq:risk}
+\end{equation}
+A miner $i$ emits an estimate $s_i(q, t) \in [0,1]$ of this quantity, together with a
+self-reported confidence $c_i(q, t) \in [0,1]$ and a structured reasoning record
+$r_i(q, t) \in \mathcal{R}$ (Section~\ref{sec:miner}). Throughout the paper, $\Delta$ is
+a subnet-level constant; the deployed value is published with the subnet specification.
+
+\subsection{Realised loss}\label{sec:formal:realised}
+
+The $E_{q, t+\Delta}$ indicator is the disjunction of four observable channels, each
+with a precise definition; we explicitly avoid the vague phrase ``something went wrong''.
+\begin{description}
+  \item[E1: Failed execution.] The OFT message originating from $q$ on $c_s$ either
+        reverts on $c_d$ or expires unredeemed past the lane's nonce timeout.
+        Operationalised as: zero $\textsc{OFTReceived}$ event on $c_d$ within the
+        protocol-defined message-window for the corresponding $\textsc{OFTSent}$ event on
+        $c_s$.
+  \item[E2: Abnormal slippage.] The realised execution price on $c_d$ deviates from the
+        median quoted price at $t$ by more than a threshold $\tau_{\text{slip}}$ (e.g.\
+        50 basis points for stablecoin OFTs, 200 bps for volatile OFTs).
+  \item[E3: Bridge / lane delay.] The end-to-end latency between $\textsc{OFTSent}$ on
+        $c_s$ and $\textsc{OFTReceived}$ on $c_d$ exceeds a per-lane latency threshold
+        $\tau_{\text{delay}}$, calibrated as the historical 99th percentile of that lane.
+  \item[E4: Exploit-cluster association.] The destination address, the lane, or the OFT
+        is identified within $\Delta'$ blocks (typically $\Delta' \le \Delta$) as
+        belonging to an attack cluster by an external label source --- in our setup, the
+        \textsc{BridgeGuard} attack-transaction corpus~\cite{wu2025safeguarding}
+        (49~incidents, 203~attack transactions) and on-chain forensic feeds.
+\end{description}
+We define $E_{q, t+\Delta} = 1$ if any of $E1$--$E4$ fires; otherwise $E_{q, t+\Delta} =
+0$. The precise channel that fired is preserved as auxiliary metadata so a follow-up
+analysis can decompose miner accuracy by event type. \emph{Realised loss} in this paper
+always refers to this conjunction of observable channels --- never to ``post-route
+drawdown'' or other downstream consequences that depend on a user's holding decision.
+
+\subsection{Material chain-state change}\label{sec:formal:material}
+
+The validator consistency rule (Section~\ref{sec:validator}) compares miner outputs at
+nearby times $t$ and $t + \delta$. We define a \emph{material chain-state change} on
+route $q$ between $t$ and $t + \delta$ as the disjunction:
+\begin{enumerate}
+  \item the source-chain or destination-chain head changed by at least one block;
+  \item the lane's DVN set, Executor, or per-OFT security configuration changed;
+  \item liquidity depth on either side of the route changed by more than a fraction
+        $\eta$ of pre-trade depth (default $\eta = 0.05$);
+  \item the OFT contract on $c_s$ or $c_d$ was upgraded or paused.
+\end{enumerate}
+If none of these holds between $t$ and $t + \delta$, the chain state is \emph{materially
+unchanged} and miner responses are required to be byte-identical (modulo the
+quantisation precision of Section~\ref{sec:miner}). If any holds, divergent miner
+responses are not penalised on the consistency channel.
+
+\subsection{Confidence calibration}\label{sec:formal:calibration}
+
+A miner's confidence $c_i(q, t)$ is \emph{calibrated} if, over a window of $N$ scored
+queries with realised outcomes $y_n \in \{0,1\}$, the empirical Brier score
+\begin{equation}
+  \text{Brier}_i \;=\; \frac{1}{N} \sum_{n=1}^{N} \bigl( s_i(q_n, t_n) - y_n \bigr)^{2}
+  \label{eq:brier}
+\end{equation}
+is no worse than that of a calibrated reference predictor on the same window, and the
+self-reported confidence $c_i$ tracks miner accuracy in the sense that the reliability
+diagram (binned $c_i$ vs.\ realised accuracy) lies within a tolerance band of the
+identity. A miner that reports $c_i = 1$ on every query is automatically miscalibrated
+unless its $\text{Brier}_i$ is uniformly zero, which empirically does not occur.
+
+\subsection{Validator loss}\label{sec:formal:vloss}
+
+Let $\mathbf{s}_i, \mathbf{c}_i, \mathbf{y}$ be the miner-$i$ score vector, confidence
+vector, and realised-outcome vector over a window of $N$ scored queries. The validator
+loss for miner $i$ is the weighted decomposition
+\begin{equation}
+  L_i \;=\; \alpha \cdot \text{Brier}(\mathbf{s}_i, \mathbf{y})
+        \;+\; \beta \cdot \text{Inconsistency}_i
+        \;+\; \gamma \cdot \text{Miscalibration}_i
+  \label{eq:vloss}
+\end{equation}
+with non-negative weights $\alpha + \beta + \gamma = 1$ that the subnet publishes as
+hyperparameters. The three terms are:
+\begin{itemize}
+  \item $\text{Brier}(\mathbf{s}_i, \mathbf{y})$ as in Eq.~\eqref{eq:brier} (realised-event
+        accuracy);
+  \item $\text{Inconsistency}_i$, the fraction of paired queries $(q, t), (q, t+\delta)$
+        with no material chain-state change (Section~\ref{sec:formal:material}) for which
+        miner $i$ returned different responses;
+  \item $\text{Miscalibration}_i$, the expected calibration error
+        $\sum_b w_b \,|\, \overline{c}_b - \overline{a}_b \,|$ over equal-mass bins of
+        $c_i$, where $\overline{c}_b$ is the mean confidence in bin $b$ and
+        $\overline{a}_b$ is the realised accuracy.
+\end{itemize}
+The validator's submitted Yuma weight vector is then $\mathbf{w}$ with $w_i \propto
+\exp(-\lambda L_i)$ (any monotone decreasing transform suffices; we use the softmax form
+for numerical stability). The on-chain Yuma rule aggregates across all subnet validators
+as in Section~\ref{sec:arch:bittensor}.
+
 \section{Miner Protocol Specification}\label{sec:miner}
 
-A miner is a thin wrapper over the OmniRisk API, exposed at the Bittensor subnet's
-miner endpoint. For each query $q = (\textit{src}, \textit{dst}, \textit{oft},
-\textit{size}, t)$ submitted by a validator, the miner returns a tuple
-$(s, c, r) \in [0,1] \times [0,1] \times \mathcal{R}$ where:
-\begin{itemize}
-  \item $s$ is the route risk score, with $s = 0$ denoting nominal and $s = 1$ denoting
-        an unrouteable lane;
-  \item $c$ is the miner's self-reported confidence;
-  \item $r$ is a structured reasoning record (which on-chain observations were used,
-        which DEX quotes were consulted, which historical incidents were the closest
-        analogues).
-\end{itemize}
+A miner $i$ is a thin wrapper over the OmniRisk API, exposed at the Bittensor subnet's
+miner endpoint. For each route query $q$ as defined in Eq.~\eqref{eq:route}, the miner
+returns a tuple $(s_i, c_i, r_i) \in [0,1] \times [0,1] \times \mathcal{R}$, where
+$s_i$ is its estimate of the route risk score $s(q,t)$ from Eq.~\eqref{eq:risk}
+($s_i = 0$ denoting nominal and $s_i = 1$ denoting an unrouteable lane), $c_i$ is the
+miner's self-reported confidence (Section~\ref{sec:formal:calibration}), and $r_i$ is a
+structured reasoning record listing which on-chain observations were used, which DEX
+quotes were consulted, and which historical incidents from the BridgeGuard
+corpus~\cite{wu2025safeguarding} were the closest analogues.
 
 \paragraph{Determinism constraint.} Yuma scoring requires that two miners using the
 same internal logic on the same query at the same block height return the same answer.
@@ -222,25 +498,37 @@ declared inputs.
 \section{Validator Mechanism}\label{sec:validator}
 
 A validator queries a subset of miners on a stratified sample of routes, scores each
-response against a ground-truth signal, and submits a Yuma weight vector
-$\mathbf{w} \in [0,1]^{N}$ over the $N$ miners it observed. The on-chain Yuma rule
-then aggregates $\mathbf{w}$ across all subnet validators using a stake-weighted
-threshold and emits rewards~\cite{opentensor2024yuma}.
+response against the realised-event ground truth defined in
+Section~\ref{sec:formal:realised}, and submits a Yuma weight vector
+$\mathbf{w} \in [0,1]^{N}$ over the $N$ miners it observed. The on-chain Yuma rule then
+aggregates $\mathbf{w}$ across all subnet validators using a stake-weighted threshold and
+emits rewards~\cite{opentensor2024yuma}.
 
-The validator scoring rule has three components:
+The scoring rule is the validator loss $L_i$ given in Eq.~\eqref{eq:vloss}. It has three
+components, each grounded in a precise definition from Section~\ref{sec:formal}:
 \begin{enumerate}
-  \item \textbf{Realised-event accuracy.} For routes that were taken between $t$ and
-        $t + \Delta$, did the miner's score $s$ correlate with the realised loss
-        (slippage, failed-execution rate, post-hoc identification as part of an attack
-        cluster)?
-  \item \textbf{Consistency.} If the same query is issued at $t$ and $t + \delta$ for
-        small $\delta$ during which no chain state changed materially, do the responses
-        match? Inconsistency indicates either non-determinism (penalty per
-        Section~\ref{sec:miner}) or unstable internal state.
-  \item \textbf{Confidence calibration.} Over a window of queries, does the miner's
-        empirical Brier score on $(s, c)$ improve on a calibrated baseline? Miners that
-        report $c = 1.0$ on every query are penalised relative to miners whose
-        confidence tracks their realised accuracy.
+  \item \textbf{Realised-event accuracy} (the $\alpha$ term, Eq.~\eqref{eq:brier}).
+        For routes scored between $t$ and $t + \Delta$, the miner's score $s_i$ is
+        evaluated against the realised-loss indicator $E_{q, t+\Delta}$
+        (Section~\ref{sec:formal:realised}), which is the disjunction of failed
+        execution, abnormal slippage, bridge/lane delay, and exploit-cluster association
+        from the BridgeGuard corpus~\cite{wu2025safeguarding}. We deliberately exclude
+        downstream channels such as ``post-route drawdown'' that would conflate
+        route-execution quality with the user's holding decision.
+  \item \textbf{Consistency} (the $\beta$ term). If the same query is issued at $t$ and
+        $t + \delta$ for small $\delta$ during which the chain state is materially
+        unchanged in the precise sense of Section~\ref{sec:formal:material}, the
+        responses must be byte-identical (modulo the quantisation precision of
+        Section~\ref{sec:miner}). Inconsistency under no material chain-state change
+        indicates either non-determinism (already penalised per Section~\ref{sec:miner})
+        or unstable internal state.
+  \item \textbf{Confidence calibration} (the $\gamma$ term). Calibration is measured by
+        the expected calibration error over reliability bins of $c_i$, with the precise
+        definition in Section~\ref{sec:formal:calibration}. Miners that report $c_i = 1$
+        on every query are automatically miscalibrated, and miners whose self-reported
+        confidence tracks realised accuracy receive lower $L_i$ and therefore higher
+        Yuma weight, which is the operational form of hypothesis H2
+        (Section~\ref{sec:rq}).
 \end{enumerate}
 
 The key design property is that validators score the \emph{quality} of intelligence, not
@@ -303,18 +591,56 @@ The evaluation we are building rests on three datasets:
         lanes, with per-lane metadata (DVN set, Executor, observed latencies,
         message-failure counts).
   \item \textbf{Realised-event labels.} A union of (a)~slippage and execution-failure
-        outcomes derived from the flow logs, and (b)~external incident labels from
-        peer-reviewed and grey-literature corpora; the BridgeGuard
+        outcomes derived from the flow logs (the $E1$--$E3$ channels of
+        Section~\ref{sec:formal:realised}) and (b)~external incident labels from
+        peer-reviewed and grey-literature corpora (the $E4$ channel); the BridgeGuard
         dataset~\cite{wu2025safeguarding} (203 attack transactions across
         49~incidents) is one of the curated bases.
-  \item \textbf{Replay routes.} For each historical route observed in (1), we replay
-        it to the OmniRisk-backed miners under the configuration at the corresponding
-        block height (Section~\ref{sec:miner}), and score against (2).
+  \item \textbf{Replay routes.} For each historical route observed in (1), we replay it
+        to the OmniRisk-backed miners under the configuration at the corresponding block
+        height (Section~\ref{sec:miner}), and score against (2).
 \end{enumerate}
-The headline metrics are realised-event AUC, early-detection lead time (how many
-blocks before an event the score crossed threshold), and Yuma reward retention (a
-miner's reward share over a window normalised by its scored share, as a measure of
-alignment with the validator consensus).
+The headline metrics are realised-event AUC, early-detection lead time (how many blocks
+before an event the score crossed threshold), expected calibration error
+(Section~\ref{sec:formal:calibration}), and Yuma reward retention (a miner's reward share
+over a window normalised by its scored share, as a measure of alignment with the
+validator consensus).
+
+\subsection{Baselines}\label{sec:eval:baselines}
+
+A claim that a verifiable cross-chain risk primitive outperforms the status quo is only
+defensible against explicit baselines. Each of the following is implemented as a
+\emph{reference miner} on the same subnet, scored under the same validator loss
+$L_i$ as any production miner, and reported alongside the OmniRisk miner in every
+follow-up evaluation. They span the design space from naive to credible analytic
+alternatives.
+
+\begin{description}
+  \item[B1: Random / naive baseline.] Returns $s = 0.5$ on every query, with
+        $c = 0.5$. This is the lower bound: any miner whose Brier score does not improve
+        on B1 is providing no information.
+  \item[B2: Single-chain liquidity-only model.] A logistic regressor over destination-chain
+        liquidity depth, recent destination-chain volatility, and asset identifier ---
+        \emph{no source-chain or lane features}. This baseline isolates the value of
+        cross-chain telemetry; rejection of H1 (Section~\ref{sec:rq}) corresponds to the
+        OmniRisk miner failing to improve early-detection lead time over B2.
+  \item[B3: Static bridge-risk heuristic.] A fixed mapping from
+        $(c_s, c_d, \text{DVN set}, \text{Executor})$ to a constant risk tier, calibrated
+        once at evaluation start and never updated. This baseline isolates the value of
+        the agentic, adaptive component of OmniRisk against a static analyst-tier
+        product.
+  \item[B4: Generic anomaly detector.] A standard isolation-forest or one-class SVM
+        trained on the union of source- and destination-chain features but without any
+        bridge-/lane-specific structure or the BridgeGuard incident corpus. This baseline
+        isolates the value of incident-grounded supervision against unsupervised
+        anomaly scoring.
+\end{description}
+
+For each baseline we report (i)~Brier score, (ii)~realised-event AUC, (iii)~early-detection
+lead time, (iv)~expected calibration error, and (v)~Yuma reward retention over the
+replay window. The OmniRisk miner is required to dominate B1 strictly on all five
+metrics, dominate B2 on (iii) for hypothesis H1 to survive, and dominate B3 on (i)--(iii)
+for the agentic-vs-static claim of Section~\ref{sec:compare} to be defensible.
 
 \section{Economic Model}\label{sec:economics}
 
@@ -413,7 +739,10 @@ We explicitly flag the following limitations.
   \item \textbf{Most quantitative claims are deferred.} The score-commitment
         contracts, the Bittensor subnet, and the evaluation framework
         (Section~\ref{sec:eval}) are design proposals; this paper does not yet report
-        AUC numbers or reward-retention curves.
+        AUC numbers, reward-retention curves, or measured comparisons against the
+        baselines of Section~\ref{sec:eval:baselines}. The hypotheses H1 and H2
+        (Section~\ref{sec:rq}) are stated as falsifiable claims, not as established
+        results.
   \item \textbf{Bittensor centralisation risk.} Independent empirical work has raised
         concerns about Bittensor's actual decentralisation under the dynamic-TAO
         regime~\cite{lui2025bittensor}. We treat the Yuma collusion-resistance bound
@@ -455,9 +784,12 @@ concrete. Any errors are the authors'.
 \section*{Reproducibility Note}
 The bibliography for this paper is the master \texttt{references.bib} of the
 \texttt{omnirisk-papers} repository. Every entry was reverified against its primary
-source on 2026-05-03 prior to inclusion. The retracted preprint arXiv:2003.03917
-is intentionally excluded; see the comment block in \texttt{references.bib} and
-Section~\ref{sec:limitations} for the rationale.
+source on 2026-05-03 prior to inclusion. Two entries were added in revision v0.4 to
+fill the related-work gaps flagged in academic review (\cite{ganescu2024trust} for
+zero-knowledge ML verification, \cite{werner2022sok} for the broader DeFi oracle
+landscape) and were verified against their arXiv abstract pages on the same date. The
+retracted preprint arXiv:2003.03917 is intentionally excluded; see the comment block in
+\texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
 
 \printbibliography
 
