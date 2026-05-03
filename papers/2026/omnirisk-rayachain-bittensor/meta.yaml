@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.4"
+revision: "0.5"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -47,6 +47,18 @@ revision_log:
       - "§11 Evaluation: new sub-section §11.1 'Baselines' — B1 random, B2 single-chain liquidity-only, B3 static bridge-risk heuristic, B4 generic anomaly detector"
       - "§17 Limitations: explicit acknowledgement that H1/H2 are stated as falsifiable claims, not established results"
       - "Bibliography: +2 entries (ganescu2024trust, werner2022sok); total 16; both added to fill review-flagged related-work gaps"
+  v0_5:
+    date: "2026-05-03"
+    summary: "Deepen engagement with three primary sources (Opentensor Yuma docs, LayerZero V2 dev docs, BridgeGuard) in response to 'enhance / study those documents' wake comment."
+    changes:
+      - "§4.3 Bittensor architecture: replaced summary-only attribution with the actual Yuma equations — consensus weight via stake-fraction-κ argmax (Eq. 5), clipped weights min(W_ij, W̄_j), aggregate ranking R_j, and miner emission share M_j. Source: Opentensor 2024 Yuma docs (verified 2026-05-03)."
+      - "§6.4 Material chain-state change: replaced 'lane's DVN set, Executor, or per-OFT security configuration' with the precise LayerZero V2 UlnConfig + ExecutorConfig field names (confirmations, requiredDVNCount, requiredDVNs[], optionalDVNCount, optionalDVNs[], optionalDVNThreshold, maxMessageSize, executor) and noted send-vs-receive enforcement asymmetry. Source: LayerZero V2 dev docs (verified 2026-05-03)."
+      - "§6.6 Validator loss → Yuma weights: replaced softmax handwave with explicit Eq. 6 (W_ij as temperature-scaled softmax of -L_j) AND the on-chain composition with the Yuma clipping rule, including economic self-correction analysis."
+      - "New §6.7 'Worked example': single concrete route (USDC OFT, Arbitrum→Base, 100k) walked through information set, miner output, realised outcome, Brier contribution, and Yuma clipping. Grounds the abstraction."
+      - "§4.2 Related Work / BridgeGuard: added concrete methodology (two-stage global+local graph mining), the 1:197 class-imbalance ratio (203 attack vs 40,000 normal), the +36.32pp recall improvement vs SOTA, and the implication that evaluation must use PR-AUC not just ROC-AUC. Source: Wu et al. 2025 (verified 2026-05-03)."
+      - "§11 Evaluation: headline metrics now include precision-recall AUC alongside ROC-AUC, with imbalance-aware threshold-selection rationale tying back to §4.2."
+      - "§5 System Architecture: replaced 'Figure omitted' embarrassment with Figure 1 — a labelled three-layer textual diagram showing intelligence/data-execution/verification layers with their inputs, outputs, and on-chain anchors."
+      - "Reproducibility Note: documents the v0.5 primary-source extraction cycle (Yuma equations, UlnConfig fields, BridgeGuard imbalance ratio) so a future reviewer can independently verify provenance."
 
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:

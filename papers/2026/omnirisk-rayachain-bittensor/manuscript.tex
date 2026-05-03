@@ -27,7 +27,7 @@
 \title{Verifiable Cross-Chain Risk Intelligence:\\
        An Agentic Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.4}}
+\date{May 2026 \\ \textbf{Working paper, v0.5}}
 
 \begin{document}
 \maketitle
@@ -207,14 +207,24 @@ defence gaps. Both are descriptive; neither proposes a verifiable risk-scoring p
 
 \subsection{Bridge attack-detection systems}\label{sec:related:bridge-detection}
 
-\cite{wu2025safeguarding} introduces \textsc{BridgeGuard}, a graph-motif detector trained
-on 203 attack transactions across 49 cross-chain bridge incidents (June~2021 --
-September~2024). \textsc{BridgeGuard} operates retrospectively on transaction-graph
-features and is the closest existing analogue to one component of OmniRisk's
-realised-event channel. We use its labelled corpus as one of the ground-truth sources for
-validator scoring (Section~\ref{sec:eval}). Two differences from our work are essential:
+\cite{wu2025safeguarding} introduces \textsc{BridgeGuard}, a two-stage graph-mining
+detector that combines a global graph view of cross-chain transactions with a local
+motif-extraction step. The labelled corpus comprises 203 attack transactions across
+49 cross-chain bridge incidents (June~2021 -- September~2024) against 40{,}000 normal
+cross-chain transactions, an empirical class-imbalance ratio of approximately
+$1{:}197$; the authors report a recall improvement of 36.32 percentage points over
+prior state-of-the-art tools and the ability to flag previously unseen attack
+transactions~\cite{wu2025safeguarding}. \textsc{BridgeGuard} is the closest existing
+analogue to one component of OmniRisk's realised-event channel and we use its labelled
+corpus as the canonical $E4$ exploit-cluster label source in
+Section~\ref{sec:formal:realised}. Two differences from our work are essential:
 (i)~it is a single-operator detector with no verification layer over its outputs, and
-(ii)~it is event-detection rather than ex-ante route-risk prediction.
+(ii)~it is retrospective event-detection rather than ex-ante route-risk prediction.
+A consequence for our evaluation framework (Section~\ref{sec:eval}) is that the
+$1{:}197$ imbalance is the natural prior for the realised-event channel, which forces
+the baselines of Section~\ref{sec:eval:baselines} to be evaluated on imbalance-aware
+metrics (precision-recall AUC, not just ROC-AUC) and motivates threshold selection
+that prioritises recall on the rare positive class.
 
 \subsection{Multichain fraud detection}\label{sec:related:multichain}
 
@@ -278,8 +288,38 @@ downstream contracts. That intersection is what this paper proposes.
 
 \section{System Architecture}\label{sec:arch}
 
-We split responsibility across three layers (Figure omitted; see Section~\ref{sec:eval}
-for the empirical setup the architecture is designed to enable).
+We split responsibility across three layers; the dataflow is summarised in
+Figure~\ref{fig:arch-text}.
+
+\begin{figure}[h]
+\centering
+\begin{small}
+\begin{tabular}{l}
+\toprule
+\textbf{Layer 1 --- Intelligence (\textsc{OmniRisk})} \\
+~~observes: chain heads, OFT \texttt{UlnConfig}/\texttt{ExecutorConfig}, AMM depth,
+incident-cluster proximity \\
+~~emits: $(s_i, c_i, r_i)$ per route query $q$ (Section~\ref{sec:miner}) \\
+\midrule
+\textbf{Layer 2 --- Data \& Execution (\textsc{RayaChain} on LayerZero V2)} \\
+~~7 live lanes: Ethereum, Arbitrum, Base, BSC, Polygon, Optimism, Solana \\
+~~+1 planned lane: Subtensor EVM (chain ID 945) \\
+~~publishes: \texttt{OFTSent}/\texttt{OFTReceived} events, lane configuration, latency \\
+\midrule
+\textbf{Layer 3 --- Verification (\textsc{Bittensor} subnet, Yuma Consensus)} \\
+~~validators: score miner outputs against realised events (Section~\ref{sec:validator}) \\
+~~Yuma rule: clip + aggregate via Eq.~\eqref{eq:yuma-consensus};
+emit miners share $M_j$ \\
+~~anchored on: Subtensor EVM as the score-commitment surface
+(Section~\ref{sec:subtensor}) \\
+\bottomrule
+\end{tabular}
+\end{small}
+\caption{Layered dataflow. Each layer is independently failure-isolated: an outage in
+Layer~1 stops new scores but does not corrupt anchored history; an outage in Layer~3
+stops verification but does not stop transfers in Layer~2.}
+\label{fig:arch-text}
+\end{figure}
 
 \subsection{OmniRisk --- Agentic Intelligence Layer}\label{sec:arch:omnirisk}
 
@@ -311,19 +351,40 @@ Section~\ref{sec:arch:bittensor}.
 Bittensor is a decentralised network in which \emph{miners} produce outputs for a
 specific task and \emph{validators} score them; rewards are emitted via Yuma Consensus
 on the Subtensor blockchain~\cite{rao2021bittensor,steeves2022incentivizing,
-opentensor2024yuma}. Yuma takes each validator's stake-weighted weight vector over
-miners, clips outliers against a stake-weighted threshold (consensus parameter
-$\kappa = 0.5$), and emits a stake-aligned reward. The mechanism is provably
-collusion-resistant up to coalitions controlling less than 50\% of stake-weighted
+opentensor2024yuma}. We summarise the mechanics here because the validator scoring rule
+of Section~\ref{sec:validator} composes with them.
+
+Let $V$ index subnet validators, $M$ index subnet miners, and $S_i$ denote the stake of
+validator $i \in V$. Each validator submits a weight $W_{ij} \in [0,1]$ for each miner
+$j$. Yuma computes a benchmark consensus weight per miner as
+\begin{equation}
+  \overline{W}_j \;=\; \arg\max_{w \in [0,1]} \;
+    \Bigl\{\, \textstyle \sum_{i \in V} S_i \cdot \mathbf{1}\!\left[W_{ij} \ge w\right]
+    \;\ge\; \kappa \cdot \textstyle \sum_{i \in V} S_i \,\Bigr\}
+  \label{eq:yuma-consensus}
+\end{equation}
+with $\kappa = 0.5$ (the default consensus parameter): $\overline{W}_j$ is the largest
+weight that at least the $\kappa$-stake-fraction of validators is willing to assign to
+miner $j$. Each validator's submitted weight is then clipped against this benchmark,
+$\widehat{W}_{ij} = \min(W_{ij}, \overline{W}_j)$, which bounds the influence of any
+single validator above the consensus. Aggregate miner ranking is
+$R_j = \sum_{i \in V} S_i \cdot \overline{W}_{ij}$ and the per-epoch miner emission share
+is $M_j = R_j / \sum_{k \in M} R_k$~\cite{opentensor2024yuma}. Validators in turn earn
+through a bond/dividend matrix $B_{ij}$ that is updated as an EMA of the
+stake-weighted clipped weights, so validators are rewarded for being early to the
+eventual consensus rather than for following it~\cite{opentensor2024yuma,
+steeves2022incentivizing}. The mechanism is provably collusion-resistant up to
+coalitions controlling less than 50\% of stake-weighted
 rank~\cite{steeves2022incentivizing}.
 
-We use Bittensor as a \emph{verification} layer in the sense that miner risk scores are
-not trusted on their face --- they are scored against validators' independent assessments,
-and over time only miners whose scores correlate with the validator consensus survive
-economically. This is the property we want from a risk oracle, and it is not provided by
-any centralised risk API. The Subtensor EVM (chain~ID~945) gives us an Ethereum-compatible
-execution environment in which to anchor commitments to score outputs without leaving
-the Bittensor trust domain~\cite{opentensor2024evm}.
+The implication for a cross-chain risk subnet is concrete: a miner is only economically
+viable if its risk scores fall within the consensus envelope of the validator quorum;
+miners that deviate are clipped out of the emission, and validators that consistently
+support deviating miners lose bonded yield. This is the property we want from a risk
+oracle, and it is not provided by any centralised risk API. The Subtensor EVM
+(chain~ID~945) gives us an Ethereum-compatible execution environment in which to anchor
+commitments to score outputs without leaving the Bittensor trust
+domain~\cite{opentensor2024evm}.
 
 \section{OmniRisk--Bittensor Integration Model}\label{sec:integration}
 
@@ -419,7 +480,12 @@ nearby times $t$ and $t + \delta$. We define a \emph{material chain-state change
 route $q$ between $t$ and $t + \delta$ as the disjunction:
 \begin{enumerate}
   \item the source-chain or destination-chain head changed by at least one block;
-  \item the lane's DVN set, Executor, or per-OFT security configuration changed;
+  \item the lane's send-side \texttt{UlnConfig} or \texttt{ExecutorConfig} changed
+        (specifically: \texttt{confirmations}, \texttt{requiredDVNCount},
+        \texttt{requiredDVNs[]}, \texttt{optionalDVNCount}, \texttt{optionalDVNs[]},
+        \texttt{optionalDVNThreshold}, \texttt{maxMessageSize}, or
+        \texttt{executor})~\cite{layerzero2024oft,zarick2024layerzero}, or the
+        receive-side \texttt{UlnConfig} that the destination endpoint enforces;
   \item liquidity depth on either side of the route changed by more than a fraction
         $\eta$ of pre-trade depth (default $\eta = 0.05$);
   \item the OFT contract on $c_s$ or $c_d$ was upgraded or paused.
@@ -428,6 +494,12 @@ If none of these holds between $t$ and $t + \delta$, the chain state is \emph{ma
 unchanged} and miner responses are required to be byte-identical (modulo the
 quantisation precision of Section~\ref{sec:miner}). If any holds, divergent miner
 responses are not penalised on the consistency channel.
+
+The lane-configuration coordinates listed in (2) are the LayerZero V2 surface that
+OmniRisk monitors per route. The receive-side \texttt{UlnConfig} is what the destination
+endpoint actually enforces, while the send-side configuration determines the verification
+path the message will follow~\cite{zarick2024layerzero}; both must be tracked because a
+mismatch between them blocks delivery and is itself a risk signal.
 
 \subsection{Confidence calibration}\label{sec:formal:calibration}
 
@@ -467,10 +539,55 @@ hyperparameters. The three terms are:
         $c_i$, where $\overline{c}_b$ is the mean confidence in bin $b$ and
         $\overline{a}_b$ is the realised accuracy.
 \end{itemize}
-The validator's submitted Yuma weight vector is then $\mathbf{w}$ with $w_i \propto
-\exp(-\lambda L_i)$ (any monotone decreasing transform suffices; we use the softmax form
-for numerical stability). The on-chain Yuma rule aggregates across all subnet validators
-as in Section~\ref{sec:arch:bittensor}.
+A validator transforms its loss vector $\{L_i\}_{i \in M}$ into a Yuma weight vector
+$\{W_{ij}\}_{j \in M}$ (using the indexing of Section~\ref{sec:arch:bittensor}, where $i$
+now indexes the validator and $j$ indexes the miner). We use the
+temperature-scaled-softmax form
+\begin{equation}
+  W_{ij} \;=\; \frac{\exp(-\lambda \, L_j)}{\sum_{k \in M} \exp(-\lambda \, L_k)}
+  \label{eq:vweight}
+\end{equation}
+with $\lambda > 0$ a subnet-published hyperparameter; any monotone decreasing transform
+of $L_j$ suffices, and we use the softmax form for numerical stability. The submitted
+weights $W_{ij}$ are then aggregated on chain via Eq.~\eqref{eq:yuma-consensus}: a
+miner's emission share $M_j$ is determined by the consensus-clipped
+$\overline{W}_{ij}$, not by the validator's pre-clip submission. In particular, a
+validator that scores miners outside the $\kappa$-stake-fraction consensus envelope
+contributes nothing additional to those miners' emissions and erodes its own bonded
+yield --- which is what makes the validator scoring rule of this section economically
+self-correcting.
+
+\subsection{Worked example}\label{sec:formal:example}
+
+To make the abstraction concrete, consider a single representative route:
+\[
+  q^{\star} \;=\; (\,c_s = \text{Arbitrum},\; c_d = \text{Base},\; a = \text{USDC OFT},\;
+                   x = 100{,}000\;\text{USDC},\; t \text{ = current finalised heads}\,) \,.
+\]
+The information set $X_{q^{\star}, t}$ that an OmniRisk-backed miner consults contains:
+the source-chain USDC liquidity depth observable on Arbitrum DEXes; the destination-chain
+liquidity depth on Base; the lane's send-side \texttt{UlnConfig}
+(\texttt{requiredDVNCount}, \texttt{requiredDVNs[]}, \texttt{optionalDVNCount},
+\texttt{optionalDVNs[]}, \texttt{optionalDVNThreshold}, \texttt{confirmations}); the
+\texttt{ExecutorConfig} (\texttt{maxMessageSize}, \texttt{executor}); the receive-side
+\texttt{UlnConfig} on Base; rolling latency and message-failure counts on this lane; and
+the BridgeGuard incident-cluster proximity for the destination address and the OFT
+contract.
+
+A miner returns $(s_i, c_i, r_i)$. Suppose $s_i = 0.07$ (low risk) and $c_i = 0.85$.
+The validator subsequently observes the realised outcome over $[t, t + \Delta]$:
+suppose the message commits within the lane's 99th-percentile latency
+(no $E3$), executes successfully on Base (no $E1$), at within-50-bp slippage
+(no $E2$), and the destination address does not appear in any BridgeGuard cluster
+within $\Delta'$ blocks (no $E4$). Then $E_{q^{\star}, t+\Delta} = 0$ and the contribution
+to the miner's Brier component is $(0.07 - 0)^2 = 0.0049$. A miner that had instead
+emitted $s_i = 0.9$ on the same query would contribute $(0.9 - 0)^2 = 0.81$ --- two
+orders of magnitude worse --- and would be ranked correspondingly lower by every
+validator that observed the same query, which would clip its consensus weight
+$\overline{W}_j$ via Eq.~\eqref{eq:yuma-consensus}. The same machinery applies in the
+opposite direction: on a query whose realised outcome is $E = 1$, the miner that emitted
+$s_i = 0.07$ contributes $0.86$ to its Brier and is clipped down. This is the operational
+form of hypotheses H1 and H2 in Section~\ref{sec:rq}.
 
 \section{Miner Protocol Specification}\label{sec:miner}
 
@@ -600,11 +717,15 @@ The evaluation we are building rests on three datasets:
         to the OmniRisk-backed miners under the configuration at the corresponding block
         height (Section~\ref{sec:miner}), and score against (2).
 \end{enumerate}
-The headline metrics are realised-event AUC, early-detection lead time (how many blocks
-before an event the score crossed threshold), expected calibration error
+The headline metrics are realised-event ROC-AUC, precision-recall AUC (the latter is
+required because the BridgeGuard prior gives a class-imbalance ratio of approximately
+$1{:}197$ for $E4$ events and ROC-AUC alone is misleading at that imbalance,
+cf.~Section~\ref{sec:related:bridge-detection}), early-detection lead time (how many
+blocks before an event the score crossed threshold), expected calibration error
 (Section~\ref{sec:formal:calibration}), and Yuma reward retention (a miner's reward share
 over a window normalised by its scored share, as a measure of alignment with the
-validator consensus).
+validator consensus, computed against the consensus weight $\overline{W}_j$ of
+Eq.~\eqref{eq:yuma-consensus}).
 
 \subsection{Baselines}\label{sec:eval:baselines}
 
@@ -787,8 +908,16 @@ The bibliography for this paper is the master \texttt{references.bib} of the
 source on 2026-05-03 prior to inclusion. Two entries were added in revision v0.4 to
 fill the related-work gaps flagged in academic review (\cite{ganescu2024trust} for
 zero-knowledge ML verification, \cite{werner2022sok} for the broader DeFi oracle
-landscape) and were verified against their arXiv abstract pages on the same date. The
-retracted preprint arXiv:2003.03917 is intentionally excluded; see the comment block in
+landscape) and were verified against their arXiv abstract pages on the same date.
+Revision v0.5 deepened engagement with three previously cited primary sources by
+extracting concrete material rather than relying on summary attribution: the Yuma
+Consensus equations of Eqs.~\eqref{eq:yuma-consensus} and~\eqref{eq:vweight} were
+extracted from~\cite{opentensor2024yuma}; the \texttt{UlnConfig} and
+\texttt{ExecutorConfig} field names of Section~\ref{sec:formal:material} from the
+LayerZero V2 developer documentation~\cite{layerzero2024oft,zarick2024layerzero}; the
+$1{:}197$ class-imbalance ratio of Section~\ref{sec:related:bridge-detection} from the
+BridgeGuard dataset described in~\cite{wu2025safeguarding}. The retracted preprint
+arXiv:2003.03917 is intentionally excluded; see the comment block in
 \texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
 
 \printbibliography
