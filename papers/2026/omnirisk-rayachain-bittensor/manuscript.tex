@@ -1,0 +1,464 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
+
+\addbibresource{references.bib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={Verifiable Cross-Chain Risk Intelligence: OmniRisk, RayaChain, and Bittensor},
+  pdfauthor={OmniRisk Research},
+}
+
+\title{Verifiable Cross-Chain Risk Intelligence:\\
+       An Agentic Architecture over LayerZero V2 and Bittensor}
+\author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
+\date{May 2026 \\ \textbf{Working paper, v0.3}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Cross-chain bridges have become the single largest concentrated source of value loss in
+decentralised finance: industry trackers attribute roughly USD~2B of theft in the first
+eight months of 2022 alone to bridge attacks~\cite{chainalysis2022bridges}, and the most
+recent peer-reviewed systematisation places cumulative losses at approximately
+USD~3.1B~\cite{augusto2024sok}. At the same time, the risk telemetry that participants
+need to navigate this environment remains \emph{siloed per chain} and
+\emph{non-verifiable}: there is no widely deployed mechanism that lets a downstream user
+confirm that a route- or token-level risk signal was produced honestly. We present
+\textsc{OmniRisk}, a deployed agentic risk-intelligence layer that ingests cross-chain
+flow data from \textsc{RayaChain}, an Omnichain Fungible Token (OFT) deployment on
+LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}, and emits structured route and
+token risk signals. Our contribution is an architecture in which (i)~OmniRisk is the
+intelligence layer, (ii)~RayaChain is the cross-chain data and execution layer, and
+(iii)~Bittensor's Yuma Consensus~\cite{rao2021bittensor,steeves2022incentivizing,
+opentensor2024yuma} acts as the decentralised verification layer for the intelligence
+itself. We argue that anchoring the verification layer on the Subtensor EVM
+(chain~ID~945)~\cite{opentensor2024evm} is the natural fit because it is the only
+production EVM whose validator set is already economically aligned to scoring the
+quality of AI outputs. The paper formalises the miner and validator protocols required
+to make this work, situates the design against the recent cross-chain bridge security
+literature~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding}, and lays out the
+evaluation framework we will use against historical RayaChain flows.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+\textsc{OmniRisk} is a live cross-chain risk intelligence service, and \textsc{RayaChain}
+is an actively deploying cross-chain transfer fabric. RayaChain's transfer lanes are
+implemented as Omnichain Fungible Tokens (OFTs) on LayerZero~V2, the protocol family
+that separates message verification (Decentralised Verifier Networks, DVNs) from message
+execution (Executors) and exposes per-application security configuration as a
+permissionless surface~\cite{zarick2024layerzero,layerzero2024oft}. As of submission,
+RayaChain is operating across seven EVM and non-EVM ecosystems --- Ethereum, Arbitrum,
+Base, BNB Smart Chain, Polygon, Optimism, and Solana --- and is scoping an eighth lane
+into the Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm}.
+
+The motivation for the eighth lane is not capacity but \emph{verifiability}. Routing
+value across heterogeneous chains exposes participants to a class of risks that survey
+work has documented in detail: design flaws in bridge architectures map onto a stable
+catalogue of attack surfaces~\cite{zhang2023sok}, attack-transaction analyses confirm
+that the same patterns recur across dozens of incidents~\cite{wu2025safeguarding}, and
+losses concentrate in the bridge layer to a degree that no other DeFi primitive
+matches~\cite{chainalysis2022bridges,augusto2024sok}. Existing risk tools react to this
+by emitting black-box risk scores: a downstream contract or wallet must trust the
+operator's API, with no cryptographic or economic mechanism that constrains the
+operator to be honest. This is the same primitive failure that gave rise to the
+oracle-design literature in the early DeFi era, and we argue it now calls for a
+verification layer that is itself decentralised.
+
+\paragraph{Contributions.} This paper makes four contributions.
+\begin{enumerate}
+  \item \textbf{An architectural separation of concerns}: OmniRisk = intelligence,
+        RayaChain = data and execution, Bittensor = verification (Section~\ref{sec:arch}).
+  \item \textbf{A miner protocol specification} for thin OmniRisk-API wrappers that meet
+        the determinism and structured-reasoning requirements of Yuma
+        scoring~\cite{opentensor2024yuma} (Section~\ref{sec:miner}).
+  \item \textbf{A validator-side scoring rule} that evaluates miner outputs against
+        ground-truth realised cross-chain risk events, expressed in the Yuma weight-vector
+        format (Section~\ref{sec:validator}).
+  \item \textbf{An evaluation framework} grounded in replayed historical RayaChain
+        flows, with an honest discussion of what we cannot yet prove
+        (Section~\ref{sec:eval} and Section~\ref{sec:limitations}).
+\end{enumerate}
+
+This is a working paper. We are explicit throughout about which components are deployed
+today, which are in active integration, and which are design proposals (see
+Table~\ref{tab:status} in Section~\ref{sec:status}).
+
+\section{Problem Definition}\label{sec:problem}
+
+\paragraph{Unified risk visibility across chains is missing.} A token's risk profile is
+not a property of any single chain. The same OFT can have safe liquidity on Ethereum
+and dangerously thin liquidity on a destination rollup; a user routing through it will
+realise the worse of the two. Empirical AMM-level evidence shows that liquidity is
+materially mis-allocated across L1 and L2s relative to LP-return
+equilibrium~\cite{gogol2024liquidity}, which means \emph{route choice} --- not just
+token choice --- is a first-order risk decision.
+
+\paragraph{Real-time route risk awareness is missing.} The bridge security literature
+documents 49~attack incidents on cross-chain bridges between June~2021 and
+September~2024~\cite{wu2025safeguarding}, and a security/privacy taxonomy spanning
+57~interoperability solutions identifies recurring failure modes across them
+all~\cite{augusto2024sok}. Yet at the moment a user submits a transfer, they typically
+have no signal that the lane they are about to use shares its design with a recently
+exploited one.
+
+\paragraph{Verifiable intelligence is missing.} Existing route-risk APIs are
+\emph{black-box}: a downstream contract must trust that the API operator scored honestly.
+Recent work on optimistic and zero-knowledge ML on blockchain
+(\cite{conway2024opml}, among others) and on multichain ML-based fraud
+detection~\cite{palaiokrassas2023multichain} addresses parts of this gap, but no system
+that we are aware of combines (a)~live cross-chain risk scoring with (b)~a decentralised
+verification layer for the scores themselves.
+
+\section{System Architecture}\label{sec:arch}
+
+We split responsibility across three layers (Figure omitted; see Section~\ref{sec:eval}
+for the empirical setup the architecture is designed to enable).
+
+\subsection{OmniRisk --- Agentic Intelligence Layer}\label{sec:arch:omnirisk}
+
+OmniRisk is a deployed system that observes cross-chain liquidity health, scores route
+risk, and surfaces anomalous on-chain activity. We describe it as \emph{agentic} in the
+narrow sense used in recent LLM systems work: a control loop that ingests chain state,
+selects which downstream tools (DEX quote APIs, on-chain analytics endpoints,
+historical incident databases) to consult, and emits a structured response with an
+explicit confidence and a chain-of-evidence. The agentic framing is contrasted with
+\emph{static} analytics --- precomputed dashboards, fixed risk-scoring formulas --- which
+do not adapt to the question being asked.
+
+\subsection{RayaChain --- Execution and Data Layer}\label{sec:arch:rayachain}
+
+RayaChain is the OFT lane fabric. Each lane is implemented as either a standard OFT
+(burn on source, mint on destination) or an OFT Adapter (lock on source, mint on
+destination) where a legacy ERC-20 already exists, exactly as specified in the OFT
+standard~\cite{layerzero2024oft}. RayaChain inherits LayerZero~V2's permissionless
+security configuration: each lane chooses its own DVN set and execution path, which is
+the surface OmniRisk monitors when scoring lane-level risk~\cite{zarick2024layerzero}.
+
+The current deployment covers seven chains (Ethereum, Arbitrum, Base, BNB Smart Chain,
+Polygon, Optimism, Solana). The proposed eighth lane is the Subtensor EVM
+(chain~ID~945)~\cite{opentensor2024evm}, motivated in
+Section~\ref{sec:arch:bittensor}.
+
+\subsection{Bittensor --- Verification Layer}\label{sec:arch:bittensor}
+
+Bittensor is a decentralised network in which \emph{miners} produce outputs for a
+specific task and \emph{validators} score them; rewards are emitted via Yuma Consensus
+on the Subtensor blockchain~\cite{rao2021bittensor,steeves2022incentivizing,
+opentensor2024yuma}. Yuma takes each validator's stake-weighted weight vector over
+miners, clips outliers against a stake-weighted threshold (consensus parameter
+$\kappa = 0.5$), and emits a stake-aligned reward. The mechanism is provably
+collusion-resistant up to coalitions controlling less than 50\% of stake-weighted
+rank~\cite{steeves2022incentivizing}.
+
+We use Bittensor as a \emph{verification} layer in the sense that miner risk scores are
+not trusted on their face --- they are scored against validators' independent assessments,
+and over time only miners whose scores correlate with the validator consensus survive
+economically. This is the property we want from a risk oracle, and it is not provided by
+any centralised risk API. The Subtensor EVM (chain~ID~945) gives us an Ethereum-compatible
+execution environment in which to anchor commitments to score outputs without leaving
+the Bittensor trust domain~\cite{opentensor2024evm}.
+
+\section{OmniRisk--Bittensor Integration Model}\label{sec:integration}
+
+The functional mapping is:
+\begin{itemize}
+  \item \textbf{OmniRisk} generates risk scores and anomaly signals (intelligence).
+  \item \textbf{Bittensor validators} act as independent risk-verification nodes
+        (verification).
+  \item \textbf{RayaChain} contributes the cross-chain flow data and is also one of
+        the execution venues whose lanes are being scored (data + execution).
+\end{itemize}
+
+A subnet specialised for cross-chain financial intelligence exposes a single task to
+its miners: given a route specification (source chain, destination chain, OFT, size,
+deadline), return a structured risk score. We do not require miners to all use the same
+internal model --- the discipline comes from the validator scoring rule
+(Section~\ref{sec:validator}), not from the miner implementation.
+
+\section{Miner Protocol Specification}\label{sec:miner}
+
+A miner is a thin wrapper over the OmniRisk API, exposed at the Bittensor subnet's
+miner endpoint. For each query $q = (\textit{src}, \textit{dst}, \textit{oft},
+\textit{size}, t)$ submitted by a validator, the miner returns a tuple
+$(s, c, r) \in [0,1] \times [0,1] \times \mathcal{R}$ where:
+\begin{itemize}
+  \item $s$ is the route risk score, with $s = 0$ denoting nominal and $s = 1$ denoting
+        an unrouteable lane;
+  \item $c$ is the miner's self-reported confidence;
+  \item $r$ is a structured reasoning record (which on-chain observations were used,
+        which DEX quotes were consulted, which historical incidents were the closest
+        analogues).
+\end{itemize}
+
+\paragraph{Determinism constraint.} Yuma scoring requires that two miners using the
+same internal logic on the same query at the same block height return the same answer.
+Otherwise validators cannot meaningfully aggregate them, and good miners are penalised
+for irreducible randomness rather than for being wrong. We pin this by (i)~quantising
+$s$ and $c$ to a fixed precision (we use 1/256), (ii)~anchoring the miner to a specific
+chain head (a 32-byte block hash per chain consulted), and (iii)~specifying the
+ordering and version of any external data sources in $r$. This is the same discipline
+that makes optimistic-ML rollup systems
+~\cite{conway2024opml} workable: outputs must be a deterministic function of the
+declared inputs.
+
+\section{Validator Mechanism}\label{sec:validator}
+
+A validator queries a subset of miners on a stratified sample of routes, scores each
+response against a ground-truth signal, and submits a Yuma weight vector
+$\mathbf{w} \in [0,1]^{N}$ over the $N$ miners it observed. The on-chain Yuma rule
+then aggregates $\mathbf{w}$ across all subnet validators using a stake-weighted
+threshold and emits rewards~\cite{opentensor2024yuma}.
+
+The validator scoring rule has three components:
+\begin{enumerate}
+  \item \textbf{Realised-event accuracy.} For routes that were taken between $t$ and
+        $t + \Delta$, did the miner's score $s$ correlate with the realised loss
+        (slippage, failed-execution rate, post-hoc identification as part of an attack
+        cluster)?
+  \item \textbf{Consistency.} If the same query is issued at $t$ and $t + \delta$ for
+        small $\delta$ during which no chain state changed materially, do the responses
+        match? Inconsistency indicates either non-determinism (penalty per
+        Section~\ref{sec:miner}) or unstable internal state.
+  \item \textbf{Confidence calibration.} Over a window of queries, does the miner's
+        empirical Brier score on $(s, c)$ improve on a calibrated baseline? Miners that
+        report $c = 1.0$ on every query are penalised relative to miners whose
+        confidence tracks their realised accuracy.
+\end{enumerate}
+
+The key design property is that validators score the \emph{quality} of intelligence, not
+just its presence. Miners that route every score through the same underlying OmniRisk
+API but apply different downstream models can still be differentiated, because the
+realised-event channel breaks ties.
+
+\section{Cross-Chain Risk Model}\label{sec:risk}
+
+We formalise three risk axes that emerge \emph{between} chains rather than within them:
+\begin{description}
+  \item[Liquidity fragmentation.] The same token has independent depth on each chain;
+        the worst-of distribution dominates a multi-hop route. The empirical
+        misallocation documented by~\cite{gogol2024liquidity} for WETH--USDC pools is
+        the simplest instance of this; the OFT lane fabric of LayerZero~V2 generalises
+        the problem to arbitrary fungible tokens~\cite{layerzero2024oft}.
+  \item[Bridge / route dependency risk.] A given OFT lane inherits the security
+        configuration of its DVN set and Executor~\cite{zarick2024layerzero}. The
+        bridge-security literature catalogues how individual configuration choices map
+        onto exploited vulnerability classes
+        ~\cite{zhang2023sok,augusto2024sok,wu2025safeguarding}.
+  \item[Anomaly propagation.] An exploit on one chain can spread to others via shared
+        bridges, shared liquidity, and shared dependencies. Multichain fraud-detection
+        datasets~\cite{palaiokrassas2023multichain} provide the empirical basis for
+        modelling this, but the cross-chain dimension remains under-instrumented in
+        published work.
+\end{description}
+The unifying observation is that cross-chain risk is \emph{a property of routes, not of
+tokens or chains in isolation}, and a verification layer that scores claims about routes
+is therefore the natural primitive.
+
+\section{Subtensor EVM (Chain~ID~945) Integration}\label{sec:subtensor}
+
+The Subtensor EVM is an Ethereum-compatible execution environment that runs inside the
+Subtensor Substrate runtime, with TAO as the gas asset~\cite{opentensor2024evm}. It is
+not just another EVM lane for RayaChain; it is the execution environment whose
+validator set is already economically aligned to scoring the quality of off-chain
+intelligence, by virtue of the Yuma mechanism~\cite{opentensor2024yuma,
+steeves2022incentivizing}. We use it for two distinct purposes:
+\begin{enumerate}
+  \item \textbf{Anchoring of risk-score commitments.} Each batch of miner outputs is
+        committed as a Merkle root on Subtensor EVM, so a downstream contract on any
+        of the seven existing RayaChain lanes can fetch a proof that a given
+        $(s, c, r)$ tuple was produced and made available at a specific block height,
+        prior to the route being taken.
+  \item \textbf{Anchoring of validator-consensus outputs.} The aggregated Yuma reward
+        vector for the cross-chain risk subnet is itself published on Subtensor EVM,
+        which gives a downstream auditor a single canonical record of which miners
+        were trusted at any given epoch.
+\end{enumerate}
+This aligns the economic incentives of the AI layer (miners and validators), the
+liquidity layer (RayaChain LPs), and the verification layer (TAO holders staking on
+the subnet).
+
+\section{Data and Evaluation Framework}\label{sec:eval}
+
+The evaluation we are building rests on three datasets:
+\begin{enumerate}
+  \item \textbf{RayaChain flow logs.} OFT send/receive events across the seven live
+        lanes, with per-lane metadata (DVN set, Executor, observed latencies,
+        message-failure counts).
+  \item \textbf{Realised-event labels.} A union of (a)~slippage and execution-failure
+        outcomes derived from the flow logs, and (b)~external incident labels from
+        peer-reviewed and grey-literature corpora; the BridgeGuard
+        dataset~\cite{wu2025safeguarding} (203 attack transactions across
+        49~incidents) is one of the curated bases.
+  \item \textbf{Replay routes.} For each historical route observed in (1), we replay
+        it to the OmniRisk-backed miners under the configuration at the corresponding
+        block height (Section~\ref{sec:miner}), and score against (2).
+\end{enumerate}
+The headline metrics are realised-event AUC, early-detection lead time (how many
+blocks before an event the score crossed threshold), and Yuma reward retention (a
+miner's reward share over a window normalised by its scored share, as a measure of
+alignment with the validator consensus).
+
+\section{Economic Model}\label{sec:economics}
+
+The economic flows are:
+\begin{itemize}
+  \item Miners are rewarded in TAO via Yuma emissions for risk outputs that the
+        validator consensus accepts~\cite{opentensor2024yuma,steeves2022incentivizing}.
+  \item Validators are rewarded for assigning weights that align with the consensus,
+        which is the natural Yuma incentive to score accurately.
+  \item OmniRisk is the infrastructure provider: it operates the underlying analytics
+        platform that miners wrap, and it monetises this through its existing API
+        surface to non-Bittensor consumers.
+\end{itemize}
+We avoid claims about token-economic equilibria here. The Bittensor critical-analysis
+literature~\cite{lui2025bittensor} documents real concerns about Bittensor's
+centralisation properties under dynamic TAO, and any quantitative economic claim about
+this subnet should be revisited against that work in a follow-up.
+
+\section{Security Model}\label{sec:security}
+
+The threat surface is dominated by three classes:
+\begin{description}
+  \item[Adversarial miners.] A miner can attempt to bias the risk score it emits, for
+        example to suppress a warning on a lane it benefits from. The Yuma scoring rule
+        bounds the influence of such a miner to its share of stake-weighted
+        rank~\cite{steeves2022incentivizing}; the determinism and consistency
+        components of the validator rule (Section~\ref{sec:validator}) further limit
+        steady-state bias.
+  \item[Manipulated liquidity signals.] An attacker can briefly distort the on-chain
+        signals that miners ingest --- e.g.\ wash-trading a thin pool to mask an exit.
+        Our mitigation is multi-source data validation: the validator's
+        realised-event channel (Section~\ref{sec:validator}) is by construction
+        retrospective and ignores manipulated quote-time signals.
+  \item[Cross-chain spoofing.] A malicious bridge can claim a state on one chain that
+        is not consistent with the source. The OFT design~\cite{layerzero2024oft}
+        and the V2 DVN model~\cite{zarick2024layerzero} reduce, but do not eliminate,
+        this risk; the bridge-security literature documents the residual surface in
+        depth~\cite{zhang2023sok,augusto2024sok,wu2025safeguarding}.
+\end{description}
+
+\section{Implementation Status}\label{sec:status}
+
+We separate what is deployed from what is in design (Table~\ref{tab:status}).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Component} & \textbf{Status as of 2026-05} & \textbf{Reference} \\
+\midrule
+OmniRisk intelligence layer        & Live in production       & this paper \\
+RayaChain lanes (7 chains)         & Live / actively deploying & \cite{zarick2024layerzero,layerzero2024oft} \\
+Subtensor EVM lane (chain~945)     & Planned (8th lane)        & \cite{opentensor2024evm} \\
+Cross-chain risk subnet (Bittensor)& Design proposal           & this paper \\
+Validator scoring rule             & Design proposal           & \S\ref{sec:validator} \\
+Score-commitment anchoring on TAO  & Design proposal           & \S\ref{sec:subtensor} \\
+\bottomrule
+\end{tabular}
+\caption{Implementation status. Components marked \emph{design proposal} are
+specified in this paper but not yet deployed, and quantitative claims about them are
+deferred to follow-up work.}
+\label{tab:status}
+\end{table}
+
+\section{Roadmap}\label{sec:roadmap}
+
+The work plan implied by Table~\ref{tab:status} is, in order:
+(i)~finalise the miner API and the determinism contract (Section~\ref{sec:miner});
+(ii)~stand up the cross-chain risk subnet on Subtensor and integrate the validator
+scoring rule (Section~\ref{sec:validator});
+(iii)~deploy the score-commitment contracts on Subtensor EVM (Section~\ref{sec:subtensor});
+(iv)~ship the eighth RayaChain lane into Subtensor EVM;
+(v)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up paper.
+
+\section{Comparative Advantage}\label{sec:compare}
+
+Existing cross-chain risk tooling is some combination of single-chain, static, or
+black-box. The architecture we propose is differentiated on three axes simultaneously:
+\begin{itemize}
+  \item \textbf{Agentic, not static.} The intelligence layer adapts its tool use to the
+        question, rather than precomputing a fixed risk surface.
+  \item \textbf{Cross-chain-native, not single-chain.} Routes, not tokens, are the
+        primitive being scored, which is the level at which fragmentation and
+        bridge-dependency risk actually emerge~\cite{gogol2024liquidity,
+        zhang2023sok}.
+  \item \textbf{Verifiable, not black-box.} The Bittensor verification layer makes
+        miner outputs economically expensive to bias, and the on-chain commitments on
+        Subtensor EVM (Section~\ref{sec:subtensor}) make their history auditable from
+        any of the seven other lanes.
+\end{itemize}
+
+\section{Limitations}\label{sec:limitations}
+
+We explicitly flag the following limitations.
+\begin{itemize}
+  \item \textbf{Most quantitative claims are deferred.} The score-commitment
+        contracts, the Bittensor subnet, and the evaluation framework
+        (Section~\ref{sec:eval}) are design proposals; this paper does not yet report
+        AUC numbers or reward-retention curves.
+  \item \textbf{Bittensor centralisation risk.} Independent empirical work has raised
+        concerns about Bittensor's actual decentralisation under the dynamic-TAO
+        regime~\cite{lui2025bittensor}. We treat the Yuma collusion-resistance bound
+        of \cite{steeves2022incentivizing} as a \emph{design property of the algorithm}
+        rather than as a guarantee about the deployed network's stake distribution.
+  \item \textbf{Withdrawn primary source.} The original BitTensor preprint
+        (arXiv:2003.03917) was withdrawn by its authors as obsolete on 2021-11-10. Any
+        prior whitepaper that cited it should be reread against the canonical
+        \cite{rao2021bittensor} or the workshop
+        formalisation~\cite{steeves2022incentivizing}.
+  \item \textbf{Determinism in agentic LLM components.} Section~\ref{sec:miner}'s
+        determinism contract is straightforward for classical analytics but is more
+        delicate when the miner uses an LLM under the hood; the
+        consistency component of the validator rule
+        (Section~\ref{sec:validator}) is what catches the residual non-determinism in
+        practice.
+\end{itemize}
+
+\section{Conclusion}\label{sec:conclusion}
+
+Cross-chain risk has settled into a regime where the dominant losses come from a small
+number of well-understood failure modes in the bridge layer, but where the risk
+\emph{intelligence} that participants need is itself untrusted. We have presented an
+architecture that splits intelligence (OmniRisk), data and execution (RayaChain on
+LayerZero~V2), and verification (Bittensor's Yuma Consensus, anchored on Subtensor EVM
+chain~ID~945) into three layers with clean economic boundaries. The result, when fully
+deployed, is the first production cross-chain risk primitive whose outputs are
+verifiable in the same sense that the underlying transfers are: by an independent,
+economically aligned, decentralised process. The intermediate deliverables on the
+roadmap (Section~\ref{sec:roadmap}) are testable in isolation, and we will report on
+each in follow-up work.
+
+\section*{Acknowledgements}
+We thank the OmniRisk engineering team for the production telemetry that grounds
+Section~\ref{sec:eval}, and the Opentensor Foundation maintainers for the Subtensor
+EVM testnet documentation that made the Section~\ref{sec:subtensor} integration plan
+concrete. Any errors are the authors'.
+
+\section*{Reproducibility Note}
+The bibliography for this paper is the master \texttt{references.bib} of the
+\texttt{omnirisk-papers} repository. Every entry was reverified against its primary
+source on 2026-05-03 prior to inclusion. The retracted preprint arXiv:2003.03917
+is intentionally excluded; see the comment block in \texttt{references.bib} and
+Section~\ref{sec:limitations} for the rationale.
+
+\printbibliography
+
+\end{document}

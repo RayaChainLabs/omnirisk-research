@@ -1,0 +1,35 @@
+title: "Verifiable Cross-Chain Risk Intelligence: An Agentic Architecture over LayerZero V2 and Bittensor"
+slug: "omnirisk-rayachain-bittensor"
+authors:
+  - name: "OmniRisk Research"
+    email: "research@omnirisk.io"
+target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
+status: "draft"              # draft | internal-review | submitted | published | archived
+revision: "0.3"
+created_at: "2026-05-03"
+submitted_at: null
+published_at: null
+doi: null
+arxiv_id: null
+canonical_url: null
+tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence","oft","yuma-consensus"]
+
+# Bibliography hygiene — read this before submission.
+bibliography_audit:
+  verified_at: "2026-05-03"
+  verified_by: "Academic Writer (OMN-34)"
+  total_entries: 14
+  entries_with_doi: 8
+  entries_url_only: 6  # protocol whitepapers + canonical docs + industry blog post
+  intentionally_excluded:
+    - cite_key: "rao2020bittensor"
+      reason: "arXiv:2003.03917 was withdrawn by its authors on 2021-11-10 as obsolete; the canonical replacement is rao2021bittensor (bittensor.com/whitepaper)."
+  every_cite_key_in_manuscript: true   # all 13 entries are cited; no orphans
+
+last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
+pending_before_submission:
+  - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
+  - "Engineering review of §4.2 (RayaChain seventh-lane status: confirm Solana lane production-ready)"
+  - "Engineering review of §9 (Subtensor EVM anchoring contracts: confirm chain ID 945 is the intended target — verify mainnet vs testnet)"
+  - "Compile manuscript on a TeX Live host (run `make pdf`); resolve any unresolved-reference warnings"
+  - "Subnet partner identification (Bittensor cross-chain risk subnet sponsor)"

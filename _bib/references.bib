@@ -9,3 +9,184 @@
 %
 % Add new entries at the bottom; never edit a published entry's fields except
 % to add a missing DOI.
+
+% =============================================================================
+% Verified 2026-05-03 by Academic Writer for OMN-34. Each entry below was
+% confirmed against its primary source (DOI page, arXiv abstract page, or
+% canonical project URL). The withdrawn arXiv preprint 2003.03917 (Rao et al.,
+% original BitTensor) is intentionally NOT included — the authors marked it
+% obsolete on 2021-11-10. Use rao2021bittensor (the canonical bittensor.com
+% whitepaper) instead.
+% =============================================================================
+
+% --- Cross-chain interoperability: protocol primary sources -------------------
+
+@techreport{zarick2024layerzero,
+  author       = {Zarick, Ryan and Pellegrino, Bryan and Zhang, Isaac and Kim, Thomas and Banister, Caleb},
+  title        = {{LayerZero V2 Whitepaper}},
+  institution  = {LayerZero Labs},
+  year         = {2024},
+  version      = {2.1.0},
+  type         = {Whitepaper},
+  url          = {https://layerzero.network/publications/LayerZero_Whitepaper_V2.1.0.pdf},
+  urldate      = {2026-05-03},
+  note         = {Specifies the V2 protocol's separation of message verification (DVNs) from execution (Executors), permissionless application security configuration, and out-of-order message delivery.}
+}
+
+@misc{layerzero2024oft,
+  author       = {{LayerZero Labs}},
+  title        = {{Omnichain Fungible Token (OFT) Standard}},
+  howpublished = {LayerZero V2 Documentation},
+  year         = {2024},
+  url          = {https://docs.layerzero.network/v2/home/token-standards/oft-standard},
+  urldate      = {2026-05-03},
+  note         = {Canonical specification of the burn-and-mint OFT standard and the lock-and-unlock OFT Adapter pattern for legacy ERC-20s.}
+}
+
+% --- Cross-chain bridge security: peer-reviewed surveys and SoKs --------------
+
+@inproceedings{augusto2024sok,
+  author       = {Augusto, Andr{\'e} and Belchior, Rafael and Correia, Miguel and Vasconcelos, Andr{\'e} and Zhang, Luyao and Hardjono, Thomas},
+  title        = {{SoK: Security and Privacy of Blockchain Interoperability}},
+  booktitle    = {2024 IEEE Symposium on Security and Privacy (SP)},
+  year         = {2024},
+  pages        = {3840--3865},
+  address      = {San Francisco, CA, USA},
+  publisher    = {IEEE},
+  doi          = {10.1109/SP54263.2024.00255},
+  note         = {Systematic literature review of 212 documents (58 peer-reviewed, 154 grey) and a security/privacy taxonomy over 57 interoperability solutions; reports cumulative cross-chain hack losses of approximately USD 3.1B.}
+}
+
+@misc{zhang2023sok,
+  author       = {Zhang, Mengya and Zhang, Xiaokuan and Barbee, Josh and Zhang, Yinqian and Lin, Zhiqiang},
+  title        = {{SoK: Security of Cross-chain Bridges: Attack Surfaces, Defenses, and Open Problems}},
+  year         = {2023},
+  eprint       = {2312.12573},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.CR},
+  doi          = {10.48550/arXiv.2312.12573},
+  url          = {https://arxiv.org/abs/2312.12573},
+  urldate      = {2026-05-03}
+}
+
+@inproceedings{wu2025safeguarding,
+  author       = {Wu, Jiajing and Lin, Kaixin and Lin, Dan and Zhang, Bozhao and Wu, Zhiying and Su, Jianzhong},
+  title        = {{Safeguarding Blockchain Ecosystem: Understanding and Detecting Attack Transactions on Cross-chain Bridges}},
+  booktitle    = {Proceedings of the ACM Web Conference 2025 (WWW '25)},
+  year         = {2025},
+  publisher    = {ACM},
+  doi          = {10.48550/arXiv.2410.14493},
+  url          = {https://arxiv.org/abs/2410.14493},
+  urldate      = {2026-05-03},
+  note         = {Introduces BridgeGuard, a graph-motif detector trained on 203 attack transactions across 49 cross-chain bridge incidents (June 2021 -- September 2024).}
+}
+
+@misc{chainalysis2022bridges,
+  author       = {{Chainalysis Team}},
+  title        = {{Vulnerabilities in Cross-chain Bridge Protocols Emerge as Top Security Risk}},
+  howpublished = {Chainalysis Blog},
+  year         = {2022},
+  month        = {August},
+  url          = {https://www.chainalysis.com/blog/cross-chain-bridge-hacks-2022/},
+  urldate      = {2026-05-03},
+  note         = {Industry estimate: USD 2B stolen across 13 cross-chain bridge incidents in the first eight months of 2022, accounting for 69\% of all crypto theft over that period.}
+}
+
+% --- Bittensor: protocol primary sources --------------------------------------
+
+@techreport{rao2021bittensor,
+  author       = {Rao, Yuma},
+  title        = {{Bittensor: A Peer-to-Peer Intelligence Market}},
+  institution  = {Opentensor Foundation},
+  year         = {2021},
+  type         = {Whitepaper},
+  url          = {https://bittensor.com/whitepaper},
+  urldate      = {2026-05-03},
+  note         = {Canonical Bittensor whitepaper. Note: the earlier preprint arXiv:2003.03917 (Rao, Steeves, Shaabana, Attevelt, McAteer) was withdrawn by its authors on 2021-11-10 as obsolete and should not be cited.}
+}
+
+@inproceedings{steeves2022incentivizing,
+  author       = {Steeves, Jacob and Shaabana, Ala and Rao, Yuma and Attevelt, Daniel and Hui, Yuqian and Luus, Fran{\c{c}}ois and Liu, Sin Tai and Tasker-Steeves, Jacqueline},
+  title        = {{Incentivizing Intelligence: The Bittensor Approach}},
+  booktitle    = {Decentralized Machine Learning Workshop (DMLW), NeurIPS 2022},
+  year         = {2022},
+  url          = {https://ai-secure.github.io/DMLW2022/assets/papers/6.pdf},
+  urldate      = {2026-05-03},
+  note         = {Workshop presentation of the collusion-resistant ranking mechanism that became Yuma Consensus; the rank-aggregation rule is provably resistant to coalitions controlling less than 50\% of stake-weighted rank.}
+}
+
+@misc{opentensor2024yuma,
+  author       = {{Opentensor Foundation}},
+  title        = {{Yuma Consensus}},
+  howpublished = {Bittensor Developer Documentation},
+  year         = {2024},
+  url          = {https://docs.learnbittensor.org/learn/yuma-consensus},
+  urldate      = {2026-05-03},
+  note         = {Reference specification: validators submit weight vectors over miners; the Yuma rule clips outliers against a stake-weighted threshold (with consensus parameter $\kappa = 0.5$) and emits stake-aligned rewards.}
+}
+
+@misc{opentensor2024evm,
+  author       = {{Opentensor Foundation}},
+  title        = {{Bittensor EVM Smart Contracts}},
+  howpublished = {Bittensor Developer Documentation},
+  year         = {2024},
+  url          = {https://docs.learnbittensor.org/evm-tutorials},
+  urldate      = {2026-05-03},
+  note         = {Reference for Subtensor EVM (chain ID 945, EVM-compatible execution environment running inside the Subtensor Substrate runtime, with TAO as the gas asset).}
+}
+
+@misc{lui2025bittensor,
+  author       = {Lui, Elizabeth and Sun, Jiahao},
+  title        = {{Bittensor Protocol: The Bitcoin in Decentralized Artificial Intelligence? A Critical and Empirical Analysis}},
+  year         = {2025},
+  eprint       = {2507.02951},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.CR},
+  doi          = {10.48550/arXiv.2507.02951},
+  url          = {https://arxiv.org/abs/2507.02951},
+  urldate      = {2026-05-03},
+  note         = {Critical empirical analysis of Bittensor's tokenomics, decentralization, and consensus; submitted to MARBLE 2025.}
+}
+
+% --- Cross-chain economics: liquidity fragmentation ---------------------------
+
+@misc{gogol2024liquidity,
+  author       = {Gogol, Krzysztof and Schneider, Manvir and Tessone, Claudio and Livshits, Benjamin},
+  title        = {{Liquidity Fragmentation or Optimization? Analyzing Automated Market Makers Across Ethereum and Rollups}},
+  year         = {2024},
+  eprint       = {2410.10324},
+  archiveprefix= {arXiv},
+  primaryclass = {q-fin.TR},
+  doi          = {10.48550/arXiv.2410.10324},
+  url          = {https://arxiv.org/abs/2410.10324},
+  urldate      = {2026-05-03},
+  note         = {Empirical AMM-level study of WETH--USDC pools across Ethereum L1 and Arbitrum/Base/Optimism L2s; finds Ethereum mainnet pools overcapitalised relative to LP-return equilibrium.}
+}
+
+% --- On-chain machine learning and cross-chain anomaly detection --------------
+
+@misc{palaiokrassas2023multichain,
+  author       = {Palaiokrassas, Georgios and Scherrers, Sandro and Ofeidis, Iason and Tassiulas, Leandros},
+  title        = {{Leveraging Machine Learning for Multichain DeFi Fraud Detection}},
+  year         = {2023},
+  eprint       = {2306.07972},
+  archiveprefix= {arXiv},
+  primaryclass = {q-fin.ST},
+  doi          = {10.48550/arXiv.2306.07972},
+  url          = {https://arxiv.org/abs/2306.07972},
+  urldate      = {2026-05-03},
+  note         = {Labelled multichain fraud-detection dataset spanning 23 DeFi protocols and 12 chains; baseline gradient-boosted and deep classifiers.}
+}
+
+@misc{conway2024opml,
+  author       = {Conway, KD and So, Cathie and Yu, Xiaohang and Wong, Kartin},
+  title        = {{opML: Optimistic Machine Learning on Blockchain}},
+  year         = {2024},
+  eprint       = {2401.17555},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.CR},
+  doi          = {10.48550/arXiv.2401.17555},
+  url          = {https://arxiv.org/abs/2401.17555},
+  urldate      = {2026-05-03},
+  note         = {Optimistic-rollup style verification of off-chain ML inference, with on-chain fraud-proof challenge games.}
+}
