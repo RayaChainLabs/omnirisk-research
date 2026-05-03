@@ -27,7 +27,7 @@
 \title{Verifiable Cross-Chain Risk Intelligence:\\
        An Agentic Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.5}}
+\date{May 2026 \\ \textbf{Working paper, v0.6}}
 
 \begin{document}
 \maketitle
@@ -73,11 +73,14 @@ implemented as Omnichain Fungible Tokens (OFTs) on LayerZero~V2, the protocol fa
 that separates message verification (Decentralised Verifier Networks, DVNs) from message
 execution (Executors) and exposes per-application security configuration as a
 permissionless surface~\cite{zarick2024layerzero,layerzero2024oft}. As of submission,
-RayaChain is operating across seven EVM and non-EVM ecosystems --- Ethereum, Arbitrum,
-Base, BNB Smart Chain, Polygon, Optimism, and Solana --- and is scoping an eighth lane
-into the Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm}.
+RayaChain is operationally supporting six chains (a mix of EVM ecosystems and Solana
+via an executor sidecar; the precise set, drawn from Ethereum, Arbitrum, Base,
+BNB Smart Chain, Polygon, Optimism, and Solana, is to be confirmed by the operator
+prior to submission --- see Section~\ref{sec:status}), with one further lane in active
+integration. The next planned addition is the Subtensor EVM
+(chain~ID~945)~\cite{opentensor2024evm}.
 
-The motivation for the eighth lane is not capacity but \emph{verifiability}. Routing
+The motivation for the next planned lane is not capacity but \emph{verifiability}. Routing
 value across heterogeneous chains exposes participants to a class of risks that survey
 work has documented in detail: design flaws in bridge architectures map onto a stable
 catalogue of attack surfaces~\cite{zhang2023sok}, attack-transaction analyses confirm
@@ -302,9 +305,14 @@ incident-cluster proximity \\
 ~~emits: $(s_i, c_i, r_i)$ per route query $q$ (Section~\ref{sec:miner}) \\
 \midrule
 \textbf{Layer 2 --- Data \& Execution (\textsc{RayaChain} on LayerZero V2)} \\
-~~7 live lanes: Ethereum, Arbitrum, Base, BSC, Polygon, Optimism, Solana \\
+~~6 lanes operationally supported (EVM mesh + Solana via executor sidecar; one
+further EVM lane in active integration --- specific chain mapping to be confirmed
+by the operator, see Section~\ref{sec:status}) \\
 ~~+1 planned lane: Subtensor EVM (chain ID 945) \\
-~~publishes: \texttt{OFTSent}/\texttt{OFTReceived} events, lane configuration, latency \\
+~~publishes: \texttt{OFTSent}/\texttt{OFTReceived} events, an 8-state Transfer
+Engine lifecycle (quote $\to$ build $\to$ inflight $\to$ settled, etc.), Route
+Health telemetry (p50/p99 latency, liquidity, volume, success rate, risk grade,
+refreshed every 15\,s), and a topic-keyed Risk Broadcast feed \\
 \midrule
 \textbf{Layer 3 --- Verification (\textsc{Bittensor} subnet, Yuma Consensus)} \\
 ~~validators: score miner outputs against realised events (Section~\ref{sec:validator}) \\
@@ -341,10 +349,42 @@ standard~\cite{layerzero2024oft}. RayaChain inherits LayerZero~V2's permissionle
 security configuration: each lane chooses its own DVN set and execution path, which is
 the surface OmniRisk monitors when scoring lane-level risk~\cite{zarick2024layerzero}.
 
-The current deployment covers seven chains (Ethereum, Arbitrum, Base, BNB Smart Chain,
-Polygon, Optimism, Solana). The proposed eighth lane is the Subtensor EVM
-(chain~ID~945)~\cite{opentensor2024evm}, motivated in
-Section~\ref{sec:arch:bittensor}.
+The current deployment supports six chains, drawn from a candidate set of seven
+EVM and non-EVM ecosystems (Ethereum, Arbitrum, Base, BNB Smart Chain, Polygon,
+Optimism, Solana); a seventh lane is in active integration. The specific
+operationally-lit chain mapping is confirmed in Section~\ref{sec:status} against
+the engineering source-of-truth and may shift before submission. The next planned
+addition is the Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm}, motivated
+in Section~\ref{sec:arch:bittensor}.
+
+\paragraph{Subsystems.} RayaChain is not a monolithic OFT deployment. Three named
+modules carry the cross-chain data and execution responsibilities relied on by
+OmniRisk and, downstream, by the verification layer of
+Section~\ref{sec:arch:bittensor}:
+\begin{description}
+  \item[Transfer Engine.] An eight-state lifecycle implementing the
+        quote~$\to$~build~$\to$~sign~$\to$~send pipeline against LayerZero V2 OFTs,
+        with EVM~$\to$~EVM, EVM~$\to$~Solana, and Solana~$\to$~EVM route classes.
+        States expose the in-flight window during which OmniRisk's route-risk
+        score~$s(q,t)$ (Section~\ref{sec:formal:score}) is most operationally
+        relevant.
+  \item[Risk Broadcast System.] A hub-spoke broadcast fabric for cross-chain
+        risk signals, with topic-keyed feeds, severity levels, and policy
+        validation. The EVM path is on-chain; the Solana path is delivered via
+        an executor sidecar. Broadcast carries OmniRisk-emitted signals to
+        downstream consumers without requiring each consumer to operate its own
+        cross-chain listener; the feed itself is one of the surfaces a Bittensor
+        subnet can score against (Section~\ref{sec:integration}).
+  \item[Route Health System.] Continuous per-lane telemetry over the dimensions
+        that drive route selection: p50/p99 attestation latency, destination-side
+        liquidity, recent volume, success rate, and a discrete risk grade. The
+        feed refreshes on a 15-second cadence and backs both the public Route
+        Health UI and the routing decisions surfaced through the Transfer Engine
+        quote step.
+\end{description}
+Section~\ref{sec:status} records which of these subsystems are production-ready,
+which are under active hardening, and which are explicit known gaps; the paper
+deliberately does not overstate readiness.
 
 \subsection{Bittensor --- Verification Layer}\label{sec:arch:bittensor}
 
@@ -702,20 +742,36 @@ the subnet).
 
 \section{Data and Evaluation Framework}\label{sec:eval}
 
-The evaluation we are building rests on three datasets:
+The evaluation we are building rests on four datasets:
 \begin{enumerate}
-  \item \textbf{RayaChain flow logs.} OFT send/receive events across the seven live
-        lanes, with per-lane metadata (DVN set, Executor, observed latencies,
-        message-failure counts).
-  \item \textbf{Realised-event labels.} A union of (a)~slippage and execution-failure
-        outcomes derived from the flow logs (the $E1$--$E3$ channels of
+  \item \textbf{RayaChain flow logs.} \texttt{OFTSent} / \texttt{OFTReceived} events
+        across the six operational lanes (and the seventh, in-integration lane once
+        it cuts over), with per-lane metadata (DVN set, Executor, observed latencies,
+        message-failure counts). Until the Transfer Engine ships transfer
+        persistence (Section~\ref{sec:status:gaps}), these have to be reconstructed
+        from on-chain logs by joining \texttt{OFTSent} on source against
+        \texttt{OFTReceived} on destination per LayerZero~V2 GUID; the evaluation
+        pipeline must record and report the join failure rate.
+  \item \textbf{Route Health time series.} The 15-second-cadence p50/p99 latency,
+        destination liquidity, recent volume, success rate, and risk-grade telemetry
+        published in production by the Route Health System
+        (Section~\ref{sec:arch:rayachain}). This dataset is the input to the
+        cross-chain features of any miner that needs more than a single-event
+        snapshot, and is the natural ground truth for the liquidity-health
+        component of the route-risk score $s(q,t)$.
+  \item \textbf{Realised-event labels.} A union of (a)~slippage and
+        execution-failure outcomes derived from the flow logs and the Route Health
+        success-rate channel (the $E_1$--$E_3$ channels of
         Section~\ref{sec:formal:realised}) and (b)~external incident labels from
-        peer-reviewed and grey-literature corpora (the $E4$ channel); the BridgeGuard
-        dataset~\cite{wu2025safeguarding} (203 attack transactions across
-        49~incidents) is one of the curated bases.
-  \item \textbf{Replay routes.} For each historical route observed in (1), we replay it
-        to the OmniRisk-backed miners under the configuration at the corresponding block
-        height (Section~\ref{sec:miner}), and score against (2).
+        peer-reviewed and grey-literature corpora (the $E_4$ channel); the
+        BridgeGuard dataset~\cite{wu2025safeguarding} (203 attack transactions
+        across 49~incidents) is one of the curated bases.
+  \item \textbf{Replay routes.} For each historical route observed in~(1), we
+        replay it to the OmniRisk-backed miners under the configuration at the
+        corresponding block height (Section~\ref{sec:miner}), and score against
+        (3). Until the Transfer Engine ships persistence, the replay set is
+        restricted to routes whose source/destination events successfully joined
+        in~(1).
 \end{enumerate}
 The headline metrics are realised-event ROC-AUC, precision-recall AUC (the latter is
 required because the BridgeGuard prior gives a class-imbalance ratio of approximately
@@ -804,27 +860,116 @@ The threat surface is dominated by three classes:
 
 \section{Implementation Status}\label{sec:status}
 
-We separate what is deployed from what is in design (Table~\ref{tab:status}).
+The schema this paper is organised around explicitly requires status to be stated
+\emph{honestly} on the grounds that overstated readiness is the failure mode that
+most damages credibility. We separate what is deployed, what is in active
+hardening, and what remains a design proposal (Table~\ref{tab:status}), and then
+list the operationally-known gaps the system summary surfaced
+(Section~\ref{sec:status:gaps}).
 
 \begin{table}[h]
 \centering
-\begin{tabular}{lll}
+\begin{tabular}{p{0.32\linewidth}p{0.40\linewidth}p{0.20\linewidth}}
 \toprule
 \textbf{Component} & \textbf{Status as of 2026-05} & \textbf{Reference} \\
 \midrule
-OmniRisk intelligence layer        & Live in production       & this paper \\
-RayaChain lanes (7 chains)         & Live / actively deploying & \cite{zarick2024layerzero,layerzero2024oft} \\
-Subtensor EVM lane (chain~945)     & Planned (8th lane)        & \cite{opentensor2024evm} \\
-Cross-chain risk subnet (Bittensor)& Design proposal           & this paper \\
-Validator scoring rule             & Design proposal           & \S\ref{sec:validator} \\
-Score-commitment anchoring on TAO  & Design proposal           & \S\ref{sec:subtensor} \\
+OmniRisk intelligence layer
+  & Live in production
+  & this paper \\
+RayaChain Transfer Engine
+  & Live; eight-state lifecycle implemented; persistence and slippage controls
+    not yet shipped (see~\ref{sec:status:gaps})
+  & \S\ref{sec:arch:rayachain} \\
+RayaChain Route Health System
+  & Live (15\,s refresh); used by routing UI and Transfer Engine quote step
+  & \S\ref{sec:arch:rayachain} \\
+RayaChain Risk Broadcast System
+  & Implemented but \emph{readiness flag currently false} --- sending disabled
+    pending executor implementation and storage TTL
+  & \S\ref{sec:arch:rayachain} \\
+RayaChain operational lanes
+  & Six chains supported (one further lane in active integration; specific
+    chain mapping pending operator confirmation)
+  & \cite{zarick2024layerzero,layerzero2024oft} \\
+Subtensor EVM lane (chain~945)
+  & Planned (next addition after the in-integration seventh lane)
+  & \cite{opentensor2024evm} \\
+Cross-chain risk subnet (Bittensor)
+  & Design proposal
+  & this paper \\
+Validator scoring rule
+  & Design proposal
+  & \S\ref{sec:validator} \\
+Score-commitment anchoring on TAO
+  & Design proposal
+  & \S\ref{sec:subtensor} \\
 \bottomrule
 \end{tabular}
-\caption{Implementation status. Components marked \emph{design proposal} are
-specified in this paper but not yet deployed, and quantitative claims about them are
-deferred to follow-up work.}
+\caption{Implementation status. Components marked \emph{live} are deployed and
+exercised by production traffic. Components marked \emph{design proposal} are
+specified in this paper but not yet deployed, and quantitative claims about
+them are deferred to follow-up work.}
 \label{tab:status}
 \end{table}
+
+\subsection{Known production gaps}\label{sec:status:gaps}
+
+The following gaps were surfaced by the RayaChain engineering system summary
+on 2026-05-03 and are recorded here so that no claim in this paper depends on
+them being closed. Each one is a concrete, falsifiable item that should be
+verified against a fresh system summary before submission.
+
+\begin{description}
+  \item[Transfer persistence.] The Transfer Engine does not yet persist
+        in-flight or settled transfer records. This is flagged by the
+        operator as a critical gap. Until it ships, the realised-loss labels
+        $E_1$--$E_3$ of Section~\ref{sec:formal:realised} have to be
+        reconstructed from on-chain events rather than from a transfer
+        store, which is feasible but introduces a join the evaluation
+        framework (Section~\ref{sec:eval}) must explicitly handle.
+  \item[Slippage controls.] User-side slippage handling in the Transfer
+        Engine is not yet implemented. The risk-score consumer assumed by
+        Section~\ref{sec:integration} can therefore advise but cannot
+        \emph{enforce} that transfers below a threshold $\theta$ revert; a
+        downstream contract that wants enforcement must implement it
+        itself today.
+  \item[Risk Broadcast not yet operational.] The broadcast readiness flag
+        is currently \texttt{false}: the path is wired but sending is
+        disabled pending (a)~the executor sidecar implementation for the
+        Solana leg and (b)~a TTL mechanism on the broadcast store to
+        prevent unbounded growth. The verification-architecture argument
+        of Section~\ref{sec:integration} does not depend on broadcast
+        being live, but a production deployment of the subnet design
+        does.
+  \item[Unverified EVM~$\leftrightarrow$~EVM routes.] A subset of
+        EVM~$\leftrightarrow$~EVM routes have not been individually
+        validated against the LayerZero~V2 \texttt{UlnConfig} /
+        \texttt{ExecutorConfig} field set
+        (Section~\ref{sec:formal:material}); the operator records this as
+        a known issue. The route registry contains both validated and
+        unvalidated entries; until the validation pass completes, the
+        OmniRisk score for an unvalidated route should be treated as
+        a lower bound on real risk.
+  \item[Decimal handling under registry miss.] Asset-decimal handling is
+        unsafe when the registry lookup is a miss; the registry fallback
+        path is itself flagged as inconsistent. This is an operational
+        correctness issue rather than a security one, but it is upstream
+        of the realised-loss channel $E_1$ (slippage), so the
+        evaluation framework should filter on registry-resolved
+        transfers when computing the $E_1$ contribution.
+  \item[API surface drift.] Of the 24~implemented HTTP endpoints (the
+        Transfers, Broadcast, and Infrastructure categories of the system
+        summary), the operator reports that some handlers exist but are
+        not yet wired into the public router. This does not affect any
+        result in this paper, but consumers of the evaluation framework
+        should treat undocumented endpoints as out-of-scope.
+\end{description}
+
+These gaps are recorded faithfully because the schema this paper follows
+asks for them to be. They do not undermine the verification-architecture
+thesis: the Bittensor scoring layer is the part that has to be staked and
+honest, and it is also the part that today is a design proposal rather
+than a deployed system.
 
 \section{Roadmap}\label{sec:roadmap}
 
@@ -833,7 +978,8 @@ The work plan implied by Table~\ref{tab:status} is, in order:
 (ii)~stand up the cross-chain risk subnet on Subtensor and integrate the validator
 scoring rule (Section~\ref{sec:validator});
 (iii)~deploy the score-commitment contracts on Subtensor EVM (Section~\ref{sec:subtensor});
-(iv)~ship the eighth RayaChain lane into Subtensor EVM;
+(iv)~ship the next RayaChain lane into Subtensor EVM (sequenced after the
+in-integration seventh lane lands);
 (v)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up paper.
 
 \section{Comparative Advantage}\label{sec:compare}
@@ -850,7 +996,7 @@ black-box. The architecture we propose is differentiated on three axes simultane
   \item \textbf{Verifiable, not black-box.} The Bittensor verification layer makes
         miner outputs economically expensive to bias, and the on-chain commitments on
         Subtensor EVM (Section~\ref{sec:subtensor}) make their history auditable from
-        any of the seven other lanes.
+        any of the other RayaChain lanes.
 \end{itemize}
 
 \section{Limitations}\label{sec:limitations}
@@ -919,6 +1065,23 @@ $1{:}197$ class-imbalance ratio of Section~\ref{sec:related:bridge-detection} fr
 BridgeGuard dataset described in~\cite{wu2025safeguarding}. The retracted preprint
 arXiv:2003.03917 is intentionally excluded; see the comment block in
 \texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
+
+Revision v0.6 reconciles the manuscript against an operator-published
+RayaChain system summary (2026-05-03), with three substantive corrections:
+(i)~the operational lane count is six, not seven, with one further lane in
+active integration (Sections~\ref{sec:intro}, \ref{sec:arch:rayachain},
+\ref{sec:status}; the prior ``seven live lanes / planned eighth'' framing was
+not consistent with the engineering source-of-truth);
+(ii)~RayaChain's three named subsystems --- Transfer Engine (eight-state
+lifecycle), Risk Broadcast System (currently with readiness flag false), and
+Route Health System (15-second telemetry) --- are now described in
+Section~\ref{sec:arch:rayachain} and feed the evaluation dataset enumeration of
+Section~\ref{sec:eval};
+(iii)~Section~\ref{sec:status:gaps} now records the specific known production
+gaps the operator surfaced (transfer persistence, slippage controls, broadcast
+not yet operational, unverified EVM~$\leftrightarrow$~EVM routes,
+registry-fallback decimal handling, API-handler drift) so that no claim in the
+paper depends on closed gaps that are in fact open.
 
 \printbibliography
 
