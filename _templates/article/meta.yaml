@@ -1,0 +1,14 @@
+title: "TITLE"
+slug: "<slug>"
+authors:
+  - name: "OmniRisk"
+    email: "research@omnirisk.io"
+target_venue: "arxiv"        # arxiv | ieee | acm | neurips | journal-name | internal-only
+status: "draft"              # draft | internal-review | submitted | published | archived
+created_at: "YYYY-MM-DD"
+submitted_at: null
+published_at: null
+doi: null
+arxiv_id: null
+canonical_url: null          # set after `make publish` — green.omnirisk.io URL
+tags: []

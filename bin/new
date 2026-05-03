@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Usage: bin/new <slug> [year]
+# Creates papers/<year>/<slug>/ from _templates/article/ and symlinks references.bib.
+set -euo pipefail
+
+if [ $# -lt 1 ]; then
+  echo "usage: $0 <slug> [year]" >&2
+  exit 2
+fi
+
+SLUG="$1"
+YEAR="${2:-$(date +%Y)}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TARGET="${ROOT}/papers/${YEAR}/${SLUG}"
+TEMPLATE="${ROOT}/_templates/article"
+BIB_RELATIVE="../../../_bib/references.bib"
+
+if [ -e "$TARGET" ]; then
+  echo "error: $TARGET already exists" >&2
+  exit 1
+fi
+
+mkdir -p "$TARGET/figures"
+cp "$TEMPLATE/manuscript.tex" "$TARGET/manuscript.tex"
+cp "$TEMPLATE/Makefile" "$TARGET/Makefile"
+cp "$TEMPLATE/meta.yaml" "$TARGET/meta.yaml"
+
+# Symlink the master bibliography so cite keys are shared across papers.
+( cd "$TARGET" && ln -s "$BIB_RELATIVE" references.bib )
+
+# Stamp the meta with current date + slug
+TODAY=$(date +%Y-%m-%d)
+# macOS sed needs '' after -i
+sed -i '' "s|<slug>|${SLUG}|g; s|YYYY-MM-DD|${TODAY}|g" "$TARGET/meta.yaml"
+
+echo "Created $TARGET"
+echo "  manuscript.tex   - draft here"
+echo "  references.bib   - symlinked to master _bib/references.bib"
+echo "  meta.yaml        - update title, target_venue, etc."
+echo
+echo "Next: cd $TARGET && make pdf"

@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Usage: bin/publish <paper-dir>
+# Builds the manuscript, then replicates the PDF + a source tarball to
+# s3://omnirisk-insights-bucket/papers/<year>/<slug>/. Updates meta.yaml
+# canonical_url to the public green.omnirisk.io URL.
+set -euo pipefail
+
+if [ $# -lt 1 ]; then
+  echo "usage: $0 <paper-dir>" >&2
+  echo "  e.g. bin/publish papers/2026/risky-subnets" >&2
+  exit 2
+fi
+
+PAPER_DIR="$1"
+[ -d "$PAPER_DIR" ] || { echo "no such dir: $PAPER_DIR" >&2; exit 1; }
+[ -f "$PAPER_DIR/manuscript.tex" ] || { echo "no manuscript.tex in $PAPER_DIR" >&2; exit 1; }
+
+# Derive year + slug from the path: papers/<year>/<slug>
+YEAR=$(basename "$(dirname "$PAPER_DIR")")
+SLUG=$(basename "$PAPER_DIR")
+
+BUCKET="${INSIGHTS_MEDIA_BUCKET_NAME:-omnirisk-insights-bucket}"
+REGION="${AWS_REGION:-eu-west-1}"
+PROFILE="${AWS_PROFILE:-default}"
+PUBLIC_BASE="${INSIGHTS_MEDIA_BASE_URL:-https://green.omnirisk.io/media}"
+S3_KEY_PREFIX="papers/${YEAR}/${SLUG}"
+
+echo "publish ${SLUG} (${YEAR}) -> s3://${BUCKET}/${S3_KEY_PREFIX}/"
+
+# 1. Build the PDF
+( cd "$PAPER_DIR" && make pdf )
+PDF="$PAPER_DIR/build/manuscript.pdf"
+[ -f "$PDF" ] || { echo "build did not produce $PDF" >&2; exit 1; }
+
+# 2. Make the source bundle (everything except build/)
+TARBALL="$PAPER_DIR/build/${SLUG}-source.tar.gz"
+tar --exclude="build" --exclude=".DS_Store" -czf "$TARBALL" -C "$(dirname "$PAPER_DIR")" "$SLUG"
+
+# 3. Upload to S3 (PDF + source bundle)
+aws --profile "$PROFILE" --region "$REGION" s3 cp "$PDF" \
+  "s3://${BUCKET}/${S3_KEY_PREFIX}/manuscript.pdf" \
+  --content-type application/pdf \
+  --acl bucket-owner-full-control
+aws --profile "$PROFILE" --region "$REGION" s3 cp "$TARBALL" \
+  "s3://${BUCKET}/${S3_KEY_PREFIX}/${SLUG}-source.tar.gz" \
+  --content-type application/gzip \
+  --acl bucket-owner-full-control
+
+# 4. Stamp meta.yaml with the canonical URL + published_at
+PUBLIC_URL="${PUBLIC_BASE}/${S3_KEY_PREFIX}/manuscript.pdf"
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+META="$PAPER_DIR/meta.yaml"
+if [ -f "$META" ]; then
+  sed -i '' "s|^canonical_url:.*|canonical_url: \"${PUBLIC_URL}\"|" "$META"
+  sed -i '' "s|^published_at:.*|published_at: \"${NOW}\"|" "$META"
+fi
+
+echo
+echo "Published:"
+echo "  PDF:    ${PUBLIC_URL}"
+echo "  Source: ${PUBLIC_BASE}/${S3_KEY_PREFIX}/${SLUG}-source.tar.gz"
+echo "  Meta:   ${META}"
+echo
+echo "Next: git add -A && git commit -m 'publish ${SLUG}'"
