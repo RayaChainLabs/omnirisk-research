@@ -27,7 +27,7 @@
 \title{Verifiable Cross-Chain Risk Intelligence:\\
        An Agentic Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.8}}
+\date{May 2026 \\ \textbf{Working paper, v0.9}}
 
 \begin{document}
 \maketitle
@@ -888,23 +888,32 @@ protocol-level inflation lever after launch. This rules out an entire class of
 governance-driven supply expansions that downstream consumers of risk telemetry
 would otherwise have to discount.
 
-\paragraph{Immediate mint-authority revocation.} The mint authority on the Solana
-canonical mint is revoked via \texttt{setAuthority(mint, null)} in the same
-operational window as TGE and initial liquidity-pool initialisation, and the EVM
-\texttt{Ownable} ownership on every spoke is transferred to the
-\texttt{0x\ldots dEaD} burn address in the same window. The Solana freeze authority
-is set to \texttt{null} in the mint instruction itself, so the token is irreversibly
-non-freezable. \emph{No subsequent mint or freeze is possible at the protocol
-level.} We use the formulation ``revoked immediately at TGE~$+$~LP'' rather than the
+\paragraph{No protocol-level mint path post-TGE.} The end-state guarantee --- post-TGE
+no signer can expand supply --- holds on every chain, with chain-specific mechanics.
+On Solana, the mint authority is revoked via \texttt{setAuthority(mint, null)} in the
+same operational window as TGE and initial liquidity-pool initialisation, and the
+freeze authority is \texttt{null} from the mint instruction itself, so the token is
+irreversibly non-mintable and non-freezable. On each EVM spoke, ownership of the OFT
+contract is retained at the 3-of-5 Safe multisig --- not burned --- because LayerZero
+peer management, endpoint and DVN configuration, and Guardian assignment must remain
+callable for the lifetime of the protocol; supply expansion is instead removed at
+the code level, with no \texttt{mint()} function in production bytecode and no
+owner-gated \texttt{\_mint} path. A separate Guardian role is restricted to
+\texttt{pause}/\texttt{unpause} of OFT bridging and cannot mint, transfer, change
+ownership, or upgrade. The intrinsic OFT cross-chain mechanic --- burn-on-source and
+mint-on-destination during a transfer --- conserves total supply across all six
+chains. \emph{No subsequent mint or freeze is possible at the protocol level on any
+chain.} We use the formulation ``no protocol mint path post-TGE'' rather than the
 softer ``may be revoked later'' because verifiable-by-construction is a stronger
 property than governance-revocable: a downstream contract can read the absence of a
-mint authority on chain rather than trust that governance will not exercise it.
+mint authority (Solana) or the absence of any mint function in the deployed
+bytecode (EVM) rather than trust that governance will not exercise it.
 
 \paragraph{Pre-minted, lockup-contract emissions.} The 35\% emissions allocation
 (Section~\ref{sec:economics:rya:emissions}) is not minted on a discretionary
 schedule; it is pre-minted at TGE and parked in an on-chain lockup contract whose
-release schedule is published and immutable post-deployment. Because the protocol
-mint authority is revoked, no other emission path exists. This eliminates the
+release schedule is published and immutable post-deployment. Because no
+protocol-level mint path exists post-TGE, no other emission path exists. This eliminates the
 discretionary-minting degree of freedom that would otherwise let a future governance
 decision accelerate or expand emissions.
 
@@ -932,10 +941,16 @@ Bridge & LayerZero OFT --- Solana lock/mint hub, EVM
 Decimals & 9 on Solana; 18 on EVM; OFT \texttt{sharedDecimals}~$=$~9 \\
 Mint authority at TGE & 3-of-5 Squads multisig (Solana); 3-of-5 Safe (EVM
                        \texttt{Ownable}) \\
-Mint authority post-launch & Revoked immediately at TGE~$+$~LP initialisation
-                             (\texttt{setAuthority(mint, null)} on Solana;
-                             \texttt{transferOwnership(0x\ldots dEaD)} on every EVM
-                             spoke) \\
+Mint authority post-launch (Solana) & Revoked immediately at TGE~$+$~LP
+                             initialisation via \texttt{setAuthority(mint, null)};
+                             irreversible \\
+Mint authority post-launch (EVM)    & Ownership retained at the 3-of-5 Safe multisig
+                             for LayerZero peer / endpoint / DVN configuration and
+                             Guardian assignment; \emph{no} \texttt{mint()} function
+                             in production bytecode, no owner-gated supply-expansion
+                             path, total supply hardcoded at deploy \\
+Guardian role               & Pause-only on OFT bridging; cannot mint, transfer,
+                             change ownership, or upgrade \\
 Freeze authority (Solana) & \texttt{null} from the mint instruction (irreversibly
                             non-freezable) \\
 Transfer fees & None at the OFT layer \\
@@ -1007,7 +1022,7 @@ visible to holders.}
 The 35\% emissions bucket (350{,}000{,}000~RYA) is the largest single allocation
 and is the mechanism by which protocol participation is bootstrapped without a
 pre-TGE investor round. It is pre-minted at TGE to an on-chain lockup contract;
-because the protocol mint authority is revoked at TGE~$+$~LP
+because no protocol-level mint path exists post-TGE
 (Section~\ref{sec:economics:rya:design}), no further emission path exists.
 
 \paragraph{Curve shape.} The emission curve is front-loaded with gradual reduction
@@ -1470,6 +1485,24 @@ BridgeGuard dataset described in~\cite{wu2025safeguarding}. The retracted prepri
 arXiv:2003.03917 is intentionally excluded; see the comment block in
 \texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
 
+Revision v0.9 reconciles \texttt{§economics:rya:design} and \texttt{§economics:rya:config}
+against the v5 update to the RYA tokenomics specification
+(\texttt{[OMN-48]} post-investor-audit correction, 2026-05-04). The Solana mechanic
+is unchanged: mint authority is revoked at TGE~$+$~LP via
+\texttt{setAuthority(mint, null)}, freeze authority is \texttt{null} from the mint
+instruction, and the token is irreversibly non-mintable and non-freezable. The EVM
+mechanic is corrected: ownership of each OFT spoke is retained at the 3-of-5 Safe
+multisig (not burned to \texttt{0x\ldots dEaD}) so that LayerZero peer
+configuration, endpoint and DVN updates, and Guardian assignment remain callable
+for the lifetime of the protocol; supply expansion is removed at the contract level
+instead, with no \texttt{mint()} function in production bytecode and no owner-gated
+\texttt{\_mint} path. A separate Guardian role is restricted to
+\texttt{pause}/\texttt{unpause} of OFT bridging. The end-state guarantee --- no
+protocol-level mint path on any chain post-TGE --- is preserved on both chains; the
+v4 burn-to-\texttt{dEaD} description has been removed from the design-rationale
+paragraph and from Table~\ref{tab:rya-config}, and a Guardian row has been added to
+the configuration table. No other tokenomics numbers or sections are affected.
+
 Revision v0.8 reconciles the manuscript against a RayaChain mainnet-readiness
 audit (2026-05-03), which surfaced two material facts not visible in the prior
 operator system summary: (i)~the six chains the v0.6 framing called
@@ -1496,8 +1529,9 @@ board-locked 2026-05-04) into Section~\ref{sec:economics}: the Bittensor
 verification-side flows of v0.6 are preserved as
 Section~\ref{sec:economics:bittensor} and the RYA application-side surface is
 specified in Sections~\ref{sec:economics:rya:design}--\ref{sec:economics:rya:bittensor}
-as a fixed-supply asset (cap $10^9$, pre-minted, with mint authority revoked
-immediately at TGE~$+$~LP), a six-bucket distribution
+as a fixed-supply asset (cap $10^9$, pre-minted, with no protocol mint path
+post-TGE; see the v0.9 entry below for the chain-specific mechanics), a six-bucket
+distribution
 (35/25/15/10/10/5; Table~\ref{tab:rya-dist}) with a 5--8\% TGE-day circulating
 supply, a 4--5-year pre-minted lockup-contract emission curve, and a buy-back
 fee-capture model with the buy-back fraction $\phi$ multisig-tunable in

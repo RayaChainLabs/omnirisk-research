@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.8"
+revision: "0.9"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -33,6 +33,15 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_9:
+    date: "2026-05-04"
+    summary: "Reconcile §economics:rya:design and §economics:rya:config against OMN-48 plan v5 (post-investor-audit EVM mint-authority correction) per OMN-54 v5 verification wake."
+    changes:
+      - "§economics:rya:design: paragraph heading renamed 'Immediate mint-authority revocation' → 'No protocol-level mint path post-TGE'; rewritten to split Solana revocation (setAuthority(mint, null)) from EVM mechanic (ownership retained at 3-of-5 Safe for LZ peer / endpoint / DVN / Guardian operations, mint role disabled at code level — no mint() function in production bytecode, no owner-gated _mint, supply hardcoded at deploy). Guardian role explicitly restricted to pause/unpause. v4 transferOwnership(0x…dEaD) language removed."
+      - "§economics:rya:config (Table tab:rya-config): single 'Mint authority post-launch' row split into 'Mint authority post-launch (Solana)' (revoked) and 'Mint authority post-launch (EVM)' (ownership-retained, mint disabled at code, supply hardcoded). New 'Guardian role' row (pause-only, cannot mint/transfer/upgrade)."
+      - "Two downstream sentences updated to use the chain-agnostic 'no protocol-level mint path post-TGE' phrasing instead of 'mint authority is revoked' (one in §economics:rya:design pre-minted-emissions paragraph, one in §economics:rya:emissions opening)."
+      - "Reproducibility Note: v0.9 entry inserted; v0.7 entry's mint-authority phrasing updated to forward-reference the v0.9 chain-specific mechanics."
+      - "Title page revision tag bumped 0.8 → 0.9. End-state guarantee 'no protocol mint path on any chain post-TGE' preserved on both chains; no other tokenomics numbers, distribution, emissions, fee-flow, utility, or Bittensor content changed."
   v0_4:
     date: "2026-05-03"
     summary: "Address academic deep-research review forwarded from OMN-21."
@@ -100,7 +109,6 @@ last_local_compile: null               # gate: needs latexmk on a machine with T
 pending_before_submission:
   - "SECURITY: rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; address 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into CI/CD secret store; ship .env.example with placeholders only — needs separate engineering issue, not a paper task"
   - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
-  - "CTO (Cody) review of §economics tokenomics integration against OMN-48 plan v4 (Final v1) — accuracy of mint-revocation language, decimal asymmetry, distribution numbers, fee-flow"
   - "Engineering: close the §status:gaps mainnet-readiness items — bring up mainnet RPC + EID + registry, deploy mainnet OFT + Solana program, wire the full 20-direction peer matrix, fix Base Sepolia ownership mismatch, adopt multisig+timelock governance, commission third-party security audit, write mainnet runbook (engineering estimate 4–8 weeks)"
   - "Engineering: re-verify §status:gaps operational items as of submission date (Transfer Engine persistence, slippage controls, Risk Broadcast readiness flag, decimal handling, API surface drift)"
   - "Engineering: confirm Subtensor EVM anchoring chain ID (945 testnet vs 964 mainnet); update §subtensor accordingly"
