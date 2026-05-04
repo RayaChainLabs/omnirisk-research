@@ -27,7 +27,7 @@
 \title{Verifiable Cross-Chain Risk Intelligence:\\
        An Agentic Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.7}}
+\date{May 2026 \\ \textbf{Working paper, v0.8}}
 
 \begin{document}
 \maketitle
@@ -73,12 +73,15 @@ implemented as Omnichain Fungible Tokens (OFTs) on LayerZero~V2, the protocol fa
 that separates message verification (Decentralised Verifier Networks, DVNs) from message
 execution (Executors) and exposes per-application security configuration as a
 permissionless surface~\cite{zarick2024layerzero,layerzero2024oft}. As of submission,
-RayaChain is operationally supporting six chains (a mix of EVM ecosystems and Solana
-via an executor sidecar; the precise set, drawn from Ethereum, Arbitrum, Base,
-BNB Smart Chain, Polygon, Optimism, and Solana, is to be confirmed by the operator
-prior to submission --- see Section~\ref{sec:status}), with one further lane in active
-integration. The next planned addition is the Subtensor EVM
-(chain~ID~945)~\cite{opentensor2024evm}.
+RayaChain is operationally integrated on six \emph{testnet} chains --- Ethereum
+Sepolia, Arbitrum Sepolia, Base Sepolia, BSC testnet, Polygon Amoy, and Solana
+devnet --- with no mainnet deployments to date and an estimated four-to-eight
+weeks of pre-launch security and configuration work outstanding before mainnet
+cutover (Section~\ref{sec:status}). The next planned addition after mainnet is
+the Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm}. The paper is
+deliberately written against this honest snapshot: the verification-architecture
+thesis stands or falls on its design, and we do not lean on production-scale
+deployment claims that the engineering ground truth would not support.
 
 The motivation for the next planned lane is not capacity but \emph{verifiability}. Routing
 value across heterogeneous chains exposes participants to a class of risks that survey
@@ -305,14 +308,16 @@ incident-cluster proximity \\
 ~~emits: $(s_i, c_i, r_i)$ per route query $q$ (Section~\ref{sec:miner}) \\
 \midrule
 \textbf{Layer 2 --- Data \& Execution (\textsc{RayaChain} on LayerZero V2)} \\
-~~6 lanes operationally supported (EVM mesh + Solana via executor sidecar; one
-further EVM lane in active integration --- specific chain mapping to be confirmed
-by the operator, see Section~\ref{sec:status}) \\
-~~+1 planned lane: Subtensor EVM (chain ID 945) \\
-~~publishes: \texttt{OFTSent}/\texttt{OFTReceived} events, an 8-state Transfer
-Engine lifecycle (quote $\to$ build $\to$ inflight $\to$ settled, etc.), Route
-Health telemetry (p50/p99 latency, liquidity, volume, success rate, risk grade,
-refreshed every 15\,s), and a topic-keyed Risk Broadcast feed \\
+~~6 testnet lanes integrated (Ethereum/Arbitrum/Base Sepolia, BSC testnet,
+Polygon Amoy, Solana devnet); 0 mainnet lanes; only 3 of 20 directional
+EVM$\leftrightarrow$EVM peer routes pass on-chain peer verification, with the
+remaining 17 returning \texttt{NoPeer} --- see Section~\ref{sec:status} \\
+~~+1 planned lane post-mainnet: Subtensor EVM (chain ID 945) \\
+~~publishes (testnet): \texttt{OFTSent}/\texttt{OFTReceived} events, an 8-state
+Transfer Engine lifecycle (quote $\to$ build $\to$ inflight $\to$ settled, etc.),
+Route Health telemetry (p50/p99 latency, liquidity, volume, success rate, risk
+grade, refreshed every 15\,s), and a topic-keyed Risk Broadcast feed
+(currently with readiness flag false) \\
 \midrule
 \textbf{Layer 3 --- Verification (\textsc{Bittensor} subnet, Yuma Consensus)} \\
 ~~validators: score miner outputs against realised events (Section~\ref{sec:validator}) \\
@@ -349,13 +354,18 @@ standard~\cite{layerzero2024oft}. RayaChain inherits LayerZero~V2's permissionle
 security configuration: each lane chooses its own DVN set and execution path, which is
 the surface OmniRisk monitors when scoring lane-level risk~\cite{zarick2024layerzero}.
 
-The current deployment supports six chains, drawn from a candidate set of seven
-EVM and non-EVM ecosystems (Ethereum, Arbitrum, Base, BNB Smart Chain, Polygon,
-Optimism, Solana); a seventh lane is in active integration. The specific
-operationally-lit chain mapping is confirmed in Section~\ref{sec:status} against
-the engineering source-of-truth and may shift before submission. The next planned
-addition is the Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm}, motivated
-in Section~\ref{sec:arch:bittensor}.
+The current deployment is six \emph{testnet} integrations: Ethereum Sepolia,
+Arbitrum Sepolia, Base Sepolia, BSC testnet, Polygon Amoy, and Solana devnet.
+There are zero mainnet deployments as of 2026-05-03; the canonical-origin pointer
+in the chain registry still resolves to \texttt{solana-devnet} (LayerZero V2 EID
+40168), which has to be repointed to a mainnet endpoint before a production
+launch. The Hardhat configuration knows only testnet networks; mainnet RPC URLs
+and mainnet EIDs are not yet declared. Section~\ref{sec:status} records this
+state and the gap list (Section~\ref{sec:status:gaps}) records the specific
+production-readiness items that still have to land. The next planned chain
+addition --- sequenced after a mainnet cutover, not before --- is the Subtensor
+EVM (chain~ID~945)~\cite{opentensor2024evm}, motivated in
+Section~\ref{sec:arch:bittensor}.
 
 \paragraph{Subsystems.} RayaChain is not a monolithic OFT deployment. Three named
 modules carry the cross-chain data and execution responsibilities relied on by
@@ -742,16 +752,27 @@ the subnet).
 
 \section{Data and Evaluation Framework}\label{sec:eval}
 
-The evaluation we are building rests on four datasets:
+The evaluation we are building rests on four datasets. As of submission-draft date,
+all of them are restricted to \emph{testnet} flows: RayaChain has zero mainnet
+deployments (Section~\ref{sec:status:gaps}), so the pre-mainnet evaluation must be
+read as a methodological dry-run rather than as evidence about production cross-chain
+risk. The datasets are:
 \begin{enumerate}
-  \item \textbf{RayaChain flow logs.} \texttt{OFTSent} / \texttt{OFTReceived} events
-        across the six operational lanes (and the seventh, in-integration lane once
-        it cuts over), with per-lane metadata (DVN set, Executor, observed latencies,
-        message-failure counts). Until the Transfer Engine ships transfer
-        persistence (Section~\ref{sec:status:gaps}), these have to be reconstructed
-        from on-chain logs by joining \texttt{OFTSent} on source against
-        \texttt{OFTReceived} on destination per LayerZero~V2 GUID; the evaluation
-        pipeline must record and report the join failure rate.
+  \item \textbf{RayaChain flow logs (testnet).} \texttt{OFTSent} /
+        \texttt{OFTReceived} events on the six registered testnet lanes
+        (Ethereum/Arbitrum/Base Sepolia, BSC testnet, Polygon Amoy, Solana
+        devnet), with per-lane metadata (DVN set, Executor, observed latencies,
+        message-failure counts). Two additional caveats apply pre-mainnet:
+        (a)~only 3 of 20 directional EVM$\leftrightarrow$EVM peer routes are
+        configured (Section~\ref{sec:status:gaps}), so the cross-chain sample
+        is dominated by a handful of routes and the empirical distribution is
+        not representative; (b)~until the Transfer Engine ships persistence,
+        records have to be reconstructed by joining \texttt{OFTSent} on source
+        against \texttt{OFTReceived} on destination per LayerZero~V2 GUID,
+        and the evaluation pipeline must record and report the join failure
+        rate. Mainnet flows will replace this dataset as the primary basis
+        for any quantitative claim, in a follow-up paper, once mainnet cuts
+        over.
   \item \textbf{Route Health time series.} The 15-second-cadence p50/p99 latency,
         destination liquidity, recent volume, success rate, and risk-grade telemetry
         published in production by the Route Health System
@@ -1152,10 +1173,15 @@ The threat surface is dominated by three classes:
 
 The schema this paper is organised around explicitly requires status to be stated
 \emph{honestly} on the grounds that overstated readiness is the failure mode that
-most damages credibility. We separate what is deployed, what is in active
-hardening, and what remains a design proposal (Table~\ref{tab:status}), and then
-list the operationally-known gaps the system summary surfaced
-(Section~\ref{sec:status:gaps}).
+most damages credibility. We separate what is deployed (and in which environment:
+testnet vs.\ mainnet), what is in active hardening, and what remains a design
+proposal (Table~\ref{tab:status}). We then list the operationally-known gaps
+that two consecutive engineering audits surfaced --- the system summary
+of 2026-05-03 and the mainnet-readiness audit posted on this issue the same
+day --- in Section~\ref{sec:status:gaps}. As of submission-draft date, RayaChain
+has \emph{zero mainnet deployments}; the engineering estimate to mainnet-ready is
+four to eight weeks. Every quantitative claim in this paper that depends on
+mainnet-scale flows is therefore deferred to follow-up work.
 
 \begin{table}[h]
 \centering
@@ -1166,23 +1192,30 @@ list the operationally-known gaps the system summary surfaced
 OmniRisk intelligence layer
   & Live in production
   & this paper \\
-RayaChain Transfer Engine
-  & Live; eight-state lifecycle implemented; persistence and slippage controls
-    not yet shipped (see~\ref{sec:status:gaps})
+RayaChain Transfer Engine (testnet)
+  & Implemented; eight-state lifecycle wired; exercised on testnet only;
+    persistence and slippage controls not yet shipped
+    (see~\ref{sec:status:gaps})
   & \S\ref{sec:arch:rayachain} \\
-RayaChain Route Health System
-  & Live (15\,s refresh); used by routing UI and Transfer Engine quote step
+RayaChain Route Health System (testnet)
+  & Implemented (15\,s refresh); backs routing UI and Transfer Engine quote step
+    against testnet endpoints
   & \S\ref{sec:arch:rayachain} \\
 RayaChain Risk Broadcast System
   & Implemented but \emph{readiness flag currently false} --- sending disabled
     pending executor implementation and storage TTL
   & \S\ref{sec:arch:rayachain} \\
-RayaChain operational lanes
-  & Six chains supported (one further lane in active integration; specific
-    chain mapping pending operator confirmation)
-  & \cite{zarick2024layerzero,layerzero2024oft} \\
+RayaChain testnet lanes
+  & Six chains registered on testnet (Ethereum/Arbitrum/Base Sepolia, BSC
+    testnet, Polygon Amoy, Solana devnet); only 3 of 20 directional
+    EVM$\leftrightarrow$EVM peer routes pass on-chain peer verification
+  & \S\ref{sec:status:gaps} \\
+RayaChain mainnet lanes
+  & \emph{Zero mainnet deployments}; mainnet RPC, EID, registry, program
+    ID, runbooks all absent; engineering estimate 4--8 weeks to ready
+  & \S\ref{sec:status:gaps} \\
 Subtensor EVM lane (chain~945)
-  & Planned (next addition after the in-integration seventh lane)
+  & Design proposal; sequenced after mainnet cutover, not before
   & \cite{opentensor2024evm} \\
 Cross-chain risk subnet (Bittensor)
   & Design proposal
@@ -1204,10 +1237,66 @@ them are deferred to follow-up work.}
 
 \subsection{Known production gaps}\label{sec:status:gaps}
 
-The following gaps were surfaced by the RayaChain engineering system summary
-on 2026-05-03 and are recorded here so that no claim in this paper depends on
-them being closed. Each one is a concrete, falsifiable item that should be
-verified against a fresh system summary before submission.
+The following gaps were surfaced by two consecutive engineering audits on
+2026-05-03 --- a RayaChain system summary describing the runtime modules and an
+independent mainnet-readiness audit of the \texttt{rayachain-oft} repository ---
+and are recorded here so that no claim in this paper depends on them being
+closed. Each item is concrete and falsifiable; each should be verified against
+a fresh audit immediately before submission.
+
+\paragraph{Mainnet readiness (mainnet-readiness audit, 2026-05-03).} These
+items must close before any mainnet claim is defensible.
+
+\begin{description}
+  \item[Zero mainnet deployments.] The \texttt{rayachain-oft} repository
+        contains no mainnet deployment artefacts: no mainnet program ID, no
+        mainnet keypair, no mainnet OFT contract on any of the five EVM
+        chains, and no mainnet entry in the registry. Estimated time to
+        mainnet-ready (engineering): four to eight weeks.
+  \item[Canonical origin pointer is testnet.] The registry's canonical
+        origin is \texttt{solana-devnet} (LayerZero V2 EID 40168). It must be
+        repointed to a Solana mainnet endpoint (and a corresponding registry
+        entry created) before launch.
+  \item[Hardhat config has no mainnet networks.] All five EVM networks in
+        \texttt{chain/evm/hardhat.config.ts} use testnet EIDs
+        (\texttt{SEPOLIA\_V2\_TESTNET}, \texttt{ARBSEP\_V2\_TESTNET},
+        \texttt{BASESEP\_V2\_TESTNET}, \texttt{BSC\_V2\_TESTNET},
+        \texttt{AMOY\_V2\_TESTNET}). Mainnet RPC URLs and mainnet EIDs are
+        not yet declared.
+  \item[Peer configuration is empty across the board.] The on-chain peer
+        verification artefact (\texttt{peer-verification.generated.json},
+        2026-03-27) records 20 directional EVM$\leftrightarrow$EVM peer
+        checks. Only three pass: Arbitrum~Sepolia~$\to$~Base~Sepolia,
+        Arbitrum~Sepolia~$\to$~Ethereum~Sepolia, and
+        Ethereum~Sepolia~$\to$~Arbitrum~Sepolia. The other 17 directions
+        return \texttt{NoPeer: on-chain peer is zero} --- any cross-chain
+        send on those routes will revert with \texttt{NoPeer(uint32)}. The
+        broadcast-readiness artefact records \texttt{peerConfigured: false}
+        for every chain.
+  \item[Base Sepolia ownership mismatch.] The Base Sepolia OFT owner is
+        \texttt{0x958f\dots} but the deployer key is \texttt{0xE60c\dots}.
+        This mismatch (documented in the repository's
+        \texttt{docs/raya-evm-oft-owner-audit.md}) currently blocks Base
+        peer wiring and must be resolved before the Base Sepolia
+        $\leftrightarrow$ peer set can be brought up.
+  \item[No mainnet governance.] No multisig, no timelock, and no documented
+        key-rotation plan. Mainnet ownership of OFT contracts must move
+        from a deployer EOA to (at minimum) a 3-of-5 multisig with a
+        timelock on peer updates and supply-affecting calls.
+  \item[No third-party security audit.] Neither \texttt{RayaChainOFT.sol}
+        nor the Solana program has a third-party audit on record. A
+        mainnet launch without one is the failure mode the bridge-security
+        SoK literature most consistently documents
+        \cite{zhang2023sok,augusto2024sok}.
+  \item[No mainnet runbook.] Only testnet deploy runbooks
+        (\texttt{docs/runbooks/solana-devnet-deploy.md}) exist. A mainnet
+        runbook covering gas, confirmation thresholds, peer-wiring order,
+        and rollback procedure has to be written and rehearsed before
+        cutover.
+\end{description}
+
+\paragraph{Operational state (system summary, 2026-05-03).} These items are
+known production gaps in the testnet integration itself.
 
 \begin{description}
   \item[Transfer persistence.] The Transfer Engine does not yet persist
@@ -1231,15 +1320,11 @@ verified against a fresh system summary before submission.
         of Section~\ref{sec:integration} does not depend on broadcast
         being live, but a production deployment of the subnet design
         does.
-  \item[Unverified EVM~$\leftrightarrow$~EVM routes.] A subset of
-        EVM~$\leftrightarrow$~EVM routes have not been individually
-        validated against the LayerZero~V2 \texttt{UlnConfig} /
-        \texttt{ExecutorConfig} field set
-        (Section~\ref{sec:formal:material}); the operator records this as
-        a known issue. The route registry contains both validated and
-        unvalidated entries; until the validation pass completes, the
-        OmniRisk score for an unvalidated route should be treated as
-        a lower bound on real risk.
+  \item[Unverified EVM~$\leftrightarrow$~EVM routes.] On testnet, only 3 of
+        20 directional EVM$\leftrightarrow$EVM routes pass peer
+        verification (see the mainnet-readiness paragraph above). The
+        OmniRisk score for any unverified route should be treated as a
+        lower bound on real risk until the peer set is wired.
   \item[Decimal handling under registry miss.] Asset-decimal handling is
         unsafe when the registry lookup is a miss; the registry fallback
         path is itself flagged as inconsistent. This is an operational
@@ -1255,22 +1340,51 @@ verified against a fresh system summary before submission.
         should treat undocumented endpoints as out-of-scope.
 \end{description}
 
-These gaps are recorded faithfully because the schema this paper follows
-asks for them to be. They do not undermine the verification-architecture
-thesis: the Bittensor scoring layer is the part that has to be staked and
-honest, and it is also the part that today is a design proposal rather
-than a deployed system.
+\paragraph{Security incident (mainnet-readiness audit, 2026-05-03).}
+Recorded here for completeness; the items themselves are tracked outside
+this paper.
+
+\begin{description}
+  \item[Plaintext deployer keys committed to a tracked file.] Three plaintext
+        private-key entries in \texttt{.env}
+        (\texttt{EVM\_DEPLOYER\_PRIVATE\_KEY},
+        \texttt{EVM\_PRIVATE\_KEY}, \texttt{BASE\_OFT\_OWNER\_PK}) all hold
+        the same secret, controlling the deployer EOA
+        \texttt{0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc}. The key must
+        be rotated, and the on-chain controlled state migrated, before
+        any mainnet deployment.
+  \item[Plaintext Alchemy API key.] The same file exposes an Alchemy API
+        key, also embedded directly in the
+        \texttt{ETHEREUM\_SEPOLIA\_RPC\_URL}. This must be rotated and
+        moved to a CI/CD secret store; a placeholder
+        \texttt{.env.example} should ship in its place.
+\end{description}
+
+These gaps do not undermine the verification-architecture thesis: the
+Bittensor scoring layer is the part that has to be staked and honest, and
+it is also the part that today is a design proposal rather than a deployed
+system. They do, however, constrain the scope of every empirical claim in
+this paper to testnet-derived measurements until mainnet cuts over.
 
 \section{Roadmap}\label{sec:roadmap}
 
-The work plan implied by Table~\ref{tab:status} is, in order:
-(i)~finalise the miner API and the determinism contract (Section~\ref{sec:miner});
-(ii)~stand up the cross-chain risk subnet on Subtensor and integrate the validator
+The work plan implied by Table~\ref{tab:status} and Section~\ref{sec:status:gaps}
+is, in order:
+(i)~close the security incident (rotate the three exposed deployer keys, rotate
+the exposed Alchemy key, move secrets out of tracked files) and adopt mainnet
+governance (multisig + timelock);
+(ii)~bring up the mainnet RayaChain deployment surface (mainnet RPC, mainnet
+EIDs, mainnet registry entries, mainnet OFT and Solana-program deployments,
+peer wiring across the full 20-direction matrix) and run a third-party security
+audit;
+(iii)~finalise the miner API and the determinism contract (Section~\ref{sec:miner});
+(iv)~stand up the cross-chain risk subnet on Subtensor and integrate the validator
 scoring rule (Section~\ref{sec:validator});
-(iii)~deploy the score-commitment contracts on Subtensor EVM (Section~\ref{sec:subtensor});
-(iv)~ship the next RayaChain lane into Subtensor EVM (sequenced after the
-in-integration seventh lane lands);
-(v)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up paper.
+(v)~deploy the score-commitment contracts on Subtensor EVM (Section~\ref{sec:subtensor});
+(vi)~ship the Subtensor EVM RayaChain lane (sequenced after the mainnet cutover
+of step~ii);
+(vii)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up
+paper, with mainnet flows once available.
 
 \section{Comparative Advantage}\label{sec:compare}
 
@@ -1355,6 +1469,27 @@ $1{:}197$ class-imbalance ratio of Section~\ref{sec:related:bridge-detection} fr
 BridgeGuard dataset described in~\cite{wu2025safeguarding}. The retracted preprint
 arXiv:2003.03917 is intentionally excluded; see the comment block in
 \texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
+
+Revision v0.8 reconciles the manuscript against a RayaChain mainnet-readiness
+audit (2026-05-03), which surfaced two material facts not visible in the prior
+operator system summary: (i)~the six chains the v0.6 framing called
+``operationally supported'' are in fact \emph{testnet} integrations (Ethereum,
+Arbitrum, Base Sepolia; BSC testnet; Polygon Amoy; Solana devnet) with zero
+mainnet deployments, and an engineering-estimated four to eight weeks of
+pre-launch security and configuration work outstanding; (ii)~on the testnets
+themselves only three of twenty directional EVM$\leftrightarrow$EVM peer routes
+pass on-chain peer verification (the other seventeen return \texttt{NoPeer}).
+Section~\ref{sec:intro}, \ref{sec:arch:rayachain}, the Layer-2 line of
+Figure~\ref{fig:arch-text}, the entire \texttt{lanes} block of
+Table~\ref{tab:status}, the \texttt{Mainnet readiness} and \texttt{Security
+incident} paragraphs of Section~\ref{sec:status:gaps}, the re-sequenced
+Section~\ref{sec:roadmap}, and the testnet-only caveat at the head of
+Section~\ref{sec:eval} all reflect this revision. The verification-architecture
+thesis is unchanged; what changed is that every empirical claim is now scoped
+explicitly to testnet flows pending mainnet cutover, and the security incident
+(three plaintext private-key entries holding the same deployer secret in a
+tracked file, plus an exposed Alchemy API key) is recorded as a separately
+tracked engineering item rather than treated as a paper concern.
 
 Revision v0.7 integrates the locked RYA tokenomics specification (Final v1,
 board-locked 2026-05-04) into Section~\ref{sec:economics}: the Bittensor

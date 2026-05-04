@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.7"
+revision: "0.8"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -59,6 +59,19 @@ revision_log:
       - "§11 Evaluation: headline metrics now include precision-recall AUC alongside ROC-AUC, with imbalance-aware threshold-selection rationale tying back to §4.2."
       - "§5 System Architecture: replaced 'Figure omitted' embarrassment with Figure 1 — a labelled three-layer textual diagram showing intelligence/data-execution/verification layers with their inputs, outputs, and on-chain anchors."
       - "Reproducibility Note: documents the v0.5 primary-source extraction cycle (Yuma equations, UlnConfig fields, BridgeGuard imbalance ratio) so a future reviewer can independently verify provenance."
+  v0_8:
+    date: "2026-05-04"
+    summary: "Reconcile against RayaChain mainnet-readiness audit (2026-05-03 wake comment on OMN-34) — testnet-only reality replaces 'six operational chains' framing."
+    changes:
+      - "§intro: 'six operationally-supported chains' → 'six TESTNET integrations (Sepolia / testnet / Amoy / devnet) with zero mainnet deployments and an engineering-estimated 4–8 weeks to mainnet-ready'. Names the six testnets explicitly."
+      - "fig:arch-text Layer 2 row: testnet endpoint list, explicit '0 mainnet lanes', explicit '3 of 20 EVM↔EVM directional peer routes pass; 17 return NoPeer'."
+      - "§arch:rayachain: testnet chain enumeration (Eth/Arb/Base Sepolia, BSC testnet, Polygon Amoy, Solana devnet); canonical-origin pointer still solana-devnet (EID 40168); Hardhat config knows only testnet networks."
+      - "§status table: replaced single 'lanes' row with TESTNET vs MAINNET split — testnet row records 6 chains + 3-of-20 peer pass rate; mainnet row records ZERO deployments + 4–8 week estimate; Subtensor lane downgraded to design-proposal sequenced after mainnet cutover."
+      - "§status:gaps: added two new paragraphs — 'Mainnet readiness (mainnet-readiness audit, 2026-05-03)' enumerating eight gaps (zero mainnet deployments, canonical origin testnet, Hardhat no mainnet networks, peer config empty, Base Sepolia owner mismatch, no multisig/timelock/governance, no third-party security audit, no mainnet runbook) AND 'Security incident (mainnet-readiness audit, 2026-05-03)' recording the three plaintext deployer keys (same secret 0xE60c…), and the plaintext Alchemy key. Also rewrote 'Unverified EVM↔EVM routes' with the concrete 3-of-20 pass count from peer-verification.generated.json."
+      - "§roadmap: re-sequenced as seven steps with mainnet security and governance work as steps (i) and (ii), preceding miner API / subnet integration / Subtensor lane / follow-up paper."
+      - "§eval: explicit 'all four datasets are testnet only as of submission-draft' caveat in the dataset preamble; flow-logs caveat now also names the 3-of-20 peer-route restriction; mainnet flows deferred to follow-up paper."
+      - "Reproducibility Note: v0.8 entry."
+
   v0_7:
     date: "2026-05-04"
     summary: "Integrate locked RYA tokenomics (OMN-48 plan v4 — Final v1) per OMN-54."
@@ -85,12 +98,13 @@ revision_log:
 
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:
+  - "SECURITY: rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; address 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into CI/CD secret store; ship .env.example with placeholders only — needs separate engineering issue, not a paper task"
   - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
   - "CTO (Cody) review of §economics tokenomics integration against OMN-48 plan v4 (Final v1) — accuracy of mint-revocation language, decimal asymmetry, distribution numbers, fee-flow"
-  - "Engineering: confirm the specific six operationally-lit chains (and the seventh in active integration) per the latest RayaChain system summary; update §arch:rayachain narrative + §status table accordingly"
-  - "Engineering: close (or downgrade the paper's claims around) the §status:gaps items — at minimum confirm each gap's status as of submission date"
+  - "Engineering: close the §status:gaps mainnet-readiness items — bring up mainnet RPC + EID + registry, deploy mainnet OFT + Solana program, wire the full 20-direction peer matrix, fix Base Sepolia ownership mismatch, adopt multisig+timelock governance, commission third-party security audit, write mainnet runbook (engineering estimate 4–8 weeks)"
+  - "Engineering: re-verify §status:gaps operational items as of submission date (Transfer Engine persistence, slippage controls, Risk Broadcast readiness flag, decimal handling, API surface drift)"
   - "Engineering: confirm Subtensor EVM anchoring chain ID (945 testnet vs 964 mainnet); update §subtensor accordingly"
   - "Engineering: lock the final emissions-curve shape (yearly decay vs halving) on the OMN-49 child issue and replace the §economics:rya:emissions 'two viable shapes' bullet list with the chosen curve"
   - "Compile manuscript on a TeX Live host (run `make pdf`); resolve any unresolved-reference warnings"
   - "Subnet partner identification (Bittensor cross-chain risk subnet sponsor)"
-  - "Empirical follow-up paper: instantiate baselines B1-B4 and report H1/H2 outcomes against historical RayaChain flows"
+  - "Empirical follow-up paper: instantiate baselines B1-B4 and report H1/H2 outcomes against MAINNET RayaChain flows once mainnet cuts over"
