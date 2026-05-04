@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.6"
+revision: "0.7"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -59,6 +59,20 @@ revision_log:
       - "§11 Evaluation: headline metrics now include precision-recall AUC alongside ROC-AUC, with imbalance-aware threshold-selection rationale tying back to §4.2."
       - "§5 System Architecture: replaced 'Figure omitted' embarrassment with Figure 1 — a labelled three-layer textual diagram showing intelligence/data-execution/verification layers with their inputs, outputs, and on-chain anchors."
       - "Reproducibility Note: documents the v0.5 primary-source extraction cycle (Yuma equations, UlnConfig fields, BridgeGuard imbalance ratio) so a future reviewer can independently verify provenance."
+  v0_7:
+    date: "2026-05-04"
+    summary: "Integrate locked RYA tokenomics (OMN-48 plan v4 — Final v1) per OMN-54."
+    changes:
+      - "§Economic Model: renamed to '§Economic Model and Tokenomics'; previous Bittensor verification-side flows preserved as new sub-section §economics:bittensor."
+      - "New §economics:rya:design — fixed-supply rationale, immediate mint-authority revocation at TGE+LP (Solana setAuthority(mint,null), EVM transferOwnership(0x…dEaD)), pre-minted lockup-contract emissions; replaces vague mint-revocation language."
+      - "New §economics:rya:config — RYA configuration table (1B fixed supply, Solana hub, EVM spokes, decimals 9/18 with OFT sharedDecimals=9, 3-of-5 multisig at TGE, transfer fees off, 5–8% TGE-day circulating)."
+      - "New §economics:rya:dist — six-bucket distribution (35/25/15/10/10/5) with vesting and TGE-day-liquid columns; explicit 'no Investor bucket' note."
+      - "New §economics:rya:emissions — 35% bucket (350M RYA), 4–5y curve with two viable shapes (yearly decay vs halving epochs) flagged for separate emissions-schedule child issue, three-channel allocation (stakers / contributors / Bittensor-aligned subnet)."
+      - "New §economics:rya:fees — three revenue sources, buy-back ratio φ ∈ [0.30, 0.50] multisig-tunable, fee-flow figure, structural property statement (fee revenue is upper bound on staker RYA inflow)."
+      - "New §economics:rya:utility — staking dual reward stream, fee discounts, access tiers."
+      - "New §economics:rya:bittensor — value-flow alignment with two present-day levers (fee routing to subnet contributors, emissions reserve carve-out) and one explicitly forward-compatible governance lever (staking-influences-weighting), no immediate subnet-governance technical commitment asserted."
+      - "Title page revision tag bumped to v0.7; Reproducibility Note appended with v0.7 entry."
+
   v0_6:
     date: "2026-05-03"
     summary: "Reconcile manuscript against operator-published RayaChain system summary (2026-05-03 wake comment on OMN-34)."
@@ -72,9 +86,11 @@ revision_log:
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:
   - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
+  - "CTO (Cody) review of §economics tokenomics integration against OMN-48 plan v4 (Final v1) — accuracy of mint-revocation language, decimal asymmetry, distribution numbers, fee-flow"
   - "Engineering: confirm the specific six operationally-lit chains (and the seventh in active integration) per the latest RayaChain system summary; update §arch:rayachain narrative + §status table accordingly"
   - "Engineering: close (or downgrade the paper's claims around) the §status:gaps items — at minimum confirm each gap's status as of submission date"
   - "Engineering: confirm Subtensor EVM anchoring chain ID (945 testnet vs 964 mainnet); update §subtensor accordingly"
+  - "Engineering: lock the final emissions-curve shape (yearly decay vs halving) on the OMN-49 child issue and replace the §economics:rya:emissions 'two viable shapes' bullet list with the chosen curve"
   - "Compile manuscript on a TeX Live host (run `make pdf`); resolve any unresolved-reference warnings"
   - "Subnet partner identification (Bittensor cross-chain risk subnet sponsor)"
   - "Empirical follow-up paper: instantiate baselines B1-B4 and report H1/H2 outcomes against historical RayaChain flows"

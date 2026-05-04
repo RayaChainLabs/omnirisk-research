@@ -27,7 +27,7 @@
 \title{Verifiable Cross-Chain Risk Intelligence:\\
        An Agentic Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.6}}
+\date{May 2026 \\ \textbf{Working paper, v0.7}}
 
 \begin{document}
 \maketitle
@@ -819,9 +819,24 @@ replay window. The OmniRisk miner is required to dominate B1 strictly on all fiv
 metrics, dominate B2 on (iii) for hypothesis H1 to survive, and dominate B3 on (i)--(iii)
 for the agentic-vs-static claim of Section~\ref{sec:compare} to be defensible.
 
-\section{Economic Model}\label{sec:economics}
+\section{Economic Model and Tokenomics}\label{sec:economics}
 
-The economic flows are:
+The architecture has two distinct economic surfaces: a verification-side surface that
+rewards Bittensor miners and validators for accurate cross-chain risk outputs
+(Section~\ref{sec:economics:bittensor}), and an application-side surface in which
+the Rayachain protocol token, \textsc{RYA}, captures the protocol's product revenue
+and aligns long-term participation with the value of the decentralised
+risk-intelligence network
+(Sections~\ref{sec:economics:rya:design}--\ref{sec:economics:rya:bittensor}). The two
+surfaces are intentionally separated: TAO emissions reward verification work, RYA
+flows reward consumption and distribution work, and a designed bridge between the
+two routes a portion of RYA-denominated fee revenue back to the Bittensor subnet
+participants whose signals drive the Rayachain broadcasts
+(Section~\ref{sec:economics:rya:bittensor}).
+
+\subsection{Bittensor verification surface}\label{sec:economics:bittensor}
+
+On the verification side, the economic flows are:
 \begin{itemize}
   \item Miners are rewarded in TAO via Yuma emissions for risk outputs that the
         validator consensus accepts~\cite{opentensor2024yuma,steeves2022incentivizing}.
@@ -835,6 +850,281 @@ We avoid claims about token-economic equilibria here. The Bittensor critical-ana
 literature~\cite{lui2025bittensor} documents real concerns about Bittensor's
 centralisation properties under dynamic TAO, and any quantitative economic claim about
 this subnet should be revisited against that work in a follow-up.
+
+\subsection{The RYA token: design rationale}\label{sec:economics:rya:design}
+
+\textsc{RYA} is the Rayachain protocol token. It is specified, at this stage, as a
+fixed-supply asset with no protocol mint authority post-launch and a fee-capture
+model in which a designed fraction of every protocol fee is converted to RYA on the
+open market and distributed to stakers. Three design decisions follow from the
+project's institutional-acceptance and verifiability constraints, and we state them
+explicitly because each one removes a degree of freedom that bridge-token designs
+typically retain.
+
+\paragraph{Fixed supply.} Total supply is capped at $10^9$~RYA at the
+token-generation event (TGE) and is pre-minted in full at TGE. There is no
+protocol-level inflation lever after launch. This rules out an entire class of
+governance-driven supply expansions that downstream consumers of risk telemetry
+would otherwise have to discount.
+
+\paragraph{Immediate mint-authority revocation.} The mint authority on the Solana
+canonical mint is revoked via \texttt{setAuthority(mint, null)} in the same
+operational window as TGE and initial liquidity-pool initialisation, and the EVM
+\texttt{Ownable} ownership on every spoke is transferred to the
+\texttt{0x\ldots dEaD} burn address in the same window. The Solana freeze authority
+is set to \texttt{null} in the mint instruction itself, so the token is irreversibly
+non-freezable. \emph{No subsequent mint or freeze is possible at the protocol
+level.} We use the formulation ``revoked immediately at TGE~$+$~LP'' rather than the
+softer ``may be revoked later'' because verifiable-by-construction is a stronger
+property than governance-revocable: a downstream contract can read the absence of a
+mint authority on chain rather than trust that governance will not exercise it.
+
+\paragraph{Pre-minted, lockup-contract emissions.} The 35\% emissions allocation
+(Section~\ref{sec:economics:rya:emissions}) is not minted on a discretionary
+schedule; it is pre-minted at TGE and parked in an on-chain lockup contract whose
+release schedule is published and immutable post-deployment. Because the protocol
+mint authority is revoked, no other emission path exists. This eliminates the
+discretionary-minting degree of freedom that would otherwise let a future governance
+decision accelerate or expand emissions.
+
+The cumulative effect is a token whose supply trajectory is a published function of
+time from TGE forward, and whose total cap is not subsequently revisable by any
+party including the founding team. We argue this is the configuration most
+consistent with the verifiability claim that motivates the rest of this paper: the
+verification layer is decentralised, the supply schedule is deterministic, and the
+on-chain configuration of both is the source of truth.
+
+\subsection{Configuration}\label{sec:economics:rya:config}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.32\linewidth}p{0.60\linewidth}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Total supply & $10^9$~RYA, fixed at TGE, pre-minted in full \\
+Canonical chain & Solana (hub) \\
+Spokes & Ethereum, Arbitrum, Base, Polygon, BNB Smart Chain \\
+Bridge & LayerZero OFT --- Solana lock/mint hub, EVM
+        burn/mint spokes~\cite{zarick2024layerzero,layerzero2024oft} \\
+Decimals & 9 on Solana; 18 on EVM; OFT \texttt{sharedDecimals}~$=$~9 \\
+Mint authority at TGE & 3-of-5 Squads multisig (Solana); 3-of-5 Safe (EVM
+                       \texttt{Ownable}) \\
+Mint authority post-launch & Revoked immediately at TGE~$+$~LP initialisation
+                             (\texttt{setAuthority(mint, null)} on Solana;
+                             \texttt{transferOwnership(0x\ldots dEaD)} on every EVM
+                             spoke) \\
+Freeze authority (Solana) & \texttt{null} from the mint instruction (irreversibly
+                            non-freezable) \\
+Transfer fees & None at the OFT layer \\
+TGE-day circulating supply & 5--8\% of total supply
+                            (Section~\ref{sec:economics:rya:dist}) \\
+\bottomrule
+\end{tabular}
+\caption{RYA token configuration. The Solana--EVM decimal asymmetry is reconciled at
+the LayerZero OFT layer via \texttt{sharedDecimals}~$=$~9, so cross-chain transfer
+amounts round to the canonical (Solana-side) 9-decimal precision. Bittensor is not a
+token chain for RYA: the integration is at the value-flow layer
+(Section~\ref{sec:economics:rya:bittensor}), not the asset layer.}
+\label{tab:rya-config}
+\end{table}
+
+\subsection{Distribution}\label{sec:economics:rya:dist}
+
+Total supply is allocated across six buckets at TGE
+(Table~\ref{tab:rya-dist}). Two properties of the distribution are worth flagging up
+front: (i)~there is no ``Investor'' bucket --- the token is bootstrapped from
+emissions, treasury, team, liquidity, and community rather than from a pre-TGE
+investor round; and (ii)~the TGE-day circulating supply is bounded between 5\% and
+8\% of total supply, with the remainder of every other bucket mechanically locked
+at TGE under either a vesting contract (Team, Advisors), a lockup contract
+(Emissions), a multisig (Treasury), or a staged-release schedule
+(Liquidity, Community).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.16\linewidth}rrp{0.36\linewidth}r}
+\toprule
+\textbf{Bucket} & \textbf{\%} & \textbf{Tokens at TGE} & \textbf{Vesting / release} &
+\textbf{TGE-day liquid} \\
+\midrule
+Emissions      & 35  & 350{,}000{,}000   & Pre-minted to lockup contract; released
+                                          over 4--5\,y per emission curve
+                                          (Section~\ref{sec:economics:rya:emissions})
+                                          & 0 \\
+Treasury       & 25  & 250{,}000{,}000   & Held in 3-of-5 multisig; DAO-governed once
+                                          governance ships & 0 \\
+Team (vested)  & 15  & 150{,}000{,}000   & 1-year cliff, 36-month linear vest after
+                                          cliff (4\,y total) & 0 \\
+Liquidity      & 10  & 100{,}000{,}000   & 3--5\% of supply deployed to DEX pools at
+                                          TGE; remainder LP-locked / staged-release
+                                          for market-maker rebalancing over 12 months
+                                          & 30M--50M \\
+Community      & 10  & 100{,}000{,}000   & Initial airdrop 2--3\% of supply at TGE;
+                                          remainder via Treasury-governed reward
+                                          programs over 36 months & 20M--30M \\
+Advisors       &  5  &  50{,}000{,}000   & 1-year cliff, 36-month linear vest after
+                                          cliff (4\,y total) & 0 \\
+\midrule
+\textbf{Total} & 100 & 1{,}000{,}000{,}000 & --- & 50M--80M (5--8\%) \\
+\bottomrule
+\end{tabular}
+\caption{RYA distribution at TGE. The TGE-day circulating supply is the sum of the
+initial airdrop (2--3\% of supply, from the Community bucket) and the
+deployed-at-TGE liquidity float (3--5\% of supply, from the Liquidity bucket); the
+remainder of every other bucket is locked under one of vesting, lockup, multisig, or
+staged-release. The public unlock schedule is published via a third-party unlock
+tracker prior to TGE so that every cliff and emission release is independently
+visible to holders.}
+\label{tab:rya-dist}
+\end{table}
+
+\subsection{Emissions}\label{sec:economics:rya:emissions}
+
+The 35\% emissions bucket (350{,}000{,}000~RYA) is the largest single allocation
+and is the mechanism by which protocol participation is bootstrapped without a
+pre-TGE investor round. It is pre-minted at TGE to an on-chain lockup contract;
+because the protocol mint authority is revoked at TGE~$+$~LP
+(Section~\ref{sec:economics:rya:design}), no further emission path exists.
+
+\paragraph{Curve shape.} The emission curve is front-loaded with gradual reduction
+over a 4--5-year horizon. Two viable shapes are under consideration; the final shape
+is locked in a separate emissions-schedule child issue and is not asserted by this
+paper:
+\begin{itemize}
+  \item \textbf{Yearly decay.} Approximately 30\% reduction per year, so the
+        annual weights of the 35\% bucket are roughly $0.30 / 0.22 / 0.16 / 0.12 /
+        0.09$ for years 1--5.
+  \item \textbf{Halving epochs.} An annual halving schedule, in which year~1 emits
+        approximately 50\% of the bucket and each subsequent year halves; the tail
+        decays to dust by year~5--6.
+\end{itemize}
+Either shape is gradual reduction without cliff drops; the lockup contract is
+immutable post-deployment, so the curve cannot be rescheduled or accelerated by
+governance.
+
+\paragraph{Allocation.} The emissions bucket is split across three reward channels.
+\emph{Stakers} are the primary recipients: RYA stakers earn emission rewards in
+proportion to stake weight and lockup duration (the staking primitive is specified
+in Section~\ref{sec:economics:rya:utility}). \emph{Contributors and ecosystem
+participants} receive a share for bug bounties, integration grants, data-quality
+incentives for OmniRisk consumers, and dispute-resolution work on the
+risk-broadcast layer. A reserve carve-out is allocated to \emph{Bittensor-aligned
+subnet participants} producing the AI risk signals that drive Rayachain broadcasts
+(Section~\ref{sec:economics:rya:bittensor}).
+
+\subsection{Fee model}\label{sec:economics:rya:fees}
+
+RYA captures real protocol cash flow rather than relying on emission alone for
+holder yield. The fee model has three revenue sources and a single distribution rule
+(Figure~\ref{fig:rya-fee-flow}).
+
+\paragraph{Revenue sources.} (i)~Cross-chain transfer fees on RYA itself and on
+partner-token transfers routed through the Rayachain OFT lanes; (ii)~per-broadcast
+fees on the Risk Broadcast System (Section~\ref{sec:arch:rayachain}) for cross-chain
+risk-score and verdict publication; (iii)~subscription revenue from institutional
+and retail consumers of the OmniRisk risk-intelligence API.
+
+\paragraph{Fee flow.} Users pay protocol fees in USDC or chain-native gas tokens
+--- \emph{they are not required to hold RYA to consume the product}. A tunable
+fraction of every fee, denoted $\phi \in [0.30, 0.50]$, is converted to RYA via
+market-buy on the canonical DEX pools. The bought RYA is distributed to stakers as
+a fee-yield reward stream that is independent of, and additive to, the emission
+rewards of Section~\ref{sec:economics:rya:emissions}. The remaining $1 - \phi$
+flows to the treasury for operations, ongoing audits, market-maker partnerships,
+grants, and runway. The buy-back ratio $\phi$ is multisig-tunable within the
+$[0.30, 0.50]$ band and is moved out of band only by DAO vote once governance ships.
+
+\begin{figure}[h]
+\centering
+\begin{small}
+\begin{tabular}{l}
+\hline
+\textbf{User pays in USDC or chain-native gas} \\
+\hline
+$\;\;\downarrow$ \\
+\textbf{$\phi \in [0.30, 0.50]$ \quad$\rightarrow$\quad market-buy RYA on DEX
+        \quad$\rightarrow$\quad stakers (fee yield)} \\
+\textbf{$1 - \phi \in [0.50, 0.70]$ \quad$\rightarrow$\quad Treasury
+        (ops, audits, MM, grants, runway)} \\
+\hline
+\end{tabular}
+\end{small}
+\caption{Fee-capture flow. The buy-back fraction $\phi$ is bounded by multisig
+within $[0.30, 0.50]$ and creates a programmatic source of RYA demand proportional
+to product usage; the residual flows to the protocol treasury rather than to a
+single beneficiary.}
+\label{fig:rya-fee-flow}
+\end{figure}
+
+The structural property that follows from this design is that real product
+consumption produces real RYA buy pressure on a public DEX, and the resulting yield
+to stakers does not require new RYA emission. Equivalently: at any buy-back rate
+$\phi > 0$, every unit of fee revenue is an upper bound on the RYA inflow to
+stakers in that period, regardless of governance.
+
+\subsection{Token utility}\label{sec:economics:rya:utility}
+
+RYA serves three product roles and is designed so that holding RYA is rewarded by
+all three simultaneously:
+\begin{description}
+  \item[Staking with a dual reward stream.] Locking RYA earns (a)~emission rewards
+        from the Section~\ref{sec:economics:rya:emissions} bucket and (b)~fee-yield
+        rewards from the Section~\ref{sec:economics:rya:fees} buy-back. Lockup
+        duration weights the staker's share of both streams; longer lockups earn
+        more.
+  \item[Fee discounts.] Stakers and qualifying holders pay reduced rates on
+        broadcast and API fees. The discount is denominated in the same fee
+        currency the user already pays, so the discount surface does not by itself
+        impose a requirement to hold RYA.
+  \item[Access tiers.] Stake size unlocks priority risk-scoring, higher API rate
+        limits, and access to premium broadcast lanes. The tiers are a
+        product-side gate, not a regulatory one.
+\end{description}
+The economic intent of these three together is that RYA is simultaneously a
+cash-flow-bearing asset (via the staker dual-reward stream), a cost-basis
+instrument for power users (via the discount), and an access credential gating
+premium product surfaces (via the tiers). None of the three relies on speculative
+supply growth: the cap is fixed and emission is on a published curve.
+
+\subsection{Bittensor value-flow alignment}\label{sec:economics:rya:bittensor}
+
+RYA is the \emph{distribution layer} for Rayachain risk broadcasts that are, in
+turn, downstream consumers of Bittensor subnet outputs. RYA is not a
+Subtensor-native asset --- there is no SPL or EIP RYA mint on Subtensor, and the
+verification-layer incentives of Section~\ref{sec:economics:bittensor} continue to
+be denominated in TAO. The integration between RYA economics and the Bittensor
+subnet is at the value-flow layer, with two concrete present-day levers and one
+explicitly forward-compatible governance lever.
+
+\paragraph{Fee routing to subnet contributors.} A portion of fee revenue from risk
+broadcasts that consume Bittensor subnet outputs is routed to the subnet
+participants and contributors producing those signals. This lever is implementable
+on the buy-back router (Section~\ref{sec:economics:rya:fees}) and does not depend
+on any subnet-governance modification.
+
+\paragraph{Distribution carve-out.} The reserve carve-out within the
+Section~\ref{sec:economics:rya:emissions} emissions bucket allocates RYA to subnet
+operators delivering quality risk-aligned outputs.
+
+\paragraph{Forward-compatible governance lever.} A future state in which staked
+RYA influences Bittensor subnet model selection or weighting --- so that RYA
+stakers vote on which subnet outputs are accepted into Rayachain broadcasts and
+what weight each subnet's signals carry --- is consistent with the design but is
+\emph{not} a technical commitment of this paper. We flag it as a forward-compatible
+governance hook because the underlying validator-loss machinery
+(Section~\ref{sec:formal:vloss}) and the score-commitment surface
+(Section~\ref{sec:subtensor}) are the components a later subnet-governance design
+would build on, but neither is required to ship in the initial mainnet
+configuration.
+
+The cumulative positioning is that RYA is the access and (eventually) governance
+asset over a Bittensor-aligned cross-chain risk-intelligence network, with current
+flows already routing real fee revenue to subnet contributors and a defined,
+non-discretionary path to staking-influences-weighting governance once the
+Section~\ref{sec:subtensor} commitments are deployed.
 
 \section{Security Model}\label{sec:security}
 
@@ -1065,6 +1355,26 @@ $1{:}197$ class-imbalance ratio of Section~\ref{sec:related:bridge-detection} fr
 BridgeGuard dataset described in~\cite{wu2025safeguarding}. The retracted preprint
 arXiv:2003.03917 is intentionally excluded; see the comment block in
 \texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
+
+Revision v0.7 integrates the locked RYA tokenomics specification (Final v1,
+board-locked 2026-05-04) into Section~\ref{sec:economics}: the Bittensor
+verification-side flows of v0.6 are preserved as
+Section~\ref{sec:economics:bittensor} and the RYA application-side surface is
+specified in Sections~\ref{sec:economics:rya:design}--\ref{sec:economics:rya:bittensor}
+as a fixed-supply asset (cap $10^9$, pre-minted, with mint authority revoked
+immediately at TGE~$+$~LP), a six-bucket distribution
+(35/25/15/10/10/5; Table~\ref{tab:rya-dist}) with a 5--8\% TGE-day circulating
+supply, a 4--5-year pre-minted lockup-contract emission curve, and a buy-back
+fee-capture model with the buy-back fraction $\phi$ multisig-tunable in
+$[0.30, 0.50]$ (Figure~\ref{fig:rya-fee-flow}). The Bittensor alignment is stated
+at the value-flow layer with present-day fee-routing and distribution-carve-out
+levers and an explicitly forward-compatible
+staking-influences-weighting governance hook
+(Section~\ref{sec:economics:rya:bittensor}); no immediate subnet-governance
+technical commitment is asserted. The numbers above match the v1 plan locked
+on 2026-05-04; the final emission-curve shape (yearly decay vs.\ halving epochs)
+and the specific buy-back-router contract addresses are deferred to follow-up
+issues and are not asserted by this paper.
 
 Revision v0.6 reconciles the manuscript against an operator-published
 RayaChain system summary (2026-05-03), with three substantive corrections:
