@@ -1,26 +1,26 @@
-title: "Verifiable Cross-Chain Risk Intelligence: An Agentic Architecture over LayerZero V2 and Bittensor"
+title: "Agentic, Context-Aware Risk Prediction for the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor"
 slug: "omnirisk-rayachain-bittensor"
 authors:
   - name: "OmniRisk Research"
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.9"
+revision: "0.10"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
 doi: null
 arxiv_id: null
 canonical_url: null
-tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence","oft","yuma-consensus"]
+tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence","oft","yuma-consensus","internet-of-value","agentic-ai","sentiment-fusion","scenario-engine","rya-defence-cycle"]
 
 # Bibliography hygiene — read this before submission.
 bibliography_audit:
-  verified_at: "2026-05-03"
-  verified_by: "Academic Writer (OMN-34)"
-  total_entries: 16
-  entries_with_doi: 10
-  entries_url_only: 6  # protocol whitepapers + canonical docs + industry blog post
+  verified_at: "2026-05-06"
+  verified_by: "Academic Writer (OMN-152)"
+  total_entries: 26
+  entries_with_doi: 18
+  entries_url_only: 8  # protocol whitepapers + canonical docs + industry blog post + grey-lit + paragraph publication
   added_in_v0_4:
     - cite_key: "ganescu2024trust"
       reason: "fills the zero-knowledge ML verification gap flagged in academic review (related work §4.4); verified against arXiv 2402.06414 abstract page on 2026-05-03"
@@ -33,6 +33,25 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_10:
+    date: "2026-05-06"
+    summary: "Reframe contribution from 'verifiable cross-chain bridge risk' to the broader thesis of 'agentic, context-aware risk prediction for the Internet of Value', characterised as the composition of five engines (prediction / Bittensor prediction subnet / sentiment fusion / agentic / API risk + scenario). Add the 2026-05-06 RYA defence cycle as an instrumented case study. Issue: OMN-152."
+    changes:
+      - "Title and pdf metadata: 'Verifiable Cross-Chain Risk Intelligence: An Agentic Architecture over LayerZero V2 and Bittensor' → 'Agentic, Context-Aware Risk Prediction for the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor'."
+      - "Abstract rewritten around the IoV thesis, the five engines (with citations), and the RYA defence-cycle case study."
+      - "§intro: new paragraph 'The IoV reframe' (composite-context risk; rug pulls and sniper bots cited from cernera2023token); research-question paragraph rewritten to ask whether the IoV risk primitive can be made simultaneously agentic, context-aware, and verifiable; novelty-claim paragraph rewritten as the five-engine composition; contributions list expanded 5 → 6 (added the case study)."
+      - "New §3 'A Five-Engine Architecture for Agentic IoV Risk' (label sec:five-engine), inserted between §problem and §rq, with five named subsections (sec:engine:prediction, sec:engine:subnet, sec:engine:sentiment, sec:engine:agentic, sec:engine:scenario) and a composition subsection (sec:engine:composition). New Figure 1 'five-engine-architecture.pdf' (vector, generated)."
+      - "§arch:omnirisk: retitled 'OmniRisk — Agentic Engine'; explicitly identifies OmniRisk as the agentic-engine instance; references the constitutional/role-bound action constraints of bai2022constitutional; describes the paused-by-default + human-approval-boundary stance."
+      - "§arch:bittensor: retitled 'Bittensor — Prediction-Engine Subnet and Verification Layer'; explicit dual role; cites taoshi2024ptn as the closest live-2026 precedent (Subnet 8 PTN)."
+      - "New §arch:sentiment 'Sentiment-fusion engine': three-modality late-fusion + stacking (text / on-chain / grey-lit Solana); citations schumaker2009textual, xing2018natural, day2016deep."
+      - "New §arch:scenario 'API risk + scenario engine': existing API surface + smallest delta (program registry / trigger evaluator / constrained execution); citations glasserman2003monte (Monte Carlo financial-engineering scenario generation), nist2006sp80084 (NIST tabletop precondition / trigger / action / post-condition structure)."
+      - "New §case-study 'The RYA Defence Cycle, 2026-05-06' (label sec:case-study), inserted between §eval and §economics. Four subsections: setup (asset/venue/wallet/Trader-role contract/.env knobs), timeline (six numbered events from 01:00 → 06:13 UTC), buy-by-buy table (Table tab:rya-defence-buys, 30 rows, every TWAP completion with timestamp / price / tier / spend / cumulative), and reading-the-cycle-as-a-five-engine-instance (mapping each engine onto the cycle, with explicit limitations). Two new figures: rya-defence-cycle-prices.pdf (price-time with 30 bot-buy markers) and rya-defence-cycle-liquidity.pdf (pool liquidity envelope from point readings). Companion operator-side narrative cited as omnirisk2026defending."
+      - "§limitations: added two new bullets — 'The case study is a single 5-hour cycle on a single Solana micro-cap pool' and 'The agentic engine in the case study is rule-based, not LLM-mediated'; existing four bullets preserved; one extra bullet added for grey-literature feed fragility in the sentiment-fusion engine. H1/H2 falsifiability statements preserved."
+      - "Bibliography: +10 new entries (bai2022constitutional, yang2023fingpt, wu2023bloomberggpt, schumaker2009textual, xing2018natural, day2016deep, taoshi2024ptn, glasserman2003monte, nist2006sp80084, cernera2023token, omnirisk2026defending; net +11 because the operator-side Paragraph publication is counted separately). Total 26 entries; bibliography_audit.verified_at refreshed to 2026-05-06."
+      - "Three vector PDFs added under figures/ (five-engine-architecture.pdf, rya-defence-cycle-prices.pdf, rya-defence-cycle-liquidity.pdf). Generation script: figures/_make_figures.py reads /Users/bazmini/omnirisk/bot/logs/decisions.jsonl and produces all three deterministically. Designer agent (OMN-152 child) is expected to replace these v0.10 baseline figures with polished versions."
+      - "Reproducibility Note: v0.10 entry inserted; describes the case-study data provenance (decision-log path, state.json post-cycle values, .env knobs that were quoted but never private keys)."
+      - "Title page revision tag bumped 0.9 → 0.10."
+      - "v0.9 content preserved verbatim except for the title, abstract, intro reframe, the §arch:omnirisk and §arch:bittensor section titles (and one-paragraph framing additions), and the §limitations additions. No tokenomics numbers, no RayaChain status numbers, no Bittensor formal definitions, no validator-loss machinery were modified."
   v0_9:
     date: "2026-05-04"
     summary: "Reconcile §economics:rya:design and §economics:rya:config against OMN-48 plan v5 (post-investor-audit EVM mint-authority correction) per OMN-54 v5 verification wake."
@@ -107,6 +126,10 @@ revision_log:
 
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:
+  - "v0.10 follow-up — Designer (OMN-152 child 12613bf3-8e65-490d-bb1d-37e24356dba1): replace the three v0.10 baseline vector PDFs (five-engine-architecture.pdf, rya-defence-cycle-prices.pdf, rya-defence-cycle-liquidity.pdf) with polished versions matching the OmniRisk visual identity. The current ones are reproducible from figures/_make_figures.py and are correct on data; they are intentionally unstyled."
+  - "v0.10 follow-up — Market Researcher (OMN-153 / 3e362df0-1807-47ce-9999-999e87692d61): confirm Taoshi Subnet 8 is still the canonical Bittensor prediction-subnet exemplar at submission time, and confirm the 8–10 sentiment-fusion / multimodal-finance citations against any newer 2026 surveys. Revise §arch:sentiment and §engine:subnet against their findings."
+  - "v0.10 follow-up — Developer (OMN-154 / 906093ba-704d-46d6-869c-17eb8f8503dc): populate §arch:scenario with the concrete OmniRisk API endpoint enumeration (Paperclip server endpoints, X bridge, Telegram bridge, risk-alert poller) and the smallest engineering delta to the program registry / trigger evaluator / constrained execution, replacing the present-day prose with a section-ready specification."
+  - "v0.10 follow-up — Cody CTO (OMN-155 / 6789d7e4-0339-4658-97e3-8638ceac0cc8): strategic call on whether the five engines ship as five separable services or as one composite agent that exposes the same five capabilities; the dependency graph / build order is the executive output that should land before the next revision."
   - "SECURITY: rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; address 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into CI/CD secret store; ship .env.example with placeholders only — needs separate engineering issue, not a paper task"
   - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
   - "Engineering: close the §status:gaps mainnet-readiness items — bring up mainnet RPC + EID + registry, deploy mainnet OFT + Solana program, wire the full 20-direction peer matrix, fix Base Sepolia ownership mismatch, adopt multisig+timelock governance, commission third-party security audit, write mainnet runbook (engineering estimate 4–8 weeks)"

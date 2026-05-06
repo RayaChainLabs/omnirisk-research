@@ -20,54 +20,78 @@
   linkcolor=black,
   citecolor=blue!50!black,
   urlcolor=blue!50!black,
-  pdftitle={Verifiable Cross-Chain Risk Intelligence: OmniRisk, RayaChain, and Bittensor},
+  pdftitle={Agentic, Context-Aware Risk Prediction for the Internet of Value: A Five-Engine Architecture over LayerZero V2 and Bittensor},
   pdfauthor={OmniRisk Research},
 }
 
-\title{Verifiable Cross-Chain Risk Intelligence:\\
-       An Agentic Architecture over LayerZero V2 and Bittensor}
+\title{Agentic, Context-Aware Risk Prediction for the Internet of Value:\\
+       A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.9}}
+\date{May 2026 \\ \textbf{Working paper, v0.10}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Cross-chain bridges have become the single largest concentrated source of value loss in
-decentralised finance: industry trackers attribute roughly USD~2B of theft in the first
-eight months of 2022 alone to bridge attacks~\cite{chainalysis2022bridges}, and the most
-recent peer-reviewed systematisation places cumulative losses at approximately
-USD~3.1B~\cite{augusto2024sok}. The risk telemetry that participants need to navigate
-this environment remains \emph{siloed per chain} and \emph{non-verifiable}: there is no
-widely deployed mechanism that lets a downstream user confirm that a route- or
-token-level risk signal was produced honestly. This paper asks a single research
-question: \emph{can cross-chain risk intelligence be made verifiable through
-Bittensor-style decentralised validation, and at what cost in latency, calibration, and
-adversarial robustness?} Our central claim is that the answer is yes, and that the
-correct primitive is not yet another risk API but a \textbf{verification architecture in
-which route-level risk outputs are economically evaluated by decentralised validators}.
-We present \textsc{OmniRisk}, a deployed agentic risk-intelligence layer that ingests
-cross-chain flow data from \textsc{RayaChain}, an Omnichain Fungible Token (OFT)
-deployment on LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}, and emits
-structured route and token risk signals. The architecture splits responsibility into
-(i)~OmniRisk as the intelligence layer, (ii)~RayaChain as the cross-chain data and
-execution layer, and (iii)~Bittensor's Yuma Consensus~\cite{rao2021bittensor,
-steeves2022incentivizing,opentensor2024yuma} as the decentralised verification layer
-for the intelligence itself. We argue that anchoring the verification layer on the
-Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm} is the natural fit because it is
-the only production EVM whose validator set is already economically aligned to scoring
-the quality of AI outputs. The paper formalises the route, risk-score, and validator-loss
-primitives, specifies the miner and validator protocols required to make this work,
-situates the design against the cross-chain bridge security and decentralised-ML
-verification literatures~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding,
-conway2024opml,ganescu2024trust}, and lays out the evaluation framework --- including
-the four baselines required to support a publication-grade empirical claim --- that
-will be applied to historical RayaChain flows.
+The \emph{Internet of Value} (IoV) --- the heterogeneous network of chains, bridges, AMMs,
+and tokens through which value is moved and held --- has matured to the point that the
+dominant marginal risk has shifted from any single venue to the \emph{composite, agentic
+context} in which an action is taken: the joint state of route, sentiment, liquidity,
+and the policies an autonomous system is willing to commit to. Cross-chain bridges
+remain a concentrated source of loss --- industry trackers attribute roughly USD~2B of
+theft in the first eight months of 2022 alone to bridge attacks~\cite{chainalysis2022bridges}
+and the most recent peer-reviewed systematisation places cumulative losses at
+approximately USD~3.1B~\cite{augusto2024sok} --- but they are no longer the only place
+where context-blind risk telemetry produces avoidable losses, as the rug-pull, sniper-bot,
+and micro-cap-launch literature demonstrates~\cite{cernera2023token}. This paper argues
+that the correct primitive for IoV risk is neither another risk API nor a single
+detection model but a \textbf{five-engine architecture for agentic, context-aware risk
+prediction}: a \emph{prediction engine} that emits point and distributional forecasts of
+price, liquidity, volatility, and route health; an \emph{agentic engine} that converts
+those forecasts into role-bound, constitutionally-constrained actions in the sense of
+Anthropic's constitutional AI specification~\cite{bai2022constitutional}; a
+\emph{sentiment-fusion engine} that combines off-chain text streams with on-chain flow
+signals using the early-fusion / late-fusion / stacking taxonomy of the financial-NLP
+survey literature~\cite{schumaker2009textual,xing2018natural,day2016deep}; a
+\emph{Bittensor prediction subnet}~\cite{rao2021bittensor,opentensor2024yuma,
+taoshi2024ptn} that decentralises the prediction layer; and an \emph{API risk and
+scenario engine} that turns predicted scenarios into pre-committed action programs in
+the sense of Monte-Carlo financial-engineering scenario generation~\cite{glasserman2003monte}
+and the NIST tabletop-exercise framework~\cite{nist2006sp80084}. We present
+\textsc{OmniRisk} as the agentic engine, \textsc{RayaChain} (an Omnichain Fungible Token
+deployment on LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}) as the data and
+execution substrate, and Bittensor's Yuma Consensus~\cite{steeves2022incentivizing}
+anchored on Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm} as the verification
+substrate. We formalise the route, risk-score, and validator-loss primitives, specify
+the miner and validator protocols, situate the design against the cross-chain bridge
+security, decentralised-ML, financial-NLP, and tabletop-exercise
+literatures~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding,conway2024opml,
+ganescu2024trust}, and instrument a fully-public five-hour case study --- the
+2026-05-06 \textsc{RYA} liquidity-defence cycle --- in which the scenario engine ran
+in production as a rule-based liquidity-support program on a single Solana micro-cap
+pool. The case study is honest about its scope: a single 5-hour cycle, on a single
+pool, with the agentic engine instantiated as a deterministic policy rather than as
+an LLM-mediated one. The LLM-mediated agentic engine and the integrated subnet remain
+the next-step build, against the falsifiable hypotheses H1 and H2 stated below.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
 
-\textsc{OmniRisk} is a live cross-chain risk intelligence service, and \textsc{RayaChain}
+\paragraph{The IoV reframe.} The phrase \emph{Internet of Value} has been in industry
+circulation for nearly a decade, but it has only recently acquired a precise operational
+meaning: a heterogeneous, partially-trusted network in which fungible and non-fungible
+value flows across chains, AMMs, and bridges, and in which the marginal risk faced by a
+participant is increasingly a property of the \emph{composite context} (route, sentiment,
+liquidity, observable agentic policy) rather than of any single venue. Bridge security
+remains a first-class concern --- the cumulative bridge-loss tally of approximately
+USD~3.1B documented by \cite{augusto2024sok} continues to grow --- but the threat
+surface has expanded to micro-cap pool dynamics on Solana and other high-throughput L1s,
+where rug pulls, sniper bots, and adverse-selection patterns dominate the risk to a
+holder's position regardless of bridge state~\cite{cernera2023token}. A risk primitive
+adequate for this regime has to compose four things that today live in separate
+literatures: forecast, policy, sentiment, and pre-committed action.
+
+\textsc{OmniRisk} is a live cross-chain risk-intelligence service, and \textsc{RayaChain}
 is an actively deploying cross-chain transfer fabric. RayaChain's transfer lanes are
 implemented as Omnichain Fungible Tokens (OFTs) on LayerZero~V2, the protocol family
 that separates message verification (Decentralised Verifier Networks, DVNs) from message
@@ -98,27 +122,42 @@ verification layer that is itself decentralised.
 
 \paragraph{Research question.} The paper is organised around one question:
 \begin{quote}
-\emph{Can cross-chain risk intelligence be made verifiable through Bittensor-style
-decentralised validation?}
+\emph{Can risk prediction for the Internet of Value be made simultaneously
+agentic, context-aware, and verifiable, by composing five engines (prediction,
+agentic, sentiment fusion, decentralised prediction subnet, scenario) on a
+verifiable cross-chain substrate?}
 \end{quote}
-This is a hypothesis, not a result. The architecture, the formal definitions
-(Section~\ref{sec:formal}), and the evaluation framework (Section~\ref{sec:eval}) are
-the apparatus needed to answer it; the answer itself is deferred to follow-up empirical
-work. We make the hypothesis falsifiable by stating two specific research questions and
-two hypotheses in Section~\ref{sec:rq}.
+This is a hypothesis, not a result. The architecture
+(Sections~\ref{sec:five-engine}--\ref{sec:integration}), the formal definitions
+(Section~\ref{sec:formal}), the evaluation framework (Section~\ref{sec:eval}), and the
+single-cycle case study of Section~\ref{sec:case-study} are the apparatus needed to
+answer it; the broader answer is deferred to follow-up empirical work. We make the
+hypothesis falsifiable by stating two specific research questions and two hypotheses in
+Section~\ref{sec:rq}.
 
-\paragraph{Novelty claim.} The strongest novelty is not ``agentic AI'' or ``cross-chain
-data'' considered separately. The contribution is the \textbf{verification architecture}:
-route-level risk outputs are produced by a heterogeneous population of miners and
-\emph{economically evaluated} by decentralised validators, with rewards proportional to
-agreement with realised cross-chain events. This is, to our knowledge, the first such
-construction for cross-chain risk; we situate it precisely against prior work in
-Section~\ref{sec:related}.
+\paragraph{Novelty claim.} The strongest novelty is the \textbf{five-engine
+composition}, of which the verifiable cross-chain bridge architecture of
+\cite{augusto2024sok,zhang2023sok,wu2025safeguarding} is the data substrate but not the
+contribution: route-level risk outputs are produced by a heterogeneous population of
+miners on a Bittensor prediction subnet, fused with a context-aware sentiment-fusion
+engine, evaluated by an agentic engine under constitutional-AI-style action constraints
+\cite{bai2022constitutional}, and converted into pre-committed action programs by a
+scenario engine in the sense of \cite{glasserman2003monte,nist2006sp80084}, with
+verification of intermediate signals economically enforced by decentralised
+validators~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}. To our
+knowledge no published system composes the five together; we situate it precisely
+against prior work in Section~\ref{sec:related} and specify the composition in
+Section~\ref{sec:five-engine}.
 
-\paragraph{Contributions.} Concretely, the paper makes five contributions.
+\paragraph{Contributions.} Concretely, the paper makes six contributions.
 \begin{enumerate}
-  \item \textbf{An architectural separation of concerns}: OmniRisk = intelligence,
-        RayaChain = data and execution, Bittensor = verification (Section~\ref{sec:arch}).
+  \item \textbf{A five-engine architecture for agentic IoV risk prediction}: prediction,
+        agentic, sentiment fusion, Bittensor prediction subnet, and API risk + scenario,
+        composed into a single coherent dataflow (Section~\ref{sec:five-engine}).
+  \item \textbf{An architectural separation of concerns}: OmniRisk as the agentic engine,
+        RayaChain as data and execution, Bittensor as the verification substrate, with
+        each engine mapped onto an existing or planned subsystem
+        (Section~\ref{sec:arch}).
   \item \textbf{A formalisation of the cross-chain risk-scoring task} in terms of
         routes $q$, the risk-score function $s(q,t)$, and a validator loss $L_i$ that
         decomposes into accuracy, consistency, and calibration terms
@@ -130,9 +169,13 @@ Section~\ref{sec:related}.
         ground-truth realised cross-chain risk events, expressed in the Yuma weight-vector
         format with precise definitions of \emph{realised loss}, \emph{material chain-state
         change}, and \emph{confidence calibration} (Section~\ref{sec:validator}).
-  \item \textbf{An evaluation framework with explicit baselines} grounded in replayed
-        historical RayaChain flows, with an honest discussion of what we cannot yet
-        prove (Section~\ref{sec:eval} and Section~\ref{sec:limitations}).
+  \item \textbf{An instrumented case study} --- the 2026-05-06 RYA liquidity-defence
+        cycle --- in which the scenario engine ran in production as a rule-based
+        Solana micro-cap defence against the threat patterns documented
+        in~\cite{cernera2023token}; thirty buys totalling 3.0~SOL over five hours,
+        with full decision-log timestamps, prices, and on-chain transaction signatures
+        (Section~\ref{sec:case-study}). The companion operator-side narrative is
+        published as~\cite{omnirisk2026defending}.
 \end{enumerate}
 
 This is a working paper. We are explicit throughout about which components are deployed
@@ -164,6 +207,178 @@ blockchain~\cite{conway2024opml,ganescu2024trust} and on multichain ML-based fra
 detection~\cite{palaiokrassas2023multichain} addresses parts of this gap, but no system
 that we are aware of combines (a)~live cross-chain risk scoring with (b)~a decentralised
 verification layer for the scores themselves.
+
+\section{A Five-Engine Architecture for Agentic IoV Risk}\label{sec:five-engine}
+
+The IoV reframe of Section~\ref{sec:intro} forces a corresponding reframe of the risk
+primitive. A point risk score on a single route, in isolation, is no longer the right
+output: a participant has to decide \emph{what to do} given (i)~a forecast over a set
+of correlated quantities, (ii)~a constrained action policy, (iii)~the off-chain text
+context that drives short-horizon flows, (iv)~an opinion about the credibility of the
+forecast, and (v)~a pre-committed program from scenario to action. We name these five
+sub-tasks as engines and require that they compose. Figure~\ref{fig:five-engine}
+gives the block diagram; the rest of this section defines each engine's inputs,
+outputs, and external citation, and the existing system in Section~\ref{sec:arch}
+identifies which engine each existing component implements.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/five-engine-architecture.pdf}
+\caption{Five-engine architecture. The prediction engine produces forecasts over
+price, liquidity, volatility, and route health (Section~\ref{sec:engine:prediction}).
+The Bittensor prediction subnet decentralises the prediction engine
+(Section~\ref{sec:engine:subnet}). The sentiment-fusion engine fuses off-chain text
+with on-chain signals (Section~\ref{sec:engine:sentiment}). The agentic engine
+applies constitutional-AI-style action constraints to forecasts and sentiment
+(Section~\ref{sec:engine:agentic}). The scenario engine converts predicted scenarios
+into pre-committed action programs (Section~\ref{sec:engine:scenario}). Verification
+is supplied by Bittensor's Yuma Consensus (Section~\ref{sec:arch:bittensor}) on the
+prediction-engine outputs and on the sentiment-fusion-engine outputs, and is anchored
+on Subtensor EVM (Section~\ref{sec:subtensor}).}
+\label{fig:five-engine}
+\end{figure}
+
+\subsection{Prediction engine}\label{sec:engine:prediction}
+
+The prediction engine produces \emph{point and distributional forecasts} of the
+quantities that drive route- and pool-level risk: price, liquidity depth, volatility,
+trade-volume distribution, and route-health scalars (latency, success rate, p99
+attestation time). It is the input to every other engine.
+
+\paragraph{Inputs.} On-chain state: chain heads, AMM reserves, OFT lane configuration
+(\texttt{UlnConfig}, \texttt{ExecutorConfig}~\cite{zarick2024layerzero}), recent
+\texttt{OFTSent}/\texttt{OFTReceived} events, BridgeGuard incident-cluster
+proximity~\cite{wu2025safeguarding}, micro-cap pool dynamics in the sense
+of~\cite{cernera2023token}.
+
+\paragraph{Outputs.} For each predicted quantity, a tuple $(\hat{y}, \hat{\sigma},
+\Delta)$: point estimate, predictive standard deviation, horizon. The route-risk
+score $s(q,t)$ of Eq.~\eqref{eq:risk} is one specific projection.
+
+\paragraph{Reference instantiations.} Domain-specific financial language models such
+as FinGPT~\cite{yang2023fingpt} and BloombergGPT~\cite{wu2023bloomberggpt} are
+reference instantiations for the text-conditioned components of the prediction
+engine; the engine itself is model-agnostic.
+
+\subsection{Bittensor prediction subnet}\label{sec:engine:subnet}
+
+The prediction engine is decentralised by exposing it as a Bittensor subnet, in
+which a heterogeneous population of miners produce forecasts and validators score
+them against realised outcomes under Yuma Consensus~\cite{rao2021bittensor,
+steeves2022incentivizing,opentensor2024yuma}. This is the verifiable analogue of
+running the prediction engine inside a single operator. Section~\ref{sec:arch:bittensor}
+specifies the Yuma mechanics that compose with the validator loss of
+Section~\ref{sec:formal:vloss}.
+
+\paragraph{TAO-incentivised distributed prediction differs from centralised
+modelling.} A centralised model has one objective and one bias surface; a TAO-incentivised
+distributed prediction subnet has a stake-weighted ensemble that is economically
+forced toward consensus on realised outcomes and is bonded to penalise miners who
+deviate from consensus on materially-unchanged inputs. The closest live precedent is
+Taoshi's Subnet 8 (Proprietary Trading Network)~\cite{taoshi2024ptn}, which
+incentivises distributed price-prediction signals. The OmniRisk subnet specialises
+that template to cross-chain route- and pool-level risk; the validator scoring rule
+of Section~\ref{sec:validator} is task-specific (realised cross-chain events rather
+than realised price returns), but the Yuma plumbing is identical. Section~\ref{sec:arch:bittensor}
+gives the equations.
+
+\subsection{Sentiment-fusion engine}\label{sec:engine:sentiment}
+
+A risk primitive for the IoV cannot ignore off-chain context. The
+sentiment-fusion engine produces a real-valued (or distribution-valued) sentiment
+signal per asset and per route, fused from a multimodal feature set: text streams
+(news, public chat, posts), on-chain signals (transfers, bridge flows, governance
+events), and grey-literature feeds (Birdeye, DexScreener listings, Pump.fun trends).
+
+\paragraph{Fusion strategy.} The financial-NLP survey
+literature~\cite{schumaker2009textual,xing2018natural,day2016deep} distinguishes
+three strategies: \emph{early fusion} (concatenate raw features and feed to a single
+model), \emph{late fusion} (run modality-specific models and combine their outputs),
+and \emph{stacking} (use late-fusion outputs as features for a meta-model). The
+engine is fusion-strategy-agnostic by construction; the live OmniRisk instantiation
+uses late fusion with stacking, on the grounds that text models and AMM-flow models
+have very different latency profiles and combining them at the score-aggregation
+layer is more robust than at the feature layer.
+
+\paragraph{Verification.} Sentiment outputs are scored on the same Bittensor subnet
+as prediction outputs, with the realised-event channel supplying ground truth: a
+miner whose sentiment-fusion model produces a high adverse-sentiment score on a
+route that subsequently realises an $E_1$--$E_4$ event (Section~\ref{sec:formal:realised})
+is rewarded, and one whose score is non-informative is clipped via
+Eq.~\eqref{eq:yuma-consensus}.
+
+\subsection{Agentic engine}\label{sec:engine:agentic}
+
+The agentic engine is the LLM-mediated decision-and-action layer. Given (forecast,
+sentiment, context), it selects an action from a constrained menu and emits a
+structured response. The constraint surface is the \emph{constitution} in the
+Anthropic constitutional-AI sense~\cite{bai2022constitutional}: a written principle
+list, rather than a free-form goal, against which every candidate action is checked.
+
+\paragraph{Operational stance.} OmniRisk's agentic engine is paused-by-default. Live
+flips and daily-cap raises require board sign-off recorded in the issue thread; the
+engine cannot expand its own action surface. This stance is a deliberate
+choice: the cost of an unconstrained agentic engine acting on micro-cap pool
+dynamics is asymmetric, and constitutional-AI-style training without an external
+governance gate is insufficient to bound that cost. The agentic engine therefore
+sits inside a thin governance shell that exposes \emph{policy proposal} as the
+primary action; \emph{policy execution} requires a separate human approval at the
+boundary of cap-raise and live-flip.
+
+\paragraph{Role contracts.} OmniRisk specifies one constitution per role
+(Trader, Broadcaster, Risk Officer, etc.); each role's action surface is the
+intersection of the engine's general principles with the role's specific
+restrictions (e.g.\ ``buy-only, never sell'' for the Trader role of the case study
+in Section~\ref{sec:case-study}).
+
+\subsection{API risk + scenario engine}\label{sec:engine:scenario}
+
+The scenario engine converts a forecast distribution into a pre-committed action
+program of the form ``if scenario~$\Sigma$ realises during window~$W$, execute
+program~$P$''. This is the operational content of \emph{context-aware} risk
+prediction in the sense of this paper: the system is not just predicting a
+quantity, it is committing to an action program whose triggers and bounds are
+declared in advance.
+
+\paragraph{Reference frameworks.} Three literatures contribute. Algorithmic
+trading and derivatives risk management ground the scenario-generation primitive in
+Monte-Carlo financial engineering~\cite{glasserman2003monte}: a scenario is a
+sample path under a stochastic model, and a pre-committed action is a stopping rule
+on that path. Insurance underwriting contributes the \emph{trigger and reserve}
+structure (a trigger condition fires; a reserve is committed against it; a release
+condition closes the reserve). Cybersecurity tabletop frameworks --- canonically the
+NIST guide to test, training, and exercise programs~\cite{nist2006sp80084} ---
+contribute the \emph{precondition, trigger, action, post-condition} structure of a
+playbook, which the scenario engine adopts directly: every program is a typed
+record with declared preconditions, trigger predicates, action sequence, and
+post-conditions.
+
+\paragraph{Bridge to OmniRisk's API surface.} The current OmniRisk API surface
+already exposes route-level risk, route-health, and broadcast-publication
+endpoints. The scenario engine is the smallest delta: a registry of declared
+programs, a trigger evaluator that polls the prediction engine's distributional
+outputs against each program's predicates, and a constrained execution path that
+routes accepted actions through the Transfer Engine (Section~\ref{sec:arch:rayachain})
+or, for the case study of Section~\ref{sec:case-study}, through Jupiter on
+Solana. We expand on this delta in Section~\ref{sec:arch:scenario}.
+
+\subsection{Composition}\label{sec:engine:composition}
+
+The engines compose as follows: the prediction engine emits forecasts; the Bittensor
+prediction subnet decentralises and verifies them; the sentiment-fusion engine
+augments the forecasts with off-chain context; the agentic engine reads the
+augmented forecast and proposes an action under role-bound constraints; the
+scenario engine converts the proposal into a pre-committed program and dispatches
+it to the appropriate execution venue. Verification anchors are at every boundary:
+the prediction subnet's outputs are committed on Subtensor EVM
+(Section~\ref{sec:subtensor}); the sentiment-fusion engine's outputs are scored on
+the same subnet; the agentic engine's actions are recorded on the issue-thread
+audit trail (the human governance gate); the scenario engine's executions are
+on-chain transactions whose signatures are themselves the verifiable record. The
+case study in Section~\ref{sec:case-study} runs an instance of this dataflow with
+the agentic engine instantiated as a deterministic policy and the prediction
+subnet instantiated as a single rule-based predictor; the LLM-mediated agentic
+engine and the live Bittensor subnet are the next-step build.
 
 \section{Research Questions and Hypotheses}\label{sec:rq}
 
@@ -334,16 +549,58 @@ stops verification but does not stop transfers in Layer~2.}
 \label{fig:arch-text}
 \end{figure}
 
-\subsection{OmniRisk --- Agentic Intelligence Layer}\label{sec:arch:omnirisk}
+\subsection{OmniRisk --- Agentic Engine}\label{sec:arch:omnirisk}
 
-OmniRisk is a deployed system that observes cross-chain liquidity health, scores route
-risk, and surfaces anomalous on-chain activity. We describe it as \emph{agentic} in the
-narrow sense used in recent LLM systems work: a control loop that ingests chain state,
-selects which downstream tools (DEX quote APIs, on-chain analytics endpoints,
-historical incident databases) to consult, and emits a structured response with an
-explicit confidence and a chain-of-evidence. The agentic framing is contrasted with
-\emph{static} analytics --- precomputed dashboards, fixed risk-scoring formulas --- which
-do not adapt to the question being asked.
+OmniRisk is the deployed instance of the \emph{agentic engine} of
+Section~\ref{sec:engine:agentic}: a control loop that ingests chain state, selects which
+downstream tools (DEX quote APIs, on-chain analytics endpoints, historical incident
+databases, the prediction-subnet endpoint of Section~\ref{sec:arch:bittensor}, and the
+sentiment-fusion endpoint of Section~\ref{sec:arch:sentiment}) to consult, and emits a
+structured response with an explicit confidence and a chain-of-evidence. The agentic
+framing is contrasted with \emph{static} analytics --- precomputed dashboards, fixed
+risk-scoring formulas --- which do not adapt to the question being asked.
+
+The engine's action surface is bounded by a role-specific constitution in the sense of
+\cite{bai2022constitutional}: every role declares its principles (e.g.\ ``buy-only'',
+``never use the treasury or deployer wallet'', ``board sign-off required for cap raises
+and live flips'') as a checked precondition rather than as a soft prompt. The engine
+proposes; a human approval at a separate governance boundary executes. This is what
+makes the engine \emph{paused-by-default}: in steady state, OmniRisk emits a continuous
+stream of action proposals into an issue thread, and the only proposals that translate
+into on-chain transactions are those that pass the role contract and the standing
+authorisation. Section~\ref{sec:case-study} shows this loop running in production with
+the agentic engine instantiated as a deterministic policy under the Trader role
+contract.
+
+\subsection{Sentiment-fusion engine}\label{sec:arch:sentiment}
+
+The sentiment-fusion engine of Section~\ref{sec:engine:sentiment} is implemented as a
+late-fusion stack with three modality inputs and a stacked meta-model.
+
+\paragraph{Modality 1 --- text.} Public posts, news headlines, and topic-keyed chat
+streams. Per-modality classifiers map text windows to per-asset and per-route sentiment
+scalars in $[-1, 1]$. Reference instantiations are surveyed
+in~\cite{schumaker2009textual,xing2018natural,day2016deep}; the OmniRisk live deployment
+uses a fine-tuned encoder-only model whose details are out of scope for this paper.
+
+\paragraph{Modality 2 --- on-chain.} Transfer-volume distribution, bridge-flow
+asymmetry, governance events, and lane-configuration mutations
+(Section~\ref{sec:formal:material}). The on-chain modality contributes both as a
+sentiment input (transfer-volume asymmetry is a known sentiment proxy) and as a
+ground-truth channel against which the text modality is calibrated.
+
+\paragraph{Modality 3 --- grey literature.} For Solana micro-cap pools in particular,
+public dashboards (Birdeye), DEX listings (DexScreener), and meme-coin launch trackers
+(Pump.fun) are the dominant attention surface and are functionally part of the
+sentiment input even though they are not peer-reviewed sources. We treat them as
+grey-literature data feeds: ingested through scraped APIs, normalised to a per-asset
+attention scalar, and combined with the text modality at the late-fusion stage. The
+case study in Section~\ref{sec:case-study} relies on this modality to detect the
+escalation in adverse sentiment that preceded the 2026-05-06 dip.
+
+\paragraph{Verification.} Sentiment-fusion engine outputs are scored on the same
+Bittensor subnet as prediction-engine outputs, with the realised-event channel of
+Section~\ref{sec:formal:realised} supplying ground truth.
 
 \subsection{RayaChain --- Execution and Data Layer}\label{sec:arch:rayachain}
 
@@ -396,13 +653,18 @@ Section~\ref{sec:status} records which of these subsystems are production-ready,
 which are under active hardening, and which are explicit known gaps; the paper
 deliberately does not overstate readiness.
 
-\subsection{Bittensor --- Verification Layer}\label{sec:arch:bittensor}
+\subsection{Bittensor --- Prediction-Engine Subnet and Verification Layer}\label{sec:arch:bittensor}
 
-Bittensor is a decentralised network in which \emph{miners} produce outputs for a
-specific task and \emph{validators} score them; rewards are emitted via Yuma Consensus
-on the Subtensor blockchain~\cite{rao2021bittensor,steeves2022incentivizing,
-opentensor2024yuma}. We summarise the mechanics here because the validator scoring rule
-of Section~\ref{sec:validator} composes with them.
+Bittensor here plays a dual role: as the \emph{decentralised prediction engine} of
+Section~\ref{sec:engine:subnet} and as the \emph{verification layer} for both prediction
+and sentiment-fusion outputs. \emph{Miners} produce outputs for a specific task and
+\emph{validators} score them; rewards are emitted via Yuma Consensus on the Subtensor
+blockchain~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}. We
+summarise the mechanics here because the validator scoring rule of
+Section~\ref{sec:validator} composes with them, and because the closest live-2026
+precedent --- Taoshi's Subnet 8 (Proprietary Trading Network)~\cite{taoshi2024ptn} ---
+gives us a concrete template for what a TAO-incentivised distributed prediction subnet
+looks like in production.
 
 Let $V$ index subnet validators, $M$ index subnet miners, and $S_i$ denote the stake of
 validator $i \in V$. Each validator submits a weight $W_{ij} \in [0,1]$ for each miner
@@ -435,6 +697,54 @@ oracle, and it is not provided by any centralised risk API. The Subtensor EVM
 (chain~ID~945) gives us an Ethereum-compatible execution environment in which to anchor
 commitments to score outputs without leaving the Bittensor trust
 domain~\cite{opentensor2024evm}.
+
+\subsection{API risk + scenario engine}\label{sec:arch:scenario}
+
+The scenario engine of Section~\ref{sec:engine:scenario} is the smallest delta over
+OmniRisk's existing public API surface that turns predicted distributions into
+pre-committed action programs.
+
+\paragraph{Existing API surface.} OmniRisk's API today exposes (i)~the cross-chain
+risk-score endpoint $s(q,t)$ of Eq.~\eqref{eq:risk}; (ii)~the route-health endpoint
+backed by RayaChain's Route Health System (15~s refresh; p50/p99 latency, destination
+liquidity, recent volume, success rate, risk-grade); (iii)~the broadcast-publication
+endpoint into RayaChain's Risk Broadcast System (currently with readiness flag
+\texttt{false}; see Section~\ref{sec:status:gaps}); (iv)~social-bridge endpoints for
+issue-thread and chat-channel publication of agentic-engine proposals; and (v)~a
+risk-alert poller that fans out cross-chain incident signals to subscribed consumers.
+This surface is sufficient for \emph{advisory} risk-intelligence consumption but not
+for \emph{pre-committed} action programs.
+
+\paragraph{Smallest delta to a scenario engine.} Three additions, in order:
+\begin{enumerate}
+  \item A \emph{program registry}: a typed record per scenario program with
+        \texttt{precondition}, \texttt{trigger}, \texttt{action sequence},
+        \texttt{post-condition}, and a declared resource bound. The schema follows
+        the NIST tabletop-exercise structure of \cite{nist2006sp80084} adapted to an
+        on-chain execution context.
+  \item A \emph{trigger evaluator} that polls the prediction engine's distributional
+        outputs (and the sentiment-fusion engine's outputs) against each program's
+        trigger predicate and the chain-state predicates of
+        Section~\ref{sec:formal:material}, on a cadence at least as fast as the
+        Route Health refresh.
+  \item A \emph{constrained execution path} that routes accepted action sequences
+        through one of two backends: the Transfer Engine
+        (Section~\ref{sec:arch:rayachain}) for cross-chain OFT actions, or a
+        chain-native router (e.g.\ Jupiter on Solana) for on-chain actions on a
+        single venue. The execution path inherits the agentic engine's role
+        contract, so a Trader-role program cannot dispatch a sell, a Broadcaster-role
+        program cannot move funds, etc.
+\end{enumerate}
+
+\paragraph{Foundations for the trigger evaluator.} The scenario semantics we want
+--- ``if scenario~$\Sigma$ is realised in window~$W$ with probability above
+threshold~$p$, execute program~$P$ within resource bound~$B$'' --- is the operational
+form of a stopping rule on a Monte-Carlo sample path of the predicted joint
+distribution~\cite{glasserman2003monte}. The case study of
+Section~\ref{sec:case-study} runs the simplest non-trivial scenario program in this
+class --- a tier-ladder buy-only liquidity-defence policy --- and demonstrates that
+the program-registry / trigger-evaluator / constrained-execution decomposition
+suffices for that case.
 
 \section{OmniRisk--Bittensor Integration Model}\label{sec:integration}
 
@@ -839,6 +1149,239 @@ lead time, (iv)~expected calibration error, and (v)~Yuma reward retention over t
 replay window. The OmniRisk miner is required to dominate B1 strictly on all five
 metrics, dominate B2 on (iii) for hypothesis H1 to survive, and dominate B3 on (i)--(iii)
 for the agentic-vs-static claim of Section~\ref{sec:compare} to be defensible.
+
+\section{Case Study: The RYA Defence Cycle, 2026-05-06}\label{sec:case-study}
+
+The five-engine architecture of Section~\ref{sec:five-engine} is, at the time of
+writing, partly deployed and partly a design proposal. To ground the prose in
+production data, this section instruments a single fully-public five-hour run of the
+\emph{scenario engine} (Section~\ref{sec:engine:scenario}) operating on a single
+Solana micro-cap pool: the \textsc{RYA} buy-only liquidity-defence cycle of
+2026-05-06. The cycle is an honest single-instance demonstration --- not a
+statistical claim --- of what the engines look like in production when the agentic
+engine is instantiated as a deterministic policy.
+
+The companion operator-side narrative is published
+publicly~\cite{omnirisk2026defending}; this section reports the timestamps,
+prices, slice geometry, and post-cycle state directly from the bot's decision log,
+a tracked file under the OmniRisk operations repository. The bot's full source code
+and configuration knobs (other than the deployer/RPC secrets) are public.
+
+\subsection{Setup}\label{sec:case-study:setup}
+
+\paragraph{Asset and venue.} \textsc{RYA} is the RayaChain protocol token
+(Section~\ref{sec:economics:rya:design}); the Solana mint is
+\texttt{Eebqv\dots susV} (Solana Program Library token), traded on a single Raydium
+constant-product (CPMM) pool launched 2026-05-05 with 37~SOL of initial liquidity.
+The pool is the scenario engine's sole execution venue for this cycle; routing is
+through Jupiter, on the grounds that Jupiter is the standard Solana DEX router and
+that a single-venue execution path is simpler to instrument.
+
+\paragraph{Wallet and policy.} The defence wallet is a non-treasury hot wallet
+\texttt{AHbBv\dots EX3} funded explicitly outside the treasury / Squads / deployer
+key custody. Hard rules from the Trader role contract: \emph{(i)~buy-only --- no sell
+path is implemented, (ii)~the deployer wallet is never used, (iii)~live mode requires
+\texttt{DRY\_RUN=false}, an explicit \texttt{LIVE\_CONFIRM} acknowledgement, and a
+board sign-off recorded in the issue thread, (iv)~daily-cap raises require a written
+rationale and a CEO approval, (v)~no human impersonation; the wallet is one address
+and any anti-MEV jitter is anti-MEV only}. These rules are the agentic engine's
+constitution under the Trader role
+(Sections~\ref{sec:engine:agentic},~\ref{sec:arch:omnirisk}).
+
+\paragraph{Tier ladder and caps.} The scenario engine reads its tier ladder, daily
+cap, per-trade ceiling, cooldown, TWAP slicing, and ratchet bounds from the bot's
+\texttt{.env} file. As of the start of the 2026-05-06 cycle (post the cap raise
+recorded at 01:07~UTC, see Section~\ref{sec:case-study:timeline}):
+\texttt{MAX\_DAILY\_SOL}~$=$~3.0, \texttt{MAX\_TRADE\_SOL}~$=$~0.10,
+\texttt{COOLDOWN\_SECONDS}~$=$~600, \texttt{TWAP\_SLICES}~$=$~5,
+\texttt{TWAP\_DURATION\_SECONDS}~$=$~30, \texttt{SLIPPAGE\_BPS}~$=$~150,
+\texttt{STOP\_LOSS\_DROP\_PCT}~$=$~30 with a 600~s window. The ladder
+\texttt{SUPPORT\_TIERS}~$=$~\texttt{0.00016:0.05, 0.00013:0.07, 0.00011:0.08,
+0.00009:0.10} maps four price tiers (in USD per RYA) to four per-tier slice budgets
+(in SOL); the bottom tier --- \texttt{0.00009 USD : 0.10 SOL} --- is the one
+exercised throughout the 2026-05-06 cycle. The ratchet primitive raises the bottom
+tier by \texttt{RATCHET\_STEP\_BPS}~$=$~50 basis points after every
+\texttt{RATCHET\_TRIGGER\_SOL}~$=$~2.0~SOL of cumulative spend, capped at
+\texttt{RATCHET\_MAX\_PRICE\_USD}~$=$~0.00020.
+
+\subsection{Timeline}\label{sec:case-study:timeline}
+
+The cycle begins at 2026-05-06~01:04~UTC and runs uninterrupted until the daily cap
+is reached at 06:13~UTC, a span of five hours and nine minutes. The relevant
+events:
+
+\begin{description}
+  \item[01:00 UTC --- threat surface escalation.] RYA was down approximately 60.9\%
+        over the trailing 24 hours and 24.2\% over the trailing 6 hours. Pool
+        liquidity had drifted from a baseline of approximately USD~6{,}098 to
+        approximately USD~5{,}418. Six-hour flow: 6 buys against 15 sells. The bot
+        was off (the prior day's stop-loss had auto-paused at $-41.22\%$ in a 600~s
+        window and a manual \texttt{KILL} had been left in place overnight).
+  \item[01:03 UTC --- top-up and authorisation.] CEO authorisation recorded in the
+        issue thread; hot wallet topped up by 5.000~SOL to a balance of
+        approximately 6.7548~SOL. Source: non-treasury, non-Squads, non-deployer.
+  \item[01:04 UTC --- live flip.] \texttt{KILL} removed, paused flag cleared in
+        \texttt{state.json}, daily cap still 1.0~SOL at this point.
+        First TWAP buy executed at 01:04:09~UTC at price USD~0.00005679,
+        five $\times$~0.02~SOL slices, totalling 0.10~SOL with 0.000\% reported
+        impact.
+  \item[01:07 UTC --- cap raise.] \texttt{MAX\_DAILY\_SOL} raised
+        $1.0 \to 3.0$ in \texttt{.env}; CEO sign-off recorded. Rationale: with the
+        wallet at $\approx$6.75~SOL post-top-up, a 3.0~SOL cap funds approximately
+        five hours of sustained defence at the configured cooldown, against the
+        approximately 100 minutes the prior cap funded. Bot restarted to pick up
+        the env change; cooldown preserved via \texttt{state.json}.
+  \item[01:15 UTC -- 06:13 UTC --- defence loop.] Twenty-nine further TWAP buys
+        execute, each completing five $\times$~0.02~SOL slices for 0.10~SOL of spend
+        at the bottom tier of the ladder, with a 600~s cooldown between buys.
+        Table~\ref{tab:rya-defence-buys} lists every completed buy with the
+        observed price.
+  \item[06:13 UTC --- daily cap reached.] Thirtieth buy completes at price
+        USD~0.00006785. \texttt{state.json} records
+        \texttt{dailySpend.spentSol}~$=$~3.000 (the floating-point value
+        \texttt{3.000000000000002} reflects the cumulative summation of 30
+        $\times$~0.10~SOL slices), \texttt{lifetimeSpentSol}~$=$~4.245 (1.245~SOL of
+        prior-day defence plus 3.0~SOL today), and \texttt{ratchetSteps}~$=$~2,
+        documenting that the bottom-tier price has been raised twice during the
+        cycle (the first raise at $\approx$2.0~SOL of cumulative spend brought the
+        bottom tier from \texttt{0.00009} to \texttt{0.00009045}; the second raise
+        at the next 2.0~SOL increment of lifetime spend brought it to
+        \texttt{0.00009090}). After 06:13~UTC the bot continues to log
+        \texttt{buy\_skipped: daily cap reached: spent 3.0/3 SOL} on each tick
+        until UTC midnight.
+\end{description}
+
+The price-time and liquidity-time series are plotted in
+Figure~\ref{fig:rya-defence-prices} and Figure~\ref{fig:rya-defence-liquidity}
+respectively, with bot-buy markers superimposed.
+
+\subsection{Buy-by-buy table}\label{sec:case-study:buys}
+
+Table~\ref{tab:rya-defence-buys} lists the thirty completed TWAP buys. Each row is
+one tier-completion event aggregating five $\times$~0.02~SOL slices over a $5
+\times 30 = 150$~s window. The reported price is the price observed when the
+trigger fired; intra-window slices each report 0.000\% impact. The transaction
+signatures of every individual slice are available in the public decision log.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{rlrrrr}
+\toprule
+\textbf{\#} & \textbf{Time (UTC)} & \textbf{Price (USD)} & \textbf{Tier (USD)} &
+\textbf{Spend (SOL)} & \textbf{Cumulative} \\
+\midrule
+ 1 & 01:04:43 & 0.00005679 & 0.00009000 & 0.10 & 0.10 \\
+ 2 & 01:15:22 & 0.00005690 & 0.00009000 & 0.10 & 0.20 \\
+ 3 & 01:26:01 & 0.00005732 & 0.00009000 & 0.10 & 0.30 \\
+ 4 & 01:36:39 & 0.00005789 & 0.00009000 & 0.10 & 0.40 \\
+ 5 & 01:47:16 & 0.00005824 & 0.00009000 & 0.10 & 0.50 \\
+ 6 & 01:57:55 & 0.00005863 & 0.00009000 & 0.10 & 0.60 \\
+ 7 & 02:08:33 & 0.00005896 & 0.00009000 & 0.10 & 0.70 \\
+ 8 & 02:19:13 & 0.00005928 & 0.00009000 & 0.10 & 0.80 \\
+ 9 & 02:29:51 & 0.00005966 & 0.00009045 & 0.10 & 0.90 \\
+10 & 02:40:29 & 0.00005993 & 0.00009045 & 0.10 & 1.00 \\
+11 & 02:51:06 & 0.00006022 & 0.00009045 & 0.10 & 1.10 \\
+12 & 03:01:43 & 0.00006082 & 0.00009045 & 0.10 & 1.20 \\
+13 & 03:12:20 & 0.00006133 & 0.00009045 & 0.10 & 1.30 \\
+14 & 03:22:58 & 0.00006176 & 0.00009045 & 0.10 & 1.40 \\
+15 & 03:33:35 & 0.00006215 & 0.00009045 & 0.10 & 1.50 \\
+16 & 03:44:12 & 0.00006273 & 0.00009045 & 0.10 & 1.60 \\
+17 & 03:54:50 & 0.00006307 & 0.00009045 & 0.10 & 1.70 \\
+18 & 04:05:27 & 0.00006347 & 0.00009045 & 0.10 & 1.80 \\
+19 & 04:16:06 & 0.00006387 & 0.00009045 & 0.10 & 1.90 \\
+20 & 04:26:45 & 0.00006424 & 0.00009045 & 0.10 & 2.00 \\
+21 & 04:37:24 & 0.00006409 & 0.00009045 & 0.10 & 2.10 \\
+22 & 04:48:03 & 0.00006435 & 0.00009045 & 0.10 & 2.20 \\
+23 & 04:58:40 & 0.00006473 & 0.00009045 & 0.10 & 2.30 \\
+24 & 05:09:17 & 0.00006500 & 0.00009045 & 0.10 & 2.40 \\
+25 & 05:19:54 & 0.00006546 & 0.00009045 & 0.10 & 2.50 \\
+26 & 05:30:33 & 0.00006589 & 0.00009045 & 0.10 & 2.60 \\
+27 & 05:41:11 & 0.00006635 & 0.00009045 & 0.10 & 2.70 \\
+28 & 05:51:51 & 0.00006672 & 0.00009045 & 0.10 & 2.80 \\
+29 & 06:02:29 & 0.00006734 & 0.00009090 & 0.10 & 2.90 \\
+30 & 06:13:07 & 0.00006785 & 0.00009090 & 0.10 & 3.00 \\
+\bottomrule
+\end{tabular}
+\caption{Thirty TWAP buys across the 2026-05-06 RYA defence cycle. Each row is a
+tier-completion event aggregating $5 \times 0.02$~SOL slices over a 150-second
+window with a 600-second cooldown to the next buy. The Tier column records the
+bottom-tier trigger price after the ratchet; the ratchet fires twice during the
+cycle (between buys~8 and~9 at $\sim$2.0 SOL of \emph{lifetime} spend, and between
+buys~28 and~29 at $\sim$4.0 SOL of \emph{lifetime} spend), each step raising the
+bottom-tier trigger by approximately 0.5\% per the configured
+\texttt{RATCHET\_STEP\_BPS}~$=$~50.}
+\label{tab:rya-defence-buys}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/rya-defence-cycle-prices.pdf}
+\caption{RYA price (USD) over the 2026-05-06 defence cycle. Markers indicate the
+thirty bot buys; the price recovers from USD~$0.0000568$ to USD~$0.0000679$ over
+the five-hour window, a $\sim$19.5\% increase from cycle-open to cycle-close. The
+recovery is concurrent with --- not necessarily caused by --- the bot's defence;
+the case study makes a single-instance demonstration claim, not a causal claim.}
+\label{fig:rya-defence-prices}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/rya-defence-cycle-liquidity.pdf}
+\caption{Pool liquidity (USD, single Raydium CPMM pool) over the 2026-05-06
+defence cycle. The baseline persisted in \texttt{state.json}
+(\texttt{liquidityBaselineUsd}~$\approx$~USD~6{,}098) is the fence below which
+the stop-loss primitive trips; the cycle ends with the cap reached and the
+liquidity baseline preserved.}
+\label{fig:rya-defence-liquidity}
+\end{figure}
+
+\subsection{Reading the cycle as a five-engine instance}\label{sec:case-study:engines}
+
+This single cycle is an explicit instance of the architecture of
+Section~\ref{sec:five-engine}, with the agentic and prediction engines
+deliberately downgraded for legibility:
+\begin{itemize}
+  \item The \emph{prediction engine} is reduced to a single rule: ``the price is
+        below the bottom tier of the support ladder''. No distributional forecast.
+        The simplification is intentional --- it is the smallest non-trivial
+        prediction primitive --- and the case study is correspondingly cautious about
+        the strength of the evidence it provides.
+  \item The \emph{Bittensor prediction subnet} is not active in this cycle. The
+        prediction primitive is a single deterministic predicate evaluated by the
+        bot. The integration of the live subnet is the next-step build.
+  \item The \emph{sentiment-fusion engine} is consulted only on the cycle-entry
+        decision: the 60.9\% / 24h drawdown, the 24.2\% / 6h drawdown, the 6:15
+        buy/sell asymmetry over six hours, and the public attention surface on
+        Birdeye/DexScreener constitute the adverse-sentiment evidence that forced
+        the cycle-entry call. After cycle-entry, sentiment is not re-consulted; the
+        cycle is run open-loop on the price tier ladder until the daily cap binds.
+  \item The \emph{agentic engine} is instantiated as a deterministic Trader-role
+        policy under the role-contract constitution of
+        Section~\ref{sec:case-study:setup}. The cycle-entry decision (the live
+        flip and the cap raise) is exactly the human-approval boundary the agentic
+        engine of Section~\ref{sec:engine:agentic} requires; the cycle itself is
+        the rule-based action surface that the role contract authorised.
+  \item The \emph{scenario engine} is the part of the architecture that is most
+        clearly running in production: the program (``buy at the bottom tier on a
+        TWAP geometry until the daily cap binds''), the trigger (``price below
+        bottom tier and cooldown elapsed''), the action (``execute five
+        $\times$~0.02 SOL Jupiter buys at 30~s spacing''), and the post-condition
+        (``daily cap binds; cycle ends'') are the four typed fields of the
+        scenario-program record of Section~\ref{sec:arch:scenario}. The full
+        cycle is a single program instance.
+\end{itemize}
+
+\paragraph{What we are not claiming.} We make no causal claim that the bot's buys
+caused the price recovery; the recovery is concurrent and the natural-experiment
+counterfactual is unavailable. We make no statistical claim from a single 5-hour
+cycle on a single pool. We make no claim that the rule-based scenario engine of
+this cycle is what the LLM-mediated agentic engine of Section~\ref{sec:engine:agentic}
+will look like in production; that is the next-step build. The case study's
+purpose is to demonstrate that the program-registry / trigger-evaluator /
+constrained-execution decomposition is sufficient to instrument a real defensive
+action against a Solana micro-cap pool dump in the threat regime
+of~\cite{cernera2023token}, with public timestamps and signatures.
 
 \section{Economic Model and Tokenomics}\label{sec:economics}
 
@@ -1422,6 +1965,25 @@ black-box. The architecture we propose is differentiated on three axes simultane
 
 We explicitly flag the following limitations.
 \begin{itemize}
+  \item \textbf{The case study is a single 5-hour cycle on a single Solana
+        micro-cap pool.} Section~\ref{sec:case-study} is a single-instance
+        demonstration of the scenario-engine decomposition, not a statistical
+        claim. We do not assert that the bot caused the price recovery; we do not
+        assert that the cycle would replicate on a different pool, on a different
+        venue, or at a different liquidity scale. The natural-experiment
+        counterfactual (``what would have happened without the bot?'') is
+        unavailable. The cycle's purpose is to instantiate the program-registry /
+        trigger-evaluator / constrained-execution decomposition with public
+        timestamps and signatures.
+  \item \textbf{The agentic engine in the case study is rule-based.} The cycle in
+        Section~\ref{sec:case-study} runs the agentic engine as a deterministic
+        Trader-role policy. The LLM-mediated agentic engine of
+        Section~\ref{sec:engine:agentic} --- a constitutional-AI-style decision
+        layer in the sense of \cite{bai2022constitutional} --- is the next-step
+        build, sequenced after the live Bittensor subnet integration of
+        Section~\ref{sec:engine:subnet}. The rule-based instantiation is
+        sufficient to demonstrate the scenario-engine decomposition but does not
+        validate the agentic engine itself.
   \item \textbf{Most quantitative claims are deferred.} The score-commitment
         contracts, the Bittensor subnet, and the evaluation framework
         (Section~\ref{sec:eval}) are design proposals; this paper does not yet report
@@ -1434,6 +1996,10 @@ We explicitly flag the following limitations.
         regime~\cite{lui2025bittensor}. We treat the Yuma collusion-resistance bound
         of \cite{steeves2022incentivizing} as a \emph{design property of the algorithm}
         rather than as a guarantee about the deployed network's stake distribution.
+        The same caveat applies to the prediction-subnet claim of
+        Section~\ref{sec:engine:subnet}: a TAO-incentivised distributed prediction
+        subnet is collusion-resistant under the Yuma bound, but its empirical
+        decentralisation has to be revisited against the deployed stake distribution.
   \item \textbf{Withdrawn primary source.} The original BitTensor preprint
         (arXiv:2003.03917) was withdrawn by its authors as obsolete on 2021-11-10. Any
         prior whitepaper that cited it should be reread against the canonical
@@ -1445,6 +2011,12 @@ We explicitly flag the following limitations.
         consistency component of the validator rule
         (Section~\ref{sec:validator}) is what catches the residual non-determinism in
         practice.
+  \item \textbf{Grey-literature feeds in the sentiment-fusion engine.} The Solana
+        sentiment modality of Section~\ref{sec:arch:sentiment} relies on
+        non-peer-reviewed dashboards (Birdeye, DexScreener) and meme-coin launch
+        trackers (Pump.fun). These are functionally part of the attention surface
+        but are operationally fragile; the fusion engine must continue to function
+        when any single grey-literature feed degrades or is rate-limited.
 \end{itemize}
 
 \section{Conclusion}\label{sec:conclusion}
@@ -1468,9 +2040,35 @@ EVM testnet documentation that made the Section~\ref{sec:subtensor} integration 
 concrete. Any errors are the authors'.
 
 \section*{Reproducibility Note}
+
+Revision v0.10 reframes the contribution from ``verifiable cross-chain bridge
+risk'' to the broader thesis of \emph{agentic, context-aware risk prediction for
+the Internet of Value}, characterised as the composition of five engines
+(prediction, Bittensor prediction subnet, sentiment fusion, agentic, API risk +
+scenario; Section~\ref{sec:five-engine}). Eleven new bibliography entries were
+added (10 literature + the Paragraph operator-side companion \cite{omnirisk2026defending});
+each was verified against its primary source (DOI page, arXiv abstract page, ACM
+Digital Library record, NIST CSRC page, Springer book record, or canonical
+project URL) on 2026-05-06; the pre-existing 16 entries audited 2026-05-03 are
+preserved verbatim. The 2026-05-06 RYA defence-cycle case study
+(Section~\ref{sec:case-study}) is reproduced from the bot's tracked decision log
+at \texttt{bot/logs/decisions.jsonl}, the post-cycle persisted state at
+\texttt{bot/state.json} (\texttt{lifetimeSpentSol}~$=$~4.245,
+\texttt{ratchetSteps}~$=$~2, \texttt{liquidityBaselineUsd}~$\approx$~6098.2), and
+the operator journal at \texttt{bot/SOL.md}; the configuration knobs quoted in
+Section~\ref{sec:case-study:setup} are non-secret values from \texttt{bot/.env}
+(daily cap, per-trade ceiling, cooldown, TWAP slicing, slippage, ratchet, support
+tiers) and explicitly do not include any private key or RPC API key. The three
+new figures (five-engine architecture; cycle prices; cycle liquidity) are
+generated by \texttt{figures/\_make\_figures.py} from the same decision log and
+are vector PDFs; the Designer agent is expected to replace these v0.10 baseline
+figures with polished versions in a follow-up revision without altering any
+underlying datum.
+
 The bibliography for this paper is the master \texttt{references.bib} of the
 \texttt{omnirisk-papers} repository. Every entry was reverified against its primary
-source on 2026-05-03 prior to inclusion. Two entries were added in revision v0.4 to
+source on 2026-05-03 (existing 16) and 2026-05-06 (added 11) prior to inclusion.
+Two entries were added in revision v0.4 to
 fill the related-work gaps flagged in academic review (\cite{ganescu2024trust} for
 zero-knowledge ML verification, \cite{werner2022sok} for the broader DeFi oracle
 landscape) and were verified against their arXiv abstract pages on the same date.

@@ -218,3 +218,161 @@
   urldate      = {2026-05-03},
   note         = {Systematisation of DeFi primitives, including oracle and data-feed mechanisms; provides the broader context against which a route-level risk oracle is positioned.}
 }
+
+% =============================================================================
+% Added in v0.10 (2026-05-06) for the agentic, context-aware IoV risk-prediction
+% reframe (OMN-152). Each entry below was verified against its primary source
+% (DOI page, arXiv abstract page, ACM Digital Library record, NIST CSRC page,
+% Springer book record, or canonical project URL) on 2026-05-06.
+%
+% These references back the new five-engine architecture: agentic engine
+% (bai2022constitutional), prediction engine (yang2023fingpt, wu2023bloomberggpt),
+% sentiment fusion engine (schumaker2009textual, xing2018natural, day2016deep),
+% Bittensor prediction subnet (taoshi2024ptn), API risk + scenario engine
+% (glasserman2003monte, nist2006sp80084), and the RYA defence-cycle case study
+% (cernera2023token, omnirisk2026defending).
+% =============================================================================
+
+% --- Agentic engine: constitutional / role-bound action constraints -----------
+
+@misc{bai2022constitutional,
+  author       = {Bai, Yuntao and Kadavath, Saurav and Kundu, Sandipan and Askell, Amanda and Kernion, Jackson and Jones, Andy and Chen, Anna and Goldie, Anna and Mirhoseini, Azalia and McKinnon, Cameron and others},
+  title        = {{Constitutional AI: Harmlessness from AI Feedback}},
+  year         = {2022},
+  eprint       = {2212.08073},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.CL},
+  doi          = {10.48550/arXiv.2212.08073},
+  url          = {https://arxiv.org/abs/2212.08073},
+  urldate      = {2026-05-06},
+  note         = {Anthropic's specification of constitutional AI: an LLM is trained against an explicit principle list that constrains its outputs and actions. We adopt the constraint-list framing as the formal basis of the role-bound action constraints in the agentic-engine layer.}
+}
+
+% --- Prediction engine: financial language models -----------------------------
+
+@misc{yang2023fingpt,
+  author       = {Yang, Hongyang and Liu, Xiao-Yang and Wang, Christina Dan},
+  title        = {{FinGPT: Open-Source Financial Large Language Models}},
+  year         = {2023},
+  eprint       = {2306.06031},
+  archiveprefix= {arXiv},
+  primaryclass = {q-fin.ST},
+  doi          = {10.48550/arXiv.2306.06031},
+  url          = {https://arxiv.org/abs/2306.06031},
+  urldate      = {2026-05-06},
+  note         = {Open-source financial LLM framework with data engineering for FinNLP tasks. Cited as one canonical instantiation of a domain-specific prediction-engine model that the agentic engine can wrap.}
+}
+
+@misc{wu2023bloomberggpt,
+  author       = {Wu, Shijie and Irsoy, Ozan and Lu, Steven and Dabravolski, Vadim and Dredze, Mark and Gehrmann, Sebastian and Kambadur, Prabhanjan and Rosenberg, David and Mann, Gideon},
+  title        = {{BloombergGPT: A Large Language Model for Finance}},
+  year         = {2023},
+  eprint       = {2303.17564},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.LG},
+  doi          = {10.48550/arXiv.2303.17564},
+  url          = {https://arxiv.org/abs/2303.17564},
+  urldate      = {2026-05-06},
+  note         = {Closed-source 50B-parameter LLM trained on a domain mix of finance and general data; sets the comparison point for finance-specialised vs general-purpose foundation models in the prediction-engine layer.}
+}
+
+% --- Sentiment fusion engine: financial NLP and multimodal sentiment ----------
+
+@article{schumaker2009textual,
+  author       = {Schumaker, Robert P. and Chen, Hsinchun},
+  title        = {{Textual Analysis of Stock Market Prediction Using Breaking Financial News: The AZFin Text System}},
+  journal      = {ACM Transactions on Information Systems},
+  volume       = {27},
+  number       = {2},
+  pages        = {12:1--12:19},
+  year         = {2009},
+  doi          = {10.1145/1462198.1462204},
+  note         = {Foundational study showing breaking financial news improves short-horizon stock prediction; one of the earliest reproducible benchmarks for fusion of news-text features with price features.}
+}
+
+@article{xing2018natural,
+  author       = {Xing, Frank Z. and Cambria, Erik and Welsch, Roy E.},
+  title        = {{Natural Language Based Financial Forecasting: A Survey}},
+  journal      = {Artificial Intelligence Review},
+  volume       = {50},
+  number       = {1},
+  pages        = {49--73},
+  year         = {2018},
+  doi          = {10.1007/s10462-017-9588-9},
+  note         = {Survey covering text representation, fusion strategy (early vs late), and modelling for financial forecasting. We use it for the early-fusion vs late-fusion vs stacking taxonomy referenced in the sentiment-fusion engine subsection.}
+}
+
+@inproceedings{day2016deep,
+  author       = {Day, Min-Yuh and Lee, Chia-Chou},
+  title        = {{Deep Learning for Financial Sentiment Analysis on Finance News Providers}},
+  booktitle    = {2016 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining (ASONAM)},
+  year         = {2016},
+  pages        = {1127--1134},
+  publisher    = {IEEE},
+  doi          = {10.1109/ASONAM.2016.7752381},
+  note         = {Early demonstration that deep models on multi-source finance news outperform single-source baselines; cited for the multi-source sentiment-fusion claim.}
+}
+
+% --- Bittensor prediction subnet: Taoshi (Subnet 8) ---------------------------
+
+@misc{taoshi2024ptn,
+  author       = {{Taoshi}},
+  title        = {{Proprietary Trading Network (Bittensor Subnet 8)}},
+  howpublished = {GitHub repository and project documentation},
+  year         = {2024},
+  url          = {https://github.com/taoshidev/proprietary-trading-network},
+  urldate      = {2026-05-06},
+  note         = {Bittensor Subnet 8 (Taoshi PTN): TAO-incentivised distributed price-prediction network in which miners submit signed forecasts and validators score them against realised outcomes. Cited as the canonical instantiation of a Bittensor prediction subnet.}
+}
+
+% --- API risk + scenario engine: scenario generation and tabletop frameworks --
+
+@book{glasserman2003monte,
+  author       = {Glasserman, Paul},
+  title        = {{Monte Carlo Methods in Financial Engineering}},
+  series       = {Stochastic Modelling and Applied Probability},
+  volume       = {53},
+  year         = {2003},
+  publisher    = {Springer},
+  address      = {New York},
+  isbn         = {978-0-387-00451-8},
+  doi          = {10.1007/978-0-387-21617-1},
+  note         = {Standard reference for scenario generation and pre-commitment policy evaluation in algorithmic trading and derivatives risk; provides the foundation for the scenario-engine pre-commitment semantics.}
+}
+
+@techreport{nist2006sp80084,
+  author       = {Grance, Tim and Nolan, Tamara and Burke, Kristin and Dudley, Rich and White, Gregory and Good, Travis},
+  title        = {{Guide to Test, Training, and Exercise Programs for IT Plans and Capabilities}},
+  institution  = {National Institute of Standards and Technology},
+  type         = {NIST Special Publication},
+  number       = {800-84},
+  year         = {2006},
+  doi          = {10.6028/NIST.SP.800-84},
+  url          = {https://csrc.nist.gov/publications/detail/sp/800-84/final},
+  urldate      = {2026-05-06},
+  note         = {Canonical US-government tabletop-exercise framework for cybersecurity contingency planning; the scenario engine's playbook semantics inherit the precondition / trigger / action structure formalised here.}
+}
+
+% --- Solana DEX micro-cap risk (RYA defence-cycle case study) -----------------
+
+@inproceedings{cernera2023token,
+  author       = {Cernera, Federico and La Morgia, Massimo and Mei, Alessandro and Sassi, Francesco},
+  title        = {{Token Spammers, Rug Pulls, and Sniper Bots: An Analysis of the Ecosystem of Tokens in Ethereum and in the Binance Smart Chain ({BNB})}},
+  booktitle    = {Proceedings of the 32nd USENIX Security Symposium (USENIX Security 23)},
+  year         = {2023},
+  pages        = {3349--3366},
+  publisher    = {USENIX Association},
+  url          = {https://www.usenix.org/conference/usenixsecurity23/presentation/cernera},
+  urldate      = {2026-05-06},
+  note         = {Empirical study of micro-cap token launches, rug pulls, and sniper-bot patterns; the closest peer-reviewed analogue for the threat surface a single-pool Solana micro-cap (RYA) faces, and the empirical reference point for the defence-cycle case study.}
+}
+
+@misc{omnirisk2026defending,
+  author       = {{RayaChain}},
+  title        = {{Defending {RYA}: A Public, On-Chain Liquidity Defence Playbook}},
+  howpublished = {Paragraph publication},
+  year         = {2026},
+  url          = {https://paragraph.com/@rayachain/defending-rya-a-public-on-chain-liquidity-defence-playbook},
+  urldate      = {2026-05-06},
+  note         = {Public operator-side companion to the case study in Section~\ref{sec:case-study}: documents the buy-only liquidity-defence policy, the tier ladder, the daily cap, and the publication discipline (wallet, ladder, and trigger published before the bot is enabled).}
+}
