@@ -376,3 +376,106 @@
   urldate      = {2026-05-06},
   note         = {Public operator-side companion to the case study in Section~\ref{sec:case-study}: documents the buy-only liquidity-defence policy, the tier ladder, the daily cap, and the publication discipline (wallet, ladder, and trigger published before the bot is enabled).}
 }
+
+% =============================================================================
+% Added in v0.11 (2026-05-06) to integrate sub-issue findings on OMN-152:
+% Market Researcher (b3cbe648) sentiment-fusion + Bittensor synthesis,
+% Developer (fed71685) API surface characterisation, Cody CTO (c750fd90)
+% five-engines-vs-composite strategic call. Each entry verified against its
+% primary source on 2026-05-06.
+% =============================================================================
+
+% --- Multimodal sentiment-fusion: contemporary surveys ------------------------
+
+@misc{lai2023multimodal,
+  author       = {Lai, Songning and Hu, Xifeng and Xu, Haoxuan and Ren, Zhaoxia and Liu, Zhi},
+  title        = {{Multimodal Sentiment Analysis: A Survey}},
+  year         = {2023},
+  eprint       = {2305.07611},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.CL},
+  doi          = {10.48550/arXiv.2305.07611},
+  url          = {https://arxiv.org/abs/2305.07611},
+  urldate      = {2026-05-06},
+  note         = {Survey organising multimodal sentiment fusion into roughly ten variants whose canonical three are early fusion (concatenated features into a single model), late fusion (per-modality models combined by averaging / weighting / stacking), and hybrid / model-level fusion (an intermediate stage with a learned meta-model).}
+}
+
+@article{gandhi2023multimodal,
+  author       = {Gandhi, Ankita and Adhvaryu, Kinjal and Poria, Soujanya and Cambria, Erik and Hussain, Amir},
+  title        = {{Multimodal Sentiment Analysis: A Systematic Review of History, Datasets, Multimodal Fusion Methods, Applications, Challenges and Future Directions}},
+  journal      = {Information Fusion},
+  volume       = {91},
+  pages        = {424--444},
+  year         = {2023},
+  doi          = {10.1016/j.inffus.2022.09.025},
+  note         = {Systematic review reaching the same early/late/hybrid partition as Lai et al. and providing the comparison we cite for when each strategy wins: early fusion captures cross-modal correlation but is brittle to missing modalities; late fusion is modality-robust but loses fine-grained interaction; stacking with a learned meta-model dominates when per-modality signals are heterogeneous in noise floor and timescale.}
+}
+
+% --- Sentiment-fusion: finance-specific deep-learning extension ---------------
+
+@article{long2019deep,
+  author       = {Long, Wen and Lu, Zhichen and Cui, Lingxiao},
+  title        = {{Deep Learning-Based Feature Engineering for Stock Price Movement Prediction}},
+  journal      = {Knowledge-Based Systems},
+  volume       = {164},
+  pages        = {163--173},
+  year         = {2019},
+  doi          = {10.1016/j.knosys.2018.10.034},
+  note         = {Multi-filters neural network (MFNN) demonstrating deep-learning feature engineering layered over Chinese-market price and news data; cited as the centralised-feature-engineered ensemble against which the TAO-incentivised distributed prediction subnet must be argued on diversity rather than fixed-dataset accuracy.}
+}
+
+@article{zhang2025sentistack,
+  author       = {Zhang, Zhibo and Jiang, Chen and Lu, Mengjie},
+  title        = {{Fusion of Sentiment and Market Signals for Bitcoin Forecasting: A {SentiStack} Network Based on a Stacking {LSTM} Architecture}},
+  journal      = {Big Data and Cognitive Computing},
+  volume       = {9},
+  number       = {6},
+  pages        = {161},
+  year         = {2025},
+  doi          = {10.3390/bdcc9060161},
+  note         = {Worked example of contemporary on-chain $\leftrightarrow$ off-chain sentiment fusion for Bitcoin forecasting: financial-news and social-media sentiment encoded by DeepSeek, fused both early (concatenated features) and late (per-modality LSTM stacked through a Ridge meta-learner) with macro and market indicators; argues sentiment carries information that pure market data cannot reproduce, particularly across regime breaks.}
+}
+
+% --- Bittensor: adjacent prediction-subnet ecosystem (Macrocosmos SN13) -------
+
+@misc{macrocosmos2024datauniverse,
+  author       = {{Macrocosmos}},
+  title        = {{Data Universe (Bittensor Subnet 13)}},
+  howpublished = {SubnetAlpha overview},
+  year         = {2024},
+  url          = {https://subnetalpha.ai/subnet/data-universe/},
+  urldate      = {2026-05-06},
+  note         = {Bittensor Subnet 13: continuously-refreshed scrapes of X (Twitter), Reddit, and (planned) YouTube transcripts with engagement metadata. By July 2025 the subnet had published over 55 billion rows of open-source social data on Hugging Face, explicitly chartered as a fuel source for downstream sentiment-analysis and financial-forecasting consumers; the closest current Bittensor analogue to a sentiment-fusion data subnet.}
+}
+
+% --- Solana grey-literature feeds (sentiment-fusion data substrate) -----------
+
+@misc{birdeye2026docs,
+  author       = {{Birdeye Data Services}},
+  title        = {{Birdeye Data Documentation}},
+  howpublished = {Public and Premium API documentation},
+  year         = {2026},
+  url          = {https://docs.birdeye.so/},
+  urldate      = {2026-05-06},
+  note         = {Documented Public/Premium APIs covering price, OHLCV, holder flow, and wallet PnL across Solana / Sui / EVM chains; cited as one of three Solana grey-literature feeds the sentiment-fusion engine ingests as noisy weak supervision rather than as primary ground truth.}
+}
+
+@misc{dexscreener2026docs,
+  author       = {{DEX Screener}},
+  title        = {{DEX Screener API and Documentation}},
+  howpublished = {Public API documentation},
+  year         = {2026},
+  url          = {https://docs.dexscreener.com/},
+  urldate      = {2026-05-06},
+  note         = {Free real-time parsing of on-chain DEX trades across Solana and EVM chains with a free public API; cited as the second Solana grey-literature attention surface in the sentiment-fusion engine.}
+}
+
+@misc{pumpfun2026site,
+  author       = {{Pump.fun}},
+  title        = {{Pump.fun --- Solana Memecoin Launchpad (Movers / Mayhem / New / Last-trade Trend Leaderboards)}},
+  howpublished = {Public web site},
+  year         = {2026},
+  url          = {https://pump.fun/},
+  urldate      = {2026-05-06},
+  note         = {Solana memecoin launch surface whose homepage trend leaderboards (Movers, Mayhem, New, Last-trade) function as a de-facto attention ticker for the memecoin segment of the IoV. Cited as the third Solana grey-literature feed, with the explicit caveat that the population (memecoins) has a fat-tailed price distribution under which off-the-shelf sentiment-classifier confidence scores are poorly calibrated.}
+}

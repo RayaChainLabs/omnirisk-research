@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.10"
+revision: "0.11"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -18,9 +18,9 @@ tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence"
 bibliography_audit:
   verified_at: "2026-05-06"
   verified_by: "Academic Writer (OMN-152)"
-  total_entries: 26
-  entries_with_doi: 18
-  entries_url_only: 8  # protocol whitepapers + canonical docs + industry blog post + grey-lit + paragraph publication
+  total_entries: 33
+  entries_with_doi: 23
+  entries_url_only: 10  # protocol whitepapers + canonical docs + industry blog post + grey-lit + paragraph publication
   added_in_v0_4:
     - cite_key: "ganescu2024trust"
       reason: "fills the zero-knowledge ML verification gap flagged in academic review (related work §4.4); verified against arXiv 2402.06414 abstract page on 2026-05-03"
@@ -33,6 +33,18 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_11:
+    date: "2026-05-06"
+    summary: "Integrate findings from OMN-152 sub-issues (Market Researcher b3cbe648, Developer fed71685, Cody CTO c750fd90) into the v0.10 architecture. No structural reframe; depth additions and one new subsection."
+    changes:
+      - "§arch:bittensor: depth pass with three new paragraphs — 'Taoshi PTN as a 2026 reference' (LONG/SHORT/FLAT directional-signal market, debt-ledger scoring with 5-min weight cadence and weekly settlement, 10% maximum-drawdown elimination cap, 30-day probation regime for sub-15th-place miners, plagiarism detector via vali_objects/miner_copying.json, carry costs 10.95/3/5.25% per year for crypto/forex/equities at 1× leverage, top-10 by Alpha-token mcap ~$47M in April 2026); 'The 2026 subnet ecosystem' (Feb 2025 dTAO transition, 2026 Robin τ upgrade doubling subnet capacity 128→256); 'Macrocosmos Data Universe (SN13)' (55B+ rows of social data on HF by July 2025; closest neighbour for sentiment-fusion data substrate). New citations: macrocosmos2024datauniverse, long2019deep."
+      - "§arch:sentiment: paragraph-level integration of contemporary multimodal-sentiment surveys (lai2023multimodal arXiv:2305.07611 with the canonical early/late/hybrid taxonomy; gandhi2023multimodal Information Fusion 91 with the where-each-strategy-wins comparison) and a worked-example reference to zhang2025sentistack (Big Data Cogn Comput 9(6):161 — DeepSeek-encoded news+social-media fused early and late through a stacking LSTM Ridge meta-learner for Bitcoin forecasting). Modality 3 (grey lit) replaced with explicit citations to birdeye2026docs / dexscreener2026docs / pumpfun2026site, three explicit caveats (unmoderated wash-trading; no labelled ground truth; fat-tailed memecoin distribution miscalibrates classifiers), and a 'noisy weak-supervision' framing. Verification paragraph names Macrocosmos SN13 as the natural upstream supplier for the text modality."
+      - "§arch:scenario: replaced with the Developer's section-ready prose. New 'As-is API surface' description block (Paperclip server :3100, X bridge :8790, Telegram bridge :8788, Discord bridge :8789, risk-alert poller); bot file-based control surfaces (bot/state.json, bot/KILL, bot/logs/decisions.jsonl) and the score()/SignedEnvelope ed25519 + RFC 8785 JCS canonical-form internal signal layer; explicit 'Scenario-engine demands' five-item list (template registry / action binding / generalised two-flag execution gate / scenario history store with HTTP query surface / agentic composition); concrete smallest-delta build options (A: in-bot ~2 days; B: Paperclip plugin ~4-5 days; C: new service ~6-8 days; recommended v0 = A + thin in-process HTTP shim on :8791 = ~3 engineer-days, +1 day for LLM-mediated authoring + Paperclip request_confirmation gate)."
+      - "New §engine:strategy 'Strategy: five separable engines, not a composite agent' (after §engine:composition). States the five-engines-vs-composite call with the three reasons against composite (composability of evidence / governance isolation / blast radius and vendor flexibility), the three contracts the shared fabric enforces (signal schema {signal_id, token, chain, score, confidence, evidence[], inputs_hash, model_version, ts} / reproducibility CI gate / governance hook on the agentic-engine action-emit interface), the build-order implications (90-day window: D0–D20 fabric+API risk; D15–D45 prediction; D30–D60 sentiment fusion; D45–D75 Bittensor research spike with explicit go/kill; D60–D90 agentic), and an out-of-scope list (no sell-side, no impersonation, no prediction-fires-trades shortcut, no custodial wallets, no closed signals, no removal of the agentic gate)."
+      - "Bibliography: +7 new entries (lai2023multimodal, gandhi2023multimodal, long2019deep, zhang2025sentistack, macrocosmos2024datauniverse, birdeye2026docs, dexscreener2026docs, pumpfun2026site — note: the pre-v0.11 day2016 entry was kept; long2019 is added as the MFNN reference cited by the researcher). Total 33 entries; bibliography_audit refreshed; every entry was verified against its primary source (DOI page, arXiv abstract page, or canonical project URL) on 2026-05-06."
+      - "Title page revision tag bumped 0.10 → 0.11."
+      - "Reproducibility Note: v0.11 entry inserted; documents the source-of-truth pointers for each integrated synthesis block (sub-issue UUIDs)."
+      - "v0.10 content preserved verbatim except for the four §arch:* depth integrations, the new §engine:strategy subsection, and the title-page revision tag. No abstract / intro / formal-definitions / case-study / tokenomics / status / limitations content was modified; the contribution framing of v0.10 is unchanged."
   v0_10:
     date: "2026-05-06"
     summary: "Reframe contribution from 'verifiable cross-chain bridge risk' to the broader thesis of 'agentic, context-aware risk prediction for the Internet of Value', characterised as the composition of five engines (prediction / Bittensor prediction subnet / sentiment fusion / agentic / API risk + scenario). Add the 2026-05-06 RYA defence cycle as an instrumented case study. Issue: OMN-152."
@@ -126,10 +138,9 @@ revision_log:
 
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:
-  - "v0.10 follow-up — Designer (OMN-152 child 12613bf3-8e65-490d-bb1d-37e24356dba1): replace the three v0.10 baseline vector PDFs (five-engine-architecture.pdf, rya-defence-cycle-prices.pdf, rya-defence-cycle-liquidity.pdf) with polished versions matching the OmniRisk visual identity. The current ones are reproducible from figures/_make_figures.py and are correct on data; they are intentionally unstyled."
-  - "v0.10 follow-up — Market Researcher (OMN-153 / 3e362df0-1807-47ce-9999-999e87692d61): confirm Taoshi Subnet 8 is still the canonical Bittensor prediction-subnet exemplar at submission time, and confirm the 8–10 sentiment-fusion / multimodal-finance citations against any newer 2026 surveys. Revise §arch:sentiment and §engine:subnet against their findings."
-  - "v0.10 follow-up — Developer (OMN-154 / 906093ba-704d-46d6-869c-17eb8f8503dc): populate §arch:scenario with the concrete OmniRisk API endpoint enumeration (Paperclip server endpoints, X bridge, Telegram bridge, risk-alert poller) and the smallest engineering delta to the program registry / trigger evaluator / constrained execution, replacing the present-day prose with a section-ready specification."
-  - "v0.10 follow-up — Cody CTO (OMN-155 / 6789d7e4-0339-4658-97e3-8638ceac0cc8): strategic call on whether the five engines ship as five separable services or as one composite agent that exposes the same five capabilities; the dependency graph / build order is the executive output that should land before the next revision."
+  - "v0.11 follow-up — Designer: replace the three v0.10 baseline vector PDFs (five-engine-architecture.pdf, rya-defence-cycle-prices.pdf, rya-defence-cycle-liquidity.pdf) with polished versions matching the OmniRisk visual identity, AND render the Cody CTO Mermaid block from §engine:strategy as a separate vector-PDF dependency-graph figure that can be referenced from the new §engine:strategy subsection. The current baseline figures are reproducible from figures/_make_figures.py and are correct on data; they are intentionally unstyled."
+  - "v0.11 follow-up — Developer: produce the OmniRisk v0 API + scenario engine sub-figure specified in the Developer sub-issue (fed71685) — nodes A–P with solid/dashed/double-line edge styling, amber=new / grey=existing / blue=external / yellow=file-store colour classes — and add it to figures/ as a fourth vector PDF; reference from §arch:scenario."
+  - "Market Researcher (b3cbe648), Developer (fed71685), Cody CTO (c750fd90) sub-issue findings have all landed in v0.11; no further input pending from those agents on this paper."
   - "SECURITY: rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; address 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into CI/CD secret store; ship .env.example with placeholders only — needs separate engineering issue, not a paper task"
   - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
   - "Engineering: close the §status:gaps mainnet-readiness items — bring up mainnet RPC + EID + registry, deploy mainnet OFT + Solana program, wire the full 20-direction peer matrix, fix Base Sepolia ownership mismatch, adopt multisig+timelock governance, commission third-party security audit, write mainnet runbook (engineering estimate 4–8 weeks)"

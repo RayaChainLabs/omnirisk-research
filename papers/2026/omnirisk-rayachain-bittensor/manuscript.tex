@@ -27,7 +27,7 @@
 \title{Agentic, Context-Aware Risk Prediction for the Internet of Value:\\
        A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.10}}
+\date{May 2026 \\ \textbf{Working paper, v0.11}}
 
 \begin{document}
 \maketitle
@@ -291,14 +291,20 @@ signal per asset and per route, fused from a multimodal feature set: text stream
 events), and grey-literature feeds (Birdeye, DexScreener listings, Pump.fun trends).
 
 \paragraph{Fusion strategy.} The financial-NLP survey
-literature~\cite{schumaker2009textual,xing2018natural,day2016deep} distinguishes
-three strategies: \emph{early fusion} (concatenate raw features and feed to a single
-model), \emph{late fusion} (run modality-specific models and combine their outputs),
-and \emph{stacking} (use late-fusion outputs as features for a meta-model). The
-engine is fusion-strategy-agnostic by construction; the live OmniRisk instantiation
-uses late fusion with stacking, on the grounds that text models and AMM-flow models
-have very different latency profiles and combining them at the score-aggregation
-layer is more robust than at the feature layer.
+literature~\cite{schumaker2009textual,xing2018natural,day2016deep} and the
+contemporary multimodal-sentiment surveys~\cite{lai2023multimodal,gandhi2023multimodal}
+distinguish three canonical strategies: \emph{early fusion} (concatenate raw features
+and feed to a single model), \emph{late fusion} (run modality-specific models and
+combine their outputs), and \emph{stacking} (a learned meta-model over the late-fusion
+outputs). \cite{gandhi2023multimodal} compares where each strategy wins: early fusion
+captures cross-modal correlation but bloats dimensionality and is brittle to missing
+modalities; late fusion is modality-robust but loses fine-grained interaction; stacking
+with a learned meta-model usually dominates when per-modality signals are heterogeneous
+in noise floor and timescale. The engine is fusion-strategy-agnostic by construction;
+the live OmniRisk instantiation uses late fusion with stacking, on the grounds that
+text models and AMM-flow models have very different latency profiles and combining
+them at the score-aggregation layer is more robust than at the feature
+layer~\cite{gandhi2023multimodal,zhang2025sentistack}.
 
 \paragraph{Verification.} Sentiment outputs are scored on the same Bittensor subnet
 as prediction outputs, with the realised-event channel supplying ground truth: a
@@ -379,6 +385,73 @@ case study in Section~\ref{sec:case-study} runs an instance of this dataflow wit
 the agentic engine instantiated as a deterministic policy and the prediction
 subnet instantiated as a single rule-based predictor; the LLM-mediated agentic
 engine and the live Bittensor subnet are the next-step build.
+
+\subsection{Strategy: five separable engines, not a composite agent}\label{sec:engine:strategy}
+
+Two structurally distinct compositions are available: \emph{five separable engines
+behind a shared ingestion and observability fabric}, or \emph{a single composite
+agent that exposes the same five capabilities internally}. The architecture and the
+roadmap of this paper take the former. We make the choice explicit because the
+framing of the contribution depends on it.
+
+\paragraph{Why five separable engines.} A composite agent collapses three properties
+the architecture cannot give up. (i)~\emph{Composability of evidence}: institutional
+buyers, the API contract, and this paper all describe risk as the sum of
+independently-sourced signals, and a composite agent hides that seam. (ii)~\emph{Governance
+isolation}: the agentic engine of Section~\ref{sec:engine:agentic} is paused-by-default
+with board sign-off, and folding the other four engines into the same process either
+over-restricts them or makes the gate harder to audit. (iii)~\emph{Blast radius and
+vendor flexibility}: a sentiment-source outage, an LLM swap, or a Bittensor dead-end
+must not take prediction or API risk down with it. The shared fabric (a uniform
+ingestion path, the signal schema below, an evidence store, and a single
+observability surface) is what gives the composition its \emph{coherence} without the
+coupling.
+
+\paragraph{Three contracts the fabric enforces.} Separability would be cosmetic
+without invariants every engine adheres to:
+\begin{enumerate}
+  \item \textbf{Signal schema.} Every engine emits records of the form
+        \texttt{\{signal\_id, token, chain, score, confidence, evidence[],
+        inputs\_hash, model\_version, ts\}}; evidence from one engine is addable to
+        another's record without renormalisation.
+  \item \textbf{Reproducibility.} \texttt{inputs\_hash}~$+$~\texttt{model\_version} plus the
+        logged input bundle must regenerate the same score; this is enforced as a
+        CI gate.
+  \item \textbf{Governance hook.} The agentic engine is the only consumer of the
+        action-emit interface, and that interface is wrapped by the
+        paused-by-default + board-approval gate. Composite agents cannot bypass it,
+        because they cannot exist; the gate is enforced at the seam.
+\end{enumerate}
+
+\paragraph{Build-order implications.} Under this composition the shared fabric is
+the only hard prerequisite; API risk + scenario, prediction, and sentiment fusion
+are independent and parallelisable once the fabric exists. The Bittensor prediction
+subnet of Section~\ref{sec:engine:subnet} is a \emph{killable} dependency of the
+prediction engine: if subnet signal-to-noise is poor, the prediction engine
+continues without it. The agentic engine is the only true integrator and ships
+last, because it consumes the other three as evidence inputs and inherits the
+governance gate. A 90-day build window therefore sequences (D0--D20) shared fabric
+plus API risk + scenario, (D15--D45) prediction, (D30--D60) sentiment fusion,
+(D45--D75) Bittensor research spike with an explicit go/kill decision, and
+(D60--D90) agentic engine; if a week is lost the order in which engines drop is
+Bittensor first, sentiment fusion second, on the grounds that neither is on the
+critical path to a buyer-shippable product. None of these dates is a commitment of
+this paper; the sequencing is what justifies the paper's framing of the agentic
+engine as the \emph{integrator} rather than as the cross-cutting engine.
+
+\paragraph{Out-of-scope, by design.} The five-engine framing carries a corresponding
+list of capabilities the architecture explicitly does not provide. We name them so
+the reader can audit later versions of this work against the same boundary:
+\emph{(i)~no sell-side execution} (buy-only across the protocol; the agentic engine
+cannot emit a sell action); \emph{(ii)~no human-impersonation jitter, social
+spoofing, or detection-evasion behaviour}, ever; \emph{(iii)~no
+prediction-fires-trades shortcut} --- the prediction engine never reaches the
+executor, and only the agentic engine, behind the governance gate, can propose
+actions; \emph{(iv)~no custodial wallets or fund-holding flows}; \emph{(v)~no
+closed, non-reproducible signals} --- if a signal cannot be replayed from logged
+inputs and produce the same score, it does not ship; \emph{(vi)~no removal of the
+agentic gate ``for performance''} --- the gate is the product, not overhead. These
+boundaries are the invariants the rest of the paper assumes.
 
 \section{Research Questions and Hypotheses}\label{sec:rq}
 
@@ -590,17 +663,46 @@ sentiment input (transfer-volume asymmetry is a known sentiment proxy) and as a
 ground-truth channel against which the text modality is calibrated.
 
 \paragraph{Modality 3 --- grey literature.} For Solana micro-cap pools in particular,
-public dashboards (Birdeye), DEX listings (DexScreener), and meme-coin launch trackers
-(Pump.fun) are the dominant attention surface and are functionally part of the
-sentiment input even though they are not peer-reviewed sources. We treat them as
-grey-literature data feeds: ingested through scraped APIs, normalised to a per-asset
-attention scalar, and combined with the text modality at the late-fusion stage. The
-case study in Section~\ref{sec:case-study} relies on this modality to detect the
-escalation in adverse sentiment that preceded the 2026-05-06 dip.
+public dashboards (Birdeye~\cite{birdeye2026docs}), DEX listings
+(DexScreener~\cite{dexscreener2026docs}), and meme-coin launch trackers
+(Pump.fun~\cite{pumpfun2026site}) are the dominant attention surface and are
+functionally part of the sentiment input even though they are not peer-reviewed
+sources. We treat them as grey-literature data feeds: ingested through scraped APIs,
+normalised to a per-asset attention scalar, and combined with the text modality at
+the late-fusion stage. Three explicit caveats apply. (i)~The feeds are unmoderated and
+vulnerable to wash-trading and pump-and-dump distortion. (ii)~There is no labelled
+ground truth: in particular, no peer-reviewed treatment of Birdeye, DexScreener, or
+Pump.fun feeds as sentiment proxies has been published, so the calibration of any
+classifier downstream of them must be done against external realised-event labels
+rather than internal-consistency labels. (iii)~The Pump.fun population (memecoins) is
+fat-tailed enough that off-the-shelf sentiment-classifier confidence scores are poorly
+calibrated; the sentiment-fusion engine therefore down-weights Pump.fun under high
+volatility-of-volatility regimes. The recommendation, consistent with the contemporary
+multimodal-sentiment surveys~\cite{lai2023multimodal,gandhi2023multimodal}, is to treat
+these feeds as \emph{noisy weak-supervision signals} and combine them via late fusion
+or stacking with stronger on-chain primitives, rather than dropping them naively into
+early-fusion concatenation --- exactly the failure mode \cite{gandhi2023multimodal} warn
+against when modality noise levels are unequal. The case study in
+Section~\ref{sec:case-study} relies on this modality to detect the escalation in
+adverse sentiment that preceded the 2026-05-06 dip.
+
+\paragraph{Worked-example reference.} Zhang, Jiang, and Lu's 2025 \emph{SentiStack}
+network~\cite{zhang2025sentistack} is the clearest contemporary published instance of
+the on-chain~$\leftrightarrow$~off-chain fusion pattern this engine implements:
+financial-news and social-media sentiment encoded by DeepSeek are fused both early
+(concatenated features) and late (per-modality LSTM stacked through a Ridge
+meta-learner) with macro and market indicators for Bitcoin forecasting; the authors
+explicitly argue that sentiment carries information pure market data cannot reproduce,
+particularly across regime breaks. Our engine adopts the same late-fusion + stacking
+discipline; the difference is that the OmniRisk routing target is route- and pool-level
+risk on the IoV rather than next-window Bitcoin price.
 
 \paragraph{Verification.} Sentiment-fusion engine outputs are scored on the same
 Bittensor subnet as prediction-engine outputs, with the realised-event channel of
-Section~\ref{sec:formal:realised} supplying ground truth.
+Section~\ref{sec:formal:realised} supplying ground truth. The Macrocosmos Data
+Universe subnet (Bittensor SN13)~\cite{macrocosmos2024datauniverse} is the natural
+upstream supplier for the text modality at scale; the sentiment-fusion engine consumes
+its output as one input among many, not as a primary source.
 
 \subsection{RayaChain --- Execution and Data Layer}\label{sec:arch:rayachain}
 
@@ -666,6 +768,53 @@ precedent --- Taoshi's Subnet 8 (Proprietary Trading Network)~\cite{taoshi2024pt
 gives us a concrete template for what a TAO-incentivised distributed prediction subnet
 looks like in production.
 
+\paragraph{Taoshi PTN as a 2026 reference.} PTN's miner schema is a directional-signal
+market: miners submit \texttt{LONG}, \texttt{SHORT}, or \texttt{FLAT} orders on
+supported pairs and validators run a debt-ledger scoring system that sets weights every
+five minutes and pays miners against the prior week's risk-adjusted PnL, with weekly
+settlement targeted by midnight Sunday~\cite{taoshi2024ptn}. Three filters bound the
+miner population: a 10\% maximum-drawdown elimination cap, a probation regime that gives
+miners ranked below the 15th place a 30-day window to recover, and an order-uniqueness
+plagiarism detector (\texttt{vali\_objects} analysis stored in
+\texttt{validation/miner\_copying.json}) that culls miners simply mirroring others.
+Carry costs (10.95\%/3\%/5.25\% per year for crypto/forex/equities at $1\times$
+leverage), spread fees, and leverage-scaled slippage are baked into reported PnL, so the
+subnet effectively scores live, fee-aware, risk-adjusted trading rather than free-standing
+forecasts. As of April 2026, taostats and CoinGecko's dTAO ecosystem review still rank
+PTN inside the top ten subnets by Alpha-token market capitalisation
+($\sim$USD~47M)~\cite{taoshi2024ptn}, well behind market leaders \textit{$\tau$emplar}
+(SN3), \textit{Chutes} (SN64), and \textit{Targon} (SN4), but it remains the only mature
+finance-prediction subnet with multi-year operational history.
+
+\paragraph{The 2026 subnet ecosystem.} Two structural changes since the original
+Bittensor specification are material to the architecture. First, the February~2025
+\emph{dTAO transition} introduced per-subnet Alpha tokens and market-allocated
+emissions, so each subnet now carries a market-priced reward that miners voluntarily
+accept the carry/slippage drag against; this is qualitatively different from validating
+a model on held-out data. Second, the 2026 \emph{Robin~$\tau$ upgrade} doubled subnet
+capacity from 128 to 256, which expanded the population of adjacent-but-not-identical
+prediction subnets~\cite{taoshi2024ptn}.
+
+\paragraph{Macrocosmos Data Universe (SN13).} The closest neighbour to OmniRisk's remit
+is Macrocosmos's \emph{Data Universe} (Bittensor Subnet 13)~\cite{macrocosmos2024datauniverse}:
+rather than predicting prices, it produces continuously-refreshed scrapes of X
+(Twitter), Reddit, and (planned) YouTube transcripts with engagement metadata --- over
+55 billion rows of open-source social data on Hugging Face by July~2025 --- explicitly
+chartered as fuel for downstream sentiment-analysis and financial-forecasting consumers.
+We have not been able to verify a post-2024 Bittensor subnet whose charter is dedicated
+specifically to on-chain risk prediction or IoV-style time-series risk; the surrounding
+$\sim$100 subnets are general-purpose LLM, inference, GPU-rental, or data-scraping
+markets. The architectural argument for routing prediction through a TAO-incentivised
+network rather than through a single in-house model is therefore \emph{not} ``higher
+accuracy on a fixed dataset'' --- centralised feature-engineered stacks of the MFNN
+type~\cite{long2019deep} routinely beat naive ensembles on benchmark splits --- but
+\emph{adversarial diversity and live skin-in-the-game}: PTN's scoring filters
+copycats and high-drawdown strategies, and under dTAO every emitted TAO is a
+market-priced reward miners voluntarily commit to. For OmniRisk's IoV stack, the
+practical implication is that Bittensor signal markets are best treated as one input
+modality among many --- not as a drop-in replacement for the in-house engines of
+Sections~\ref{sec:arch:omnirisk}--\ref{sec:arch:scenario}.
+
 Let $V$ index subnet validators, $M$ index subnet miners, and $S_i$ denote the stake of
 validator $i \in V$. Each validator submits a weight $W_{ij} \in [0,1]$ for each miner
 $j$. Yuma computes a benchmark consensus weight per miner as
@@ -701,50 +850,112 @@ domain~\cite{opentensor2024evm}.
 \subsection{API risk + scenario engine}\label{sec:arch:scenario}
 
 The scenario engine of Section~\ref{sec:engine:scenario} is the smallest delta over
-OmniRisk's existing public API surface that turns predicted distributions into
-pre-committed action programs.
+OmniRisk's existing API surface that turns predicted distributions into pre-committed
+action programs. We characterise the as-is surface concretely (because every published
+description so far has been at the abstract layer), specify the demands the scenario
+engine adds, and quote the smallest-delta build cost in engineer-days.
 
-\paragraph{Existing API surface.} OmniRisk's API today exposes (i)~the cross-chain
-risk-score endpoint $s(q,t)$ of Eq.~\eqref{eq:risk}; (ii)~the route-health endpoint
-backed by RayaChain's Route Health System (15~s refresh; p50/p99 latency, destination
-liquidity, recent volume, success rate, risk-grade); (iii)~the broadcast-publication
-endpoint into RayaChain's Risk Broadcast System (currently with readiness flag
-\texttt{false}; see Section~\ref{sec:status:gaps}); (iv)~social-bridge endpoints for
-issue-thread and chat-channel publication of agentic-engine proposals; and (v)~a
-risk-alert poller that fans out cross-chain incident signals to subscribed consumers.
-This surface is sufficient for \emph{advisory} risk-intelligence consumption but not
-for \emph{pre-committed} action programs.
+\paragraph{As-is API surface.} OmniRisk currently runs five distinct HTTP boundaries
+plus one bot runtime with file-based control surfaces, all on the operator's machine.
 
-\paragraph{Smallest delta to a scenario engine.} Three additions, in order:
+\begin{description}
+  \item[Paperclip server (\texttt{:3100/api/\dots}).] The orchestration backbone.
+        REST API for company and agent enumeration, issue lifecycle (\texttt{POST/GET/
+        PATCH /api/issues/:id}), threaded comments, document attachment, and agent
+        heartbeat invocation (\texttt{POST /api/agents/:id/heartbeat/invoke}). Auth
+        model: \texttt{local\_trusted} --- localhost requests are treated as the
+        board user. Idempotency: issue creation is keyed on caller-provided
+        \texttt{idempotencyKey}; heartbeat invocations are fire-and-forget with no
+        delivery guarantee. Observability: structured JSON logs;
+        no metrics endpoint.
+  \item[X bridge (\texttt{:8790}).] Outbound-only to the X v2 API. Surfaces:
+        \texttt{POST /tweet} (single tweet, 280-char validated), \texttt{POST /thread}
+        (sequential multi-tweet, 500\,ms gap enforced), \texttt{POST /notify}
+        (Telegram-compat envelope), \texttt{GET /health}. Auth: shared
+        \texttt{X-Bridge-Token}; the bridge signs outbound X requests with OAuth~1.0a
+        HMAC-SHA1. No idempotency; rate ceiling $\sim$1{,}500~posts/month on the X
+        free tier with no backpressure surface to callers.
+  \item[Telegram bridge (\texttt{:8788}).] Bidirectional. Inbound: long-polls the
+        Telegram Bot API, creates Paperclip issues assigned to the Personal
+        Assistant, then polls issue comments to relay replies (default 5\,s).
+        Outbound: \texttt{POST /notify} with \texttt{\{channel,text\}}; channel
+        names map to chat IDs via env-var registry.
+  \item[Discord bridge (\texttt{:8789}).] Identical outbound contract to Telegram,
+        backed by per-channel Discord webhook URLs. Truncates at the Discord
+        2{,}000-char hard limit; HTTP 429 retried with exponential backoff.
+  \item[Risk-alert poller (client; no inbound port).] Polls
+        \texttt{OMNIRISK\_API\_BASE\_URL/v1/dashboard/high-risk-alerts?limit=50}
+        on a configurable interval (default 300\,s). Deduplicates by
+        \texttt{chain:address}; routes by severity to the Telegram bridge
+        (\texttt{critical}/\texttt{high} $\to$ \texttt{alerts}, \texttt{medium}
+        $\to$ \texttt{internal}, \texttt{low}/\texttt{info} dropped).
+\end{description}
+
+The bot runtime supplies file-based control surfaces, not HTTP: \texttt{bot/state.json}
+(cooldown timestamps, daily-spend accumulator, pause flag), \texttt{bot/KILL} (graceful
+shutdown sentinel), and \texttt{bot/logs/decisions.jsonl} (append-only structured
+decision log). The live-mode gate is a two-flag lock --- \texttt{DRY\_RUN=false} plus
+\texttt{LIVE\_CONFIRM=I\_UNDERSTAND\_LIVE\_TRADING} --- both required for real trade
+execution. Internally, a \texttt{score()} pure function with deterministic
+\texttt{SignedEnvelope} outputs (ed25519 signatures, UUIDv7 identifiers, RFC~8785
+JCS canonical form) appends signed signal records to \texttt{output/signals.jsonl};
+no HTTP endpoint today accepts or emits these signals.
+
+\paragraph{Scenario-engine demands.} A scenario engine is the conduit between a market
+observation and a pre-authorised response. It needs five capabilities the current
+surface does not provide:
 \begin{enumerate}
-  \item A \emph{program registry}: a typed record per scenario program with
-        \texttt{precondition}, \texttt{trigger}, \texttt{action sequence},
-        \texttt{post-condition}, and a declared resource bound. The schema follows
-        the NIST tabletop-exercise structure of \cite{nist2006sp80084} adapted to an
-        on-chain execution context.
-  \item A \emph{trigger evaluator} that polls the prediction engine's distributional
-        outputs (and the sentiment-fusion engine's outputs) against each program's
-        trigger predicate and the chain-state predicates of
-        Section~\ref{sec:formal:material}, on a cadence at least as fast as the
-        Route Health refresh.
-  \item A \emph{constrained execution path} that routes accepted action sequences
-        through one of two backends: the Transfer Engine
-        (Section~\ref{sec:arch:rayachain}) for cross-chain OFT actions, or a
-        chain-native router (e.g.\ Jupiter on Solana) for on-chain actions on a
-        single venue. The execution path inherits the agentic engine's role
-        contract, so a Trader-role program cannot dispatch a sell, a Broadcaster-role
-        program cannot move funds, etc.
+  \item A \emph{scenario template registry}: a persistent typed store of named
+        condition patterns of the form ``liquidity on pool $P$ drops more than $X\%$
+        within window $W$''. The bot's tier thresholds are TypeScript constants today
+        and cannot be authored, versioned, or queried at runtime.
+  \item \emph{Action binding}: each template binds to one or more serialisable
+        response actions (``pre-commit $Z$~SOL of buy capacity to tier $T$'', ``post
+        alert to channel $C$'', ``invoke agent $A$ with payload $P$''), executable
+        without per-event human confirmation in automated mode.
+  \item A \emph{generalised two-flag execution gate}: a \texttt{mode} field
+        (\texttt{dry\_run}~$|$~\texttt{live}) per scenario execution context, plus a
+        per-scenario \texttt{confirmed} bit requiring explicit board sign-off before
+        any live action fires. The bot's two-flag pattern today is local env-var
+        state inside the bot process and not externally readable.
+  \item A \emph{scenario history store} with append-only run records and an HTTP
+        query surface (\texttt{GET /scenarios/:id/runs?limit=N\&since=T}). The
+        existing \texttt{decisions.jsonl} partially fulfils this for the bot but is
+        bot-specific and not queryable over HTTP.
+  \item \emph{Agentic composition}: an LLM-mediated authoring path where natural-
+        language intent is translated into a validated condition-grammar template,
+        plus a Paperclip \texttt{request\_confirmation} interaction to gate live-mode
+        activation. None of these flows are wired today.
 \end{enumerate}
+The trigger-delivery substrate is a sixth requirement: the engine must receive market
+events in near real time, where the only inbound market-data path today is the bot's
+internal \texttt{priceWatcher.ts} (DexScreener polling, 30\,s cadence). The engine
+either subscribes to a shared event emitter exported from the bot or polls its own
+adapters.
 
-\paragraph{Foundations for the trigger evaluator.} The scenario semantics we want
---- ``if scenario~$\Sigma$ is realised in window~$W$ with probability above
-threshold~$p$, execute program~$P$ within resource bound~$B$'' --- is the operational
-form of a stopping rule on a Monte-Carlo sample path of the predicted joint
-distribution~\cite{glasserman2003monte}. The case study of
-Section~\ref{sec:case-study} runs the simplest non-trivial scenario program in this
-class --- a tier-ladder buy-only liquidity-defence policy --- and demonstrates that
-the program-registry / trigger-evaluator / constrained-execution decomposition
-suffices for that case.
+\paragraph{Smallest-delta build.} Three deployment options, in increasing isolation:
+(i)~a \texttt{scenarios/} module inside the bot ($\sim$2 engineer-days; no new
+process); (ii)~a Paperclip plugin exposing \texttt{POST/GET /scenarios} and
+\texttt{GET /scenarios/:id/runs} with history persisted via the issue/comment system
+($\sim$4--5 days); (iii)~a new Node service on \texttt{:8791} with SQLite-backed
+templates and history ($\sim$6--8 days). The recommended v0 is (i) plus a thin
+in-process HTTP shim on \texttt{:8791} for \texttt{POST /scenarios} and
+\texttt{GET /scenarios/:id/runs}, costed at $\sim$3 engineer-days for the rule-based
+core (template store, evaluator, history writer, generalised two-flag contract,
+\texttt{decisions.jsonl} schema extension) and a fourth day for LLM-mediated authoring
+plus the Paperclip \texttt{request\_confirmation} gate. The agentic-authoring layer
+ships as a follow-on PR; it does not block the engine from running in dry-run mode on
+board-authored templates.
+
+\paragraph{Foundations for the trigger evaluator.} The scenario semantics we want ---
+``if scenario~$\Sigma$ is realised in window~$W$ with probability above threshold~$p$,
+execute program~$P$ within resource bound~$B$'' --- is the operational form of a
+stopping rule on a Monte-Carlo sample path of the predicted joint
+distribution~\cite{glasserman2003monte}. The case study of Section~\ref{sec:case-study}
+runs the simplest non-trivial scenario program in this class --- a tier-ladder
+buy-only liquidity-defence policy --- and demonstrates that the program-registry /
+trigger-evaluator / constrained-execution decomposition suffices for that case at
+the rule-based level.
 
 \section{OmniRisk--Bittensor Integration Model}\label{sec:integration}
 
@@ -2040,6 +2251,28 @@ EVM testnet documentation that made the Section~\ref{sec:subtensor} integration 
 concrete. Any errors are the authors'.
 
 \section*{Reproducibility Note}
+
+Revision v0.11 integrates synthesis blocks delivered against three OMN-152
+sub-issues into the v0.10 architecture. Source-of-truth pointers for each
+integration: \emph{(i)~Bittensor / Taoshi PTN / dTAO / Macrocosmos SN13} from
+sub-issue \texttt{b3cbe648-318a-4907-b9ae-54bf869824af} (Market Researcher) is
+folded into Section~\ref{sec:arch:bittensor}; \emph{(ii)~contemporary multimodal-
+sentiment surveys + SentiStack worked example + Solana grey-literature feeds}
+from the same sub-issue is folded into Section~\ref{sec:arch:sentiment};
+\emph{(iii)~OmniRisk API surface characterisation + smallest-delta scenario-engine
+build} from sub-issue \texttt{fed71685-264d-45e5-aab5-0f5f18cc9758} (Developer)
+is folded into Section~\ref{sec:arch:scenario}; \emph{(iv)~strategic call on
+five separable engines vs.\ a composite agent + 90-day build order + out-of-scope
+boundary list} from sub-issue \texttt{c750fd90-32be-469e-85ce-9bbdb4ffe522}
+(Cody CTO) is folded into the new Section~\ref{sec:engine:strategy}. Seven new
+bibliography entries were added on 2026-05-06 (\cite{lai2023multimodal,
+gandhi2023multimodal,long2019deep,zhang2025sentistack,macrocosmos2024datauniverse,
+birdeye2026docs,dexscreener2026docs,pumpfun2026site}); each was verified against
+its primary source (DOI page, arXiv abstract page, or canonical project URL) on
+the same date. Total bibliography: 33 entries; pre-existing 26 entries audited
+2026-05-06 are preserved verbatim. No abstract / intro / formal-definitions /
+case-study / tokenomics / status / limitations content was modified in v0.11;
+the contribution framing of v0.10 is unchanged.
 
 Revision v0.10 reframes the contribution from ``verifiable cross-chain bridge
 risk'' to the broader thesis of \emph{agentic, context-aware risk prediction for
