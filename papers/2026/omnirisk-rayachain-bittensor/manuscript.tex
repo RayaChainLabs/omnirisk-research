@@ -27,7 +27,7 @@
 \title{Agentic, Context-Aware Risk Prediction for the Internet of Value:\\
        A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor}
 \author{OmniRisk Research \\ \texttt{research@omnirisk.io}}
-\date{May 2026 \\ \textbf{Working paper, v0.11}}
+\date{May 2026 \\ \textbf{Working paper, v0.12}}
 
 \begin{document}
 \maketitle
@@ -430,6 +430,10 @@ subnet of Section~\ref{sec:engine:subnet} is a \emph{killable} dependency of the
 prediction engine: if subnet signal-to-noise is poor, the prediction engine
 continues without it. The agentic engine is the only true integrator and ships
 last, because it consumes the other three as evidence inputs and inherits the
+governance gate. Figure~\ref{fig:five-engine-dependency} summarises the dependency
+graph: the shared fabric supplies API risk + scenario, prediction, and sentiment
+fusion; the prediction engine optionally consumes Bittensor as a research-grade
+uplift; the agentic engine consumes all three as evidence and is wrapped by the
 governance gate. A 90-day build window therefore sequences (D0--D20) shared fabric
 plus API risk + scenario, (D15--D45) prediction, (D30--D60) sentiment fusion,
 (D45--D75) Bittensor research spike with an explicit go/kill decision, and
@@ -438,6 +442,20 @@ Bittensor first, sentiment fusion second, on the grounds that neither is on the
 critical path to a buyer-shippable product. None of these dates is a commitment of
 this paper; the sequencing is what justifies the paper's framing of the agentic
 engine as the \emph{integrator} rather than as the cross-cutting engine.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/five-engine-dependency-graph.pdf}
+\caption{Dependency graph for the five-engine composition. Node colour follows
+the role: \emph{foundation} (shared fabric --- ingestion, signal schema, evidence
+store, observability), \emph{engine} (API risk + scenario, prediction, sentiment
+fusion, agentic), \emph{research} (Bittensor prediction subnet --- a killable
+uplift to the in-house prediction engine), and \emph{governance gate}
+(paused-by-default + board approval, wrapping the agentic engine's action-emit
+interface). Solid arrows denote evidence flows; the dashed Bittensor arrow
+indicates that the dependency is killable without taking prediction down.}
+\label{fig:five-engine-dependency}
+\end{figure}
 
 \paragraph{Out-of-scope, by design.} The five-engine framing carries a corresponding
 list of capabilities the architecture explicitly does not provide. We name them so
@@ -956,6 +974,25 @@ runs the simplest non-trivial scenario program in this class --- a tier-ladder
 buy-only liquidity-defence policy --- and demonstrates that the program-registry /
 trigger-evaluator / constrained-execution decomposition suffices for that case at
 the rule-based level.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/scenario-engine-dataflow.pdf}
+\caption{Data flows for the v0 scenario engine, overlaid on the as-is API
+surface. New components (amber): the scenario evaluator, the JSON template store,
+the run-history extension to \texttt{decisions.jsonl}, the action dispatcher, and
+the scenario HTTP shim on \texttt{:8791}. Existing components (grey): the bot
+\texttt{priceWatcher}, the bot tick loop, the Telegram and X bridges, the Paperclip
+server, and the risk-alert poller. External actors (blue): market data sources,
+Jupiter swap, and the agents/board surface that interacts via the HTTP shim. File
+stores (yellow): \texttt{bot/state.json} and \texttt{bot/KILL}. Edge styles: solid
+$=$ synchronous call; dashed $=$ file I/O; double-line $=$ two-flag gated (the
+generalised \texttt{DRY\_RUN}~$\land$~\texttt{LIVE\_CONFIRM} contract). The
+double-line on the action-dispatcher$\to$Jupiter edge is the scenario-engine
+analogue of the agentic engine's governance gate
+(Section~\ref{sec:engine:agentic}).}
+\label{fig:scenario-engine-dataflow}
+\end{figure}
 
 \section{OmniRisk--Bittensor Integration Model}\label{sec:integration}
 
@@ -2251,6 +2288,25 @@ EVM testnet documentation that made the Section~\ref{sec:subtensor} integration 
 concrete. Any errors are the authors'.
 
 \section*{Reproducibility Note}
+
+Revision v0.12 wires two new vector PDF figures into the manuscript: the
+five-engine dependency graph (Figure~\ref{fig:five-engine-dependency} in
+Section~\ref{sec:engine:strategy}, rendered from the Cody CTO Mermaid block in
+sub-issue \texttt{c750fd90-32be-469e-85ce-9bbdb4ffe522}) and the scenario-engine
+data-flow diagram (Figure~\ref{fig:scenario-engine-dataflow} in
+Section~\ref{sec:arch:scenario}, rendered from the 16-node specification in
+Developer sub-issue \texttt{fed71685-264d-45e5-aab5-0f5f18cc9758}). The three
+v0.10/v0.11 baseline figures (\texttt{five-engine-architecture.pdf},
+\texttt{rya-defence-cycle-prices.pdf}, \texttt{rya-defence-cycle-liquidity.pdf})
+have been replaced in place by polished versions matching the OmniRisk visual
+identity; the underlying data layer is unchanged and remains reproducible from
+\texttt{figures/\_make\_figures.py} against \texttt{bot/logs/decisions.jsonl}.
+Designer commit \texttt{eb6dafd} on \texttt{omnirisk-papers} is the source of
+all five vector PDFs in \texttt{figures/} as of v0.12. No textual content from
+the v0.11 architecture, case study, tokenomics, status, limitations, or
+bibliography sections has been modified in v0.12; the only changes are the
+title-page revision tag and two \texttt{\textbackslash includegraphics} blocks
+plus their captions.
 
 Revision v0.11 integrates synthesis blocks delivered against three OMN-152
 sub-issues into the v0.10 architecture. Source-of-truth pointers for each

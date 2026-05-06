@@ -5,7 +5,7 @@ authors:
     email: "research@omnirisk.io"
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.11"
+revision: "0.12"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -33,6 +33,16 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_12:
+    date: "2026-05-06"
+    summary: "Wire Designer's two new vector PDFs (five-engine dependency graph + scenario-engine data flow) into the manuscript. Designer figure deliverables (commit eb6dafd) close out the OMN-152 figure surface."
+    changes:
+      - "§engine:strategy: new Figure 'fig:five-engine-dependency' (figures/five-engine-dependency-graph.pdf) inserted after the build-order paragraph, with caption documenting the four colour classes (foundation / engine / research / gate), the solid evidence-flow arrows, and the dashed killable-Bittensor edge."
+      - "§arch:scenario: new Figure 'fig:scenario-engine-dataflow' (figures/scenario-engine-dataflow.pdf) inserted after the trigger-evaluator paragraph, with caption documenting the four colour classes (new amber / existing grey / external blue / file-store yellow), the three edge styles (solid synchronous / dashed file I/O / double-line two-flag-gated), and the analogy between the action-dispatcher→Jupiter double-line edge and the agentic engine's governance gate."
+      - "Title page revision tag bumped 0.11 → 0.12."
+      - "Reproducibility Note: v0.12 entry inserted; documents the source-of-truth pointers for the two new figures (Cody CTO Mermaid block from sub-issue c750fd90 and the 16-node specification from Developer sub-issue fed71685) and the Designer commit eb6dafd."
+      - "v0.11 textual content (architecture, case study, tokenomics, status, limitations, bibliography) preserved verbatim. Only the two \\includegraphics blocks + their captions and the revision-tag/reproducibility-note changes are touched."
+      - "pending_before_submission: removed the 'v0.11 follow-up — Designer / Developer figures' bullets; OMN-160 has shipped and the figures are wired."
   v0_11:
     date: "2026-05-06"
     summary: "Integrate findings from OMN-152 sub-issues (Market Researcher b3cbe648, Developer fed71685, Cody CTO c750fd90) into the v0.10 architecture. No structural reframe; depth additions and one new subsection."
@@ -138,9 +148,7 @@ revision_log:
 
 last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
 pending_before_submission:
-  - "v0.11 follow-up — Designer: replace the three v0.10 baseline vector PDFs (five-engine-architecture.pdf, rya-defence-cycle-prices.pdf, rya-defence-cycle-liquidity.pdf) with polished versions matching the OmniRisk visual identity, AND render the Cody CTO Mermaid block from §engine:strategy as a separate vector-PDF dependency-graph figure that can be referenced from the new §engine:strategy subsection. The current baseline figures are reproducible from figures/_make_figures.py and are correct on data; they are intentionally unstyled."
-  - "v0.11 follow-up — Developer: produce the OmniRisk v0 API + scenario engine sub-figure specified in the Developer sub-issue (fed71685) — nodes A–P with solid/dashed/double-line edge styling, amber=new / grey=existing / blue=external / yellow=file-store colour classes — and add it to figures/ as a fourth vector PDF; reference from §arch:scenario."
-  - "Market Researcher (b3cbe648), Developer (fed71685), Cody CTO (c750fd90) sub-issue findings have all landed in v0.11; no further input pending from those agents on this paper."
+  - "Sub-issue findings landed: Market Researcher (b3cbe648) + Developer (fed71685) + Cody CTO (c750fd90) in v0.11; Designer (OMN-160 / commit eb6dafd) in v0.12. The five required vector PDFs (architecture, prices, liquidity, dependency graph, scenario data flow) are all in figures/ and wired into the manuscript."
   - "SECURITY: rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; address 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into CI/CD secret store; ship .env.example with placeholders only — needs separate engineering issue, not a paper task"
   - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
   - "Engineering: close the §status:gaps mainnet-readiness items — bring up mainnet RPC + EID + registry, deploy mainnet OFT + Solana program, wire the full 20-direction peer matrix, fix Base Sepolia ownership mismatch, adopt multisig+timelock governance, commission third-party security audit, write mainnet runbook (engineering estimate 4–8 weeks)"
