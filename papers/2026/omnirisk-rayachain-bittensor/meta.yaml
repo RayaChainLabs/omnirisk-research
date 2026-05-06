@@ -1,11 +1,17 @@
 title: "Agentic, Context-Aware Risk Prediction for the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor"
 slug: "omnirisk-rayachain-bittensor"
 authors:
+  - name: "Basel Magableh"
+    email: "basel.magableh@tudublin.ie"
+    affiliation: "Technological University of Dublin"
+    order: 1
+    corresponding: true
   - name: "OmniRisk Research"
     email: "research@omnirisk.io"
+    order: 2
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.12"
+revision: "0.13"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -33,6 +39,15 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_13:
+    date: "2026-05-06"
+    summary: "Add Basel Magableh (Technological University of Dublin) as first author per CEO directive. Metadata-only change, no manuscript content modified."
+    changes:
+      - "manuscript.tex \\author{} block: Basel Magableh added as first author with TUD affiliation \\thanks{} footnote and corresponding-author email basel.magableh@tudublin.ie. OmniRisk Research preserved as second author (research@omnirisk.io) with its own \\thanks{} footnote."
+      - "hyperref pdfauthor metadata: 'OmniRisk Research' → 'Basel Magableh; OmniRisk Research'."
+      - "Title page revision tag bumped 0.12 → 0.13."
+      - "meta.yaml authors: Basel Magableh added as order 1, corresponding=true; OmniRisk Research demoted to order 2."
+      - "No bibliography, abstract, sections, figures, or claims changed."
   v0_12:
     date: "2026-05-06"
     summary: "Wire Designer's two new vector PDFs (five-engine dependency graph + scenario-engine data flow) into the manuscript. Designer figure deliverables (commit eb6dafd) close out the OMN-152 figure surface."
