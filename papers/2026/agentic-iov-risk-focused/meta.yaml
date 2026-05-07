@@ -1,7 +1,7 @@
 title: "A Five-Engine Architecture for Agentic, Context-Aware Risk Prediction in the Internet of Value"
 slug: "agentic-iov-risk-focused"
 companion_to: "omnirisk-rayachain-bittensor"   # the long technical-report version, same authors
-target_length_pages: 10                         # tight; conference-short / preprint-companion length
+target_length_pages: 15                         # CEO directive 2026-05-07: max 15 pages, easy to read, this is the publishable artefact
 authors:
   - name: "Basel Magableh"
     email: "basel.magableh@tudublin.ie"
