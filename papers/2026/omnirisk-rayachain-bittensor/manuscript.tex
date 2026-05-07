@@ -8,6 +8,8 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{seqsplit}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{xcolor}
@@ -842,25 +844,22 @@ independently audit each address on-chain.
 
 \begin{table}[h]
 \centering
-\small
-\begin{tabular}{p{0.20\linewidth}p{0.55\linewidth}r}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{@{}l l X r@{}}
 \toprule
-\textbf{Chain (testnet)} & \textbf{Address} & \textbf{Validated} \\
+\textbf{Chain (testnet)} & \textbf{Artefact} & \textbf{Address} & \textbf{Validated} \\
 \midrule
-Solana devnet (canonical) & Program ID
-\texttt{9tFnL3MJiQZhBzHsskQrXvhswidyx4GhynRtbVPRC8hy};
-mint \texttt{9DSqNkXxXic5cnQwpkvqjJV2pSJy6kM8NuKv3TSwAEFJ}; OFT store
-\texttt{3E65hKya7XZVN1DXq1uXpDdUJFfCHVrKW9iZuNDeyfEp}
-& 2026-03-14 \\
-Base Sepolia OFT & \texttt{0x0D502B598FFa3f11573A8349726915cB20ad4656}
-(deterministic CREATE2)
-& 2026-03-14 \\
-Ethereum Sepolia OFT & \texttt{0x4e2128623d9968000D2C4D2926d014373951c2ad}
-& 2026-03-14 \\
-LayerZero EndpointV2 (all EVM testnet) & \texttt{0x6EDCE65403992e310A62460808c4b910D972f10f}
-& 2026-03-14 \\
+Solana devnet (canonical) & Program ID & \seqsplit{9tFnL3MJiQZhBzHsskQrXvhswidyx4GhynRtbVPRC8hy} & 2026-03-14 \\
+Solana devnet (canonical) & Mint        & \seqsplit{9DSqNkXxXic5cnQwpkvqjJV2pSJy6kM8NuKv3TSwAEFJ} & 2026-03-14 \\
+Solana devnet (canonical) & OFT store   & \seqsplit{3E65hKya7XZVN1DXq1uXpDdUJFfCHVrKW9iZuNDeyfEp} & 2026-03-14 \\
+\addlinespace[2pt]
+Base Sepolia              & OFT (deterministic CREATE2) & \seqsplit{0x0D502B598FFa3f11573A8349726915cB20ad4656} & 2026-03-14 \\
+Ethereum Sepolia          & OFT                          & \seqsplit{0x4e2128623d9968000D2C4D2926d014373951c2ad} & 2026-03-14 \\
+LayerZero (all EVM testnet) & EndpointV2                  & \seqsplit{0x6EDCE65403992e310A62460808c4b910D972f10f} & 2026-03-14 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \caption{Subset of the canonical RayaChain registry deployed-contract addresses
 with last-validated dates. Reverse-route status for Arbitrum and Base has been
 ``unknown'' since 2026-03-14; Polygon Amoy reverse-send is currently blocked by
