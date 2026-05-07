@@ -296,7 +296,7 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: "2026-05-07T04:46Z (v0.22, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 52 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf; seqsplit \\providecommand fallback added so build succeeds whether or not the seqsplit.sty package is installed)"
+last_local_compile: "2026-05-07T05:57Z (v0.22, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 52 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf; author-block layout-fix applied per CEO directive ab6086a6 — \\and → \\quad\\quad and \\normalsize on affiliation lines so the author + affiliations render as a centered two-author block with readable affiliation footnotes rather than collapsing through the \\and tabular layout; seqsplit \\providecommand fallback retained from v0.22)"
 
 # pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
 # engineering-side (delegated, separate track from publication).
