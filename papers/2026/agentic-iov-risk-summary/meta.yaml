@@ -14,8 +14,8 @@ authors:
     affiliation: "Rayachain Lab, Dublin, Ireland"
     order: 2
 target_venue: "paragraph or arxiv-extended-abstract"   # CEO call before publish
-status: "scaffold"                            # scaffold → draft → CEO-review → published; CEO directive: keep in draft until they look
-revision: "0.1"
+status: "draft"                               # scaffold → draft → CEO-review → published; CEO directive: keep in draft until they look
+revision: "0.5"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
@@ -46,9 +46,23 @@ provenance:
     not also in the focused paper. The summary is shorter and more readable; not different
     in substance.
 
-last_local_compile: null
+last_local_compile: "2026-05-07T09:00Z (v0.5, latexmk + pdflatex, papers/2026/agentic-iov-risk-summary; 4 pages, ZERO WARNINGS, zero overfull hboxes, zero underfull hboxes, no missing-font-shape notices; biblatex deliberately not loaded — in-text URLs only per CEO directive 5ca85ec4)"
+
+revision_log:
+  v0_5:
+    date: "2026-05-07"
+    summary: "First populated draft of the short-form summary article per CEO directive 5ca85ec4 (2026-05-07T08:55Z): 'Ask the AW writer to make A summry article in paper for the Agentic, Context-Aware Risk Intelligence in the Internet of Value keep it in draft until i look at it'. Source provenance is the focused paper at papers/2026/agentic-iov-risk-focused/manuscript.tex v1.1+ (commit baa3a4f / 358ea1e). Status flipped scaffold → draft per directive; CEO will read before any further status promotion."
+    changes:
+      - "manuscript.tex populated from the scaffold to a 4-page short summary article. Six \\section* sections: 'The problem in one paragraph' (~125 words); 'The five engines' (~270 words across five short paragraphs, one analogy per engine — weather report, Wikipedia for forecasts, tape reader, paid trader with a chaperone, automatic fire drill); 'The case study (in plain English)' (~315 words, chronological narrative anchored on UTC timestamps with the 02:38 stop-loss event and 03:44 manual override); 'The 168-hour calibration arc' (~165 words, leads with 53% baseline, ends with Brier 0.1335); 'What this isn't' (three honest disclaimers: not a retail trading bot; not a decentralised system yet; not a generalisation claim); 'Read more' (in-text URLs to focused paper, Paragraph article, decision log, soak telemetry)."
+      - "Abstract: 95 words; opens with the IoV reframe in one sentence; names the five engines in one sentence using 'which include' rather than a comma list; closes with the empirical anchor (27-hour intervention + 168-hour calibration arc). No \\cite calls per directive."
+      - "Voice: active throughout. 'We deployed' / 'The bot fired' / 'The CEO recorded an authorisation'. Uses the word 'defence' and 'override' freely (the focused paper rephrased these for TIFS review reasons; the summary is under no such constraint). No threat-model section. No formal validator-loss decomposition. No CRediT/funding/data-availability/ethics sections (those live in the focused paper)."
+      - "One figure (Figure 1, full-width OmniRisk architecture diagram) included; the optional five-engine dependency-graph (Figure 2) was dropped to stay under the 6-page hard ceiling — the page count came in at 4 with one figure, and the dependency graph would have pushed the layout into a more cluttered shape without adding substance for the non-specialist audience."
+      - "Preamble: dropped biblatex/\\addbibresource and booktabs/tabularx (no tables, no bibliography). Kept hyperref with the 'hyphens' option passed through to the url package (\\PassOptionsToPackage{hyphens}{url}) so the long Paragraph URL in §read-more breaks at hyphens — without this, an overfull hbox of ~40pt on that paragraph. Title-page revision tag: 'v0.5 (draft, CEO read-through pending)'."
+      - "Provenance: every numeric claim in this summary already appears in the focused paper. Specifically: the 60.9% trailing-24h drop, $6,098/$5,418/$4,661 pool-liquidity figures, the 5 SOL top-up, the 0.10 SOL/5×0.02 SOL slicing, the 1→3→5 SOL daily cap raises, the +50bp ratchet primitive, the 19.5% recovery, the 02:38 UTC stop-loss event with -46% in 3-10 minutes draining $1,666 of liquidity, the 03:44 UTC override, the new $0.0000414 floor, the 53% live-API baseline, the 99.34% on 915 samples, the Brier 0.1335, the 5,097 successful Bittensor rounds with zero auth failures. The CEO scaffold note's '$10.5k pool liquidity' figure was NOT used because it does not appear in the focused paper — per the provenance rule, summary numbers must already be in the focused paper or not in the summary at all."
+      - "What is NOT done: focused paper at agentic-iov-risk-focused/ NOT touched (still at v1.2 / commit 358ea1e); long technical report at omnirisk-rayachain-bittensor/ NOT touched (still at v0.22+); no \\cite{omnirisk2026techreport} self-reference (the focused paper had this scrubbed for the same reason); no auto-promotion past status 'draft' (CEO will gate the next status flip personally per directive)."
+      - "Build: make pdf → 4 pages, zero warnings, zero overfull hboxes, zero underfull hboxes. Single PNG figure (omnirisk-architecture.png, ~1.5 MB) included; PDF size ~1.5 MB."
+
 pending_before_submission:
-  - "First-pass populate from the focused paper into a 5-page accessible summary"
-  - "Compile clean (make pdf)"
-  - "CEO read-through (status stays `draft` until then)"
-  - "Pick venue: Paragraph (long-form blog) or arXiv extended abstract"
+  - "DONE in v0.5: first populated draft from focused paper provenance; compile clean; revision_log entry."
+  - "CEO read-through (status stays `draft` until CEO explicitly flips it; per directive 5ca85ec4 do NOT auto-promote)."
+  - "Pick venue: Paragraph (long-form blog) or arXiv extended abstract — CEO call after read-through."
