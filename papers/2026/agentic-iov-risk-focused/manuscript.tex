@@ -1,0 +1,170 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{seqsplit}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
+
+\addbibresource{references.bib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={A Five-Engine Architecture for Agentic, Context-Aware Risk Prediction in the Internet of Value},
+  pdfauthor={Basel Magableh; OmniRisk Research},
+}
+
+\title{A Five-Engine Architecture for Agentic, Context-Aware\\
+       Risk Prediction in the Internet of Value\\[0.5em]
+       \large{\normalfont(Focused companion to the OmniRisk--RayaChain--Bittensor technical report)}}
+\author{
+  Basel Magableh\textsuperscript{1,*} \and OmniRisk Research\textsuperscript{2}\\[0.8em]
+  \textsuperscript{1}School of Computer Science, Technological University Dublin, Ireland\\
+  \textsuperscript{2}Rayachain Lab, Dublin, Ireland\\[0.4em]
+  \textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
+}
+\date{2026-05-07 \\ \textbf{Working paper, v0.1 (scaffold)}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\textbf{[SCAFFOLD --- AW: rewrite this abstract as a tight 150--180 word version
+of the long-paper abstract. Open with the IoV reframe, name the five engines
+in one sentence each, anchor on the empirical contribution (the RYA defence
+cycle and the 168\,h prediction-router calibration arc), and close with one
+falsifiable claim. Do not duplicate the long paper's 600-word abstract
+verbatim --- this is the short-form companion.]}
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+\textbf{[SCAFFOLD --- AW: 1.5 pages max. Same intellectual setup as the long
+paper's \S\ref{sec:intro}, but compressed:}
+\begin{itemize}
+\item \textbf{[The IoV reframe in three sentences:} value moves across chains;
+the dominant marginal risk is now composite and agentic; existing tooling
+treats single chains.\textbf{]}
+\item \textbf{[The five-engine thesis in one paragraph (do not enumerate the
+engines yet --- forward-reference \S\ref{sec:arch}).]}
+\item \textbf{[The empirical anchor: a fully-public 5-hour RYA defence cycle
+and a 168\,h prediction-router calibration arc against production data.]}
+\item \textbf{[The contribution list (3 bullets) and a roadmap of the focused
+paper.]}
+\end{itemize}
+\textbf{Bridge security and prior cross-chain SoK literature: cite once,
+\cite{augusto2024sok,zhang2023sok,belchior2021survey}, and move on. This is
+not the place for the full literature review --- that lives in the long paper.}\textbf{]}
+
+\section{The Five-Engine Architecture}\label{sec:arch}
+
+\textbf{[SCAFFOLD --- AW: 2--3 pages. The headline contribution. Lift the
+five-engine block diagram from the long paper (Figure
+\texttt{fig:five-engine-dependency} at
+\texttt{papers/2026/omnirisk-rayachain-bittensor/figures/five-engine-dependency-graph.pdf})
+and explain each engine in one tight paragraph:}
+\begin{itemize}
+\item \textbf{Prediction engine} \textbf{[$\sim$120 words. Forecast targets
+(price, liquidity, volatility, route health). Cite production calibration
+v1: 66{,}118 samples, 21 anchor symbols, 30-day horizon, primary source
+\cite{omnirisk2026sysdesign}.]}
+\item \textbf{Agentic engine} \textbf{[$\sim$120 words. LLM-mediated, role-bound,
+constitutionally-constrained \cite{bai2022constitutional}. The
+paused-by-default + board-sign-off-required posture.]}
+\item \textbf{Sentiment-fusion engine} \textbf{[$\sim$120 words. Multimodal
+fusion of off-chain text and on-chain flow. Early/late/stacking taxonomy
+\cite{schumaker2009textual,xing2018natural,day2016deep}. Note the
+12-adapter implementation deployed in production.]}
+\item \textbf{Bittensor verification subnet} \textbf{[$\sim$120 words. Yuma
+consensus \cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma};
+Taoshi PTN \cite{taoshi2024ptn} as the closest 2026 reference. Deployed
+shadow-validator soak: 5{,}097 successful rounds over 57\,h on testnet
+netuid 60 \cite{omnirisk2026soak}.]}
+\item \textbf{API risk and scenario engine} \textbf{[$\sim$120 words. Predicted
+scenario $\rightarrow$ pre-committed action programme. Lineage in financial-engineering
+Monte-Carlo scenario generation \cite{glasserman2003monte} and NIST tabletop
+exercises \cite{nist2006sp80084}.]}
+\end{itemize}
+\textbf{End the section with one paragraph on how the engines compose: which
+feeds which, where the agentic engine gates the others, where the verification
+substrate sits.}\textbf{]}
+
+\section{Case Study: The RYA Liquidity-Defence Cycle}\label{sec:case-study}
+
+\textbf{[SCAFFOLD --- AW: 2 pages. Lift the chronological case-study from the
+long paper's \S\texttt{case-study} verbatim where it works, and tighten where
+it sprawls. Anchor each paragraph with a UTC timestamp:}
+\begin{itemize}
+\item \textbf{2026-05-06 \textasciitilde 01:00 UTC --- the dump:} price $-61\%$
+in 24\,h, liquidity drained $\$8\textrm{,}378 \to \$5\textrm{,}418$.
+\item \textbf{2026-05-06 01:04 UTC --- defence begins:} buy-only, capped,
+disclosed wallet \texttt{AHbB...EX3}.
+\item \textbf{2026-05-06 06:13 UTC --- daily cap hit:} 30 buys, 3.0\,SOL
+deployed, price recovered to \$0.0000682 ($+20\%$ off the floor), liquidity
+$+\$680$.
+\item \textbf{2026-05-06 \textasciitilde 10:30 UTC --- first organic buyer
+appears at the defended floor.}
+\item \textbf{2026-05-06 21:30 UTC --- second sell wave \& cap raised
+($3.0 \to 5.0$\,SOL) on CEO sign-off.}
+\item \textbf{2026-05-07 01:14 UTC --- ratchet step 3 reached at lifetime
+6.045\,SOL.}
+\item \textbf{Honest scope statement:} a single 5-hour cycle on a single
+Solana micro-cap pool, with the agentic engine instantiated as a deterministic
+policy. The LLM-mediated agentic engine is the next-step build.
+\end{itemize}
+\textbf{Cite the public Paragraph writeup and the source artefact at
+\cite{omnirisk2026defending}.}\textbf{]}
+
+\section{Production Metrics: 168-Hour Prediction-Router Calibration Arc}\label{sec:metrics}
+
+\textbf{[SCAFFOLD --- AW: 1 page. Lift the prediction-router calibration arc
+table from the long paper (\S\texttt{case-study:prediction-router}) and the
+honest framing (53\% baseline $\to$ 77\% on the April 25--26 168\,h cohort
+$\to$ 99.34\% on the May 7 168\,h cohort with class-imbalance caveats).
+Production source: \cite{omnirisk2026predmetrics}. Brier $0.1335$ is the
+informative number; raw accuracy $99.34\%$ alone fails on review.]}
+
+\section{Limitations \& Falsification}\label{sec:limits}
+
+\textbf{[SCAFFOLD --- AW: 0.75 page. Two columns of honest text.}
+\begin{itemize}
+\item \textbf{Limitation:} single pool, single 5-hour cycle, deterministic
+policy. \textbf{Falsification:} re-run the defence on three more micro-cap
+pools with different liquidity profiles; if it does not generalise, the
+architecture is venue-specific.
+\item \textbf{Limitation:} 99.34\% accuracy on a 915-sample cohort with
+top-1000-by-cap restriction. \textbf{Falsification:} lift the cohort
+restriction; if accuracy drops to the 53\% baseline, the calibration arc
+is artefactual.
+\item \textbf{Limitation:} validator-loss components $L_i$ ($\alpha$
+Brier $+ \beta$ Inconsistency $+ \gamma$ Miscalibration) are not yet
+measured \cite{omnirisk2026soak}~\S5. \textbf{Falsification:} the smallest
+experiment that would break the verification claim is to introduce a
+second miner with a non-trivial protocol, accumulate $(c, y)$ pairs across
+realised events, and report the three-component decomposition in a
+follow-up.\textbf{]}
+\end{itemize}\textbf{]}
+
+\section{Conclusion}\label{sec:conclusion}
+
+\textbf{[SCAFFOLD --- AW: 0.5 page. The five-engine architecture, the case
+study, the calibration arc, the verification substrate. One sentence pointing
+to the long paper for full formalisation, full cross-chain bridge SoK
+discussion, and the RayaChain tokenomics. One sentence pointing to the
+falsifiable hypotheses H1/H2 stated in the long paper's \S3.]}
+
+\printbibliography
+
+\end{document}

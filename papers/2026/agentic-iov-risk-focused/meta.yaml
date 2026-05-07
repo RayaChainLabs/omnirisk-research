@@ -1,0 +1,53 @@
+title: "A Five-Engine Architecture for Agentic, Context-Aware Risk Prediction in the Internet of Value"
+slug: "agentic-iov-risk-focused"
+companion_to: "omnirisk-rayachain-bittensor"   # the long technical-report version, same authors
+target_length_pages: 10                         # tight; conference-short / preprint-companion length
+authors:
+  - name: "Basel Magableh"
+    email: "basel.magableh@tudublin.ie"
+    affiliation: "School of Computer Science, Technological University Dublin, Ireland"
+    order: 1
+    corresponding: true
+  - name: "OmniRisk Research"
+    email: "research@omnirisk.io"
+    affiliation: "Rayachain Lab, Dublin, Ireland"
+    order: 2
+target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list — same as long paper
+status: "scaffold"           # scaffold | draft | internal-review | submitted | published
+revision: "0.1"
+created_at: "2026-05-07"
+submitted_at: null
+published_at: null
+doi: null
+arxiv_id: null
+canonical_url: null
+tags: ["internet-of-value","agentic-ai","cross-chain","prediction-engine","scenario-engine","sentiment-fusion","bittensor","focused-companion"]
+
+scope:
+  in: |
+    A 5-engine architecture for agentic, context-aware risk prediction.
+    The RYA liquidity-defence cycle as a fully-public case study.
+    The 168h prediction-router calibration arc (53% baseline → 77% → 99% with class-imbalance honesty).
+    The Bittensor shadow-validator soak as evidence the verification substrate is deployable.
+    Honest limitations: single pool, deterministic policy, deferred §validator-loss measurement.
+  out: |
+    Cross-chain bridge SoK (compressed to 2-3 sentences, citation only).
+    RayaChain tokenomics (§economics:rya:* in the long paper) — out of scope here.
+    Subtensor EVM integration deep-dive — out of scope here.
+    Full §formal definitions — collapse to 2-3 essential equations.
+    Implementation status table (full) — replace with a 1-paragraph status statement.
+
+provenance:
+  source_paper: "papers/2026/omnirisk-rayachain-bittensor/manuscript.tex (v0.21+)"
+  extraction_rule: |
+    Where text appears in both papers, it must be byte-identical OR clearly intentionally rewritten
+    for the focused-paper register (more accessible, narrative). No new claims may appear in the focused
+    paper that are not also in the long paper, with the same primary-source anchors.
+  bibliography: "../../../_bib/references.bib (shared, 52 entries; focused paper cites a subset of ~20-25)"
+
+last_local_compile: null
+pending_before_submission:
+  - "First-pass extraction from long paper into focused-paper structure (Abstract / Intro / Architecture / Case study / Metrics / Limitations / References)"
+  - "Compile clean (make pdf)"
+  - "CEO read-through"
+  - "Cross-link from long paper's §intro to this focused companion (and vice-versa)"
