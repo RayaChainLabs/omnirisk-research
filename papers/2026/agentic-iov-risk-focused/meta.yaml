@@ -14,7 +14,7 @@ authors:
     order: 2
 target_venue: "IEEE TIFS primary, arXiv cs.CR + q-fin.RM cross-list parallel; ACM TOPS or AFT/Journal of Financial Stability fallback"
 status: "submission-ready"   # scaffold | draft | internal-review | submission-ready | submitted | published
-revision: "1.1"
+revision: "1.2"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
@@ -45,9 +45,22 @@ provenance:
     paper that are not also in the long paper, with the same primary-source anchors.
   bibliography: "../../../_bib/references.bib (shared, 52 entries; focused paper cites a subset of ~20-25)"
 
-last_local_compile: "2026-05-07T08:41Z (v1.1, latexmk + biber, papers/2026/agentic-iov-risk-focused; 15 pages, ZERO WARNINGS, zero overfull hboxes, zero underfull hboxes, no unresolved citations or references, no missing-font-shape notices, top-level manuscript.pdf matches build/manuscript.pdf; submission-ready for IEEE TIFS primary + arXiv cs.CR cross-list)"
+last_local_compile: "2026-05-07T08:46Z (v1.2 arxiv-prep, latexmk + biber, papers/2026/agentic-iov-risk-focused; 15 pages, ZERO WARNINGS in final pdflatex pass, zero overfull hboxes, zero underfull hboxes, bbl format version 3.3; arxiv-bundle.tar.gz at submission/arxiv-bundle.tar.gz — 1.5 MB, 4 entries: manuscript.tex, manuscript.bbl, figures/omnirisk-architecture.png, figures/five-engine-dependency-graph.pdf; verified cleanly compiled in fresh tmpdir via make arxiv-verify)"
 
 revision_log:
+  v1_2:
+    date: "2026-05-07"
+    summary: "arXiv-prep packaging cut per CEO directive 551199b0 (2026-05-07T07:19Z). Five concrete fixes from arXiv's TeX/LaTeX submission guidelines (https://info.arxiv.org/help/submit_tex.html). No content changes; this is a packaging-only revision that lands cleanly on top of v1.1. Status remains submission-ready."
+    changes:
+      - "Cross-paper figure path resolved (item 1). Copied papers/2026/omnirisk-rayachain-bittensor/figures/five-engine-dependency-graph.pdf into papers/2026/agentic-iov-risk-focused/figures/. Rewrote the \\includegraphics path in manuscript.tex from '../omnirisk-rayachain-bittensor/figures/five-engine-dependency-graph.pdf' to 'figures/five-engine-dependency-graph.pdf'. The cross-paper '../...' path would have failed on arXiv because the sibling directory does not exist in the extracted submission tree."
+      - "Bibliography handling switched to Option A (item 2). The local references.bib remains a symlink into _bib/references.bib for the local make pdf path; the arXiv submission ships manuscript.bbl instead, removing arXiv's symlink-resolution risk entirely. The .bbl filename matches the .tex name as required by arXiv. The bbl header declares 'biblatex bbl format version 3.3' (TeX Live 2025+ default)."
+      - "New Makefile target 'arxiv' (item 3) produces submission/arxiv-bundle.tar.gz. The recipe stages a clean copy under build/arxiv-stage, strips macOS metadata (.DS_Store, ._*), and copies only manuscript.tex, manuscript.bbl, and figures/*.{png,pdf}. Excluded by construction: the entire build/ tree, all latex auxiliary files (*.aux, *.bcf, *.blg, *.fdb_latexmk, *.fls, *.log, *.out, *.run.xml, *.toc, *.dvi, *.ps, manuscript.pdf), meta.yaml, references.bib symlink, hidden files. Tarball size 1.5 MB."
+      - "New Makefile target 'arxiv-verify' (item 4) extracts the tarball into a fresh tmpdir and runs latexmk -pdf -interaction=nonstopmode manuscript.tex. The verifier confirmed: 3 pdflatex passes, biber vetoed (because the .bbl is shipped pre-built), final pass clean (zero warnings, zero underfull, zero overfull), 15 pages, identical output to the in-tree build."
+      - "submission/arxiv-bundle.md rewritten (item 5). Updated title to the v1.1 rename ('Agentic, Context-Aware Risk Intelligence in the Internet of Value'). Added cs.MA cross-list category alongside the original cs.CR primary + q-fin.RM cross-list. New comments-field text declaring 15 pages / 2 figures / 1 table / IEEE TIFS dual submission / b419338 + e726153 reproducibility-data git anchors. License upgraded from arXiv default to CC-BY 4.0 (standard for crypto/security preprints). Added forbidden-patterns audit subsection with the grep recipe and a five-row clean-status table. Added bundle-verification subsection naming the 'make arxiv-verify' command."
+      - "Forbidden-pattern audit (CEO item 4): grep -nE '\\\\today|\\\\pdfoutput|\\\\xr\\{' manuscript.tex returns empty. Manuscript is clean."
+      - "meta.yaml: revision 1.1 → 1.2; status remains submission-ready; last_local_compile updated to 2026-05-07T08:46Z noting the bbl format version, tarball size, and verifier signal."
+      - "What is NOT changed: title; abstract; author block; §arch; §threat-model; §formal; §case-study (still v1.1's policy-constrained stress-response framing); §metrics; §langgraph; §limits; §conclusion; back-matter; bibliography (53 entries; the focused paper cites a curated subset rendered by biblatex's filter). Content is byte-identical to v1.1 except the dependency-graph figure path."
+      - "What is NOT done in this iteration: no biblatex-ieee swap (still numeric-comp); no anonymisation; no tarball upload to arXiv (CEO action). The submission cover-letter, reviewer-suggestions, and reviewer-response files are unchanged from v1.0/v1.1."
   v1_1:
     date: "2026-05-07"
     summary: "Pre-submission peer-review revision pass per CEO-forwarded feedback (comment 6e86b889, 2026-05-07T07:16Z): reduce reviewer attack surface ahead of IEEE TIFS submission. Headline change: §case-study reframed from token-defence narrative to policy-constrained stress-response experiment. Three new analytical sections added (validation-status table, §threat-model, §formal validator-loss specification with Bittensor scoring spec). Abstract trimmed; 'why now' paragraph added to §intro. Status remains submission-ready."
