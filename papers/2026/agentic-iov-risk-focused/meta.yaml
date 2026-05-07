@@ -12,9 +12,9 @@ authors:
     email: "research@omnirisk.io"
     affiliation: "Rayachain Lab, Dublin, Ireland"
     order: 2
-target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list — same as long paper
-status: "internal-review"    # scaffold | draft | internal-review | submitted | published
-revision: "0.7"
+target_venue: "IEEE TIFS primary, arXiv cs.CR + q-fin.RM cross-list parallel; ACM TOPS or AFT/Journal of Financial Stability fallback"
+status: "submission-ready"   # scaffold | draft | internal-review | submission-ready | submitted | published
+revision: "1.0"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
@@ -45,9 +45,22 @@ provenance:
     paper that are not also in the long paper, with the same primary-source anchors.
   bibliography: "../../../_bib/references.bib (shared, 52 entries; focused paper cites a subset of ~20-25)"
 
-last_local_compile: "2026-05-07T06:17Z (v0.7, latexmk + biber, papers/2026/agentic-iov-risk-focused; 11 pages, ZERO WARNINGS, no unresolved citations or references, no overfull/underfull hboxes, no missing-font-shape notices, top-level manuscript.pdf matches build/manuscript.pdf)"
+last_local_compile: "2026-05-07T06:30Z (v1.0, latexmk + biber, papers/2026/agentic-iov-risk-focused; 12 pages, ZERO WARNINGS, zero overfull hboxes, zero underfull hboxes, no unresolved citations or references, no missing-font-shape notices, top-level manuscript.pdf matches build/manuscript.pdf; submission-ready for IEEE TIFS primary + arXiv cs.CR cross-list)"
 
 revision_log:
+  v1_0:
+    date: "2026-05-07"
+    summary: "Final journal-submission cut per CEO directive 91e16a3c (2026-05-07T05:24Z): mark the focused paper submission-ready for IEEE Transactions on Information Forensics and Security (primary) plus arXiv cs.CR + q-fin.RM cross-list (parallel preprint). Front-matter additions (keywords, ACM CCS, MSC, CRediT contributions, ORCID placeholder, funding, data-availability, conflict-of-interest, ethics statements). Submission package created under submission/. Status flipped internal-review → submission-ready. Revision 0.7 → 1.0."
+    changes:
+      - "Front-matter additions in manuscript.tex immediately after \\end{abstract}: Keywords block (six keywords from IEEE TIFS taxonomy: agentic AI safety; cross-chain risk prediction; blockchain bridges; decentralised verification; liquidity defence; constitutional AI). Subject-classifications block: ACM CCS primary (Security and privacy → Distributed systems security → Distributed algorithms) + two secondary (Computing methodologies → AI → Multi-agent systems; Applied computing → Electronic commerce → Digital cash). AMS/MSC 2020: 68M14 (distributed systems), 68T05 (learning and adaptive systems), 91G70 (statistical methods in finance)."
+      - "Back-matter additions before \\printbibliography: Author contributions (CRediT taxonomy: Basel = conceptualisation/methodology/funding/admin/supervision/draft/edit; OmniRisk Research = software/investigation/data/resources/visualisation/validation/edit). ORCID placeholder for Basel (0000-0003-2027-7300, to be CEO-confirmed before camera-ready). Funding statement (no external funding; on-chain experiment funded by corresponding author from non-treasury reserves; OmniRisk infrastructure operated by Rayachain Lab). Data-availability statement (committed CSV snapshot, soak telemetry, decision log; live endpoint operator-only by design). Conflict-of-interest statement (no competing interests other than the disclosed funding). Ethics statement (no human subjects, no PII, on-chain data publicly observable, defence policy on corresponding author's wallet only)."
+      - "Citation style change attempted: numeric-comp → ieee. Reverted: the local TeX install does not have the biblatex-ieee CTAN package and tlmgr install requires sudo. Restored to numeric-comp with a preamble comment noting that biblatex-ieee can be substituted on the publisher's TeX system for the camera-ready cut. numeric-comp output is IEEE-compatible (numbered citations [1], [2,3], [4--6]) and arXiv-compatible without modification."
+      - "Title-page revision tag bumped 0.7 → 1.0; date subtitle '2026-05-07 / Working paper, v0.7 (internal review)' → '2026-05-07 / v1.0 (submission-ready) --- IEEE TIFS primary, arXiv cs.CR cross-list'."
+      - "meta.yaml: revision 0.7 → 1.0; status internal-review → submission-ready (new enum value added to the comment line); target_venue field expanded from 'arxiv' to 'IEEE TIFS primary, arXiv cs.CR + q-fin.RM cross-list parallel; ACM TOPS or AFT/Journal of Financial Stability fallback'."
+      - "Submission package created under papers/2026/agentic-iov-risk-focused/submission/: cover-letter.md (one-page editor-addressed letter with venue-fit argument, arXiv-coexistence confirmation, reviewer-and-conflict placeholders for CEO to fill); arxiv-bundle.md (one-page submission-bundle spec naming arXiv categories cs.CR + q-fin.RM, MSC + ACM CCS classifications, license, bundle file list, build instructions); reviewer-suggestions.md (placeholders for 3 reviewers + 1 conflict, with selection-guidance criteria for whoever fills the form)."
+      - "Build target met: zero warnings, zero overfull hboxes, zero underfull hboxes (after a \\seqsplit fix on the two long path arguments in §data-availability that were causing underfull-hbox warnings under \\path{}). Page count 11 → 12 (front-matter additions cost ~1 page; well under the 14-page TIFS soft ceiling)."
+      - "What is NOT changed: title; author block + affiliations; IoV-opener abstract; 5-engine architecture; §case-study three-act narrative (Acts I/II/III with the 02:38 stop-loss + 03:44 override); §metrics calibration arc with class-imbalance honesty; §langgraph 3-paragraph research-grade compression; §limits falsification posture; §conclusion. Bibliography unchanged at 53 entries. The dropped self-reference to the unpublished long paper (constraint from commit 380a4bf) is honoured. The long paper is not iterated on in this commit."
+      - "What is NOT done in this iteration, deliberately: no reformat to IEEEtran.cls (article class is fine for arXiv and for TIFS desk-review; reformat is a 30-minute job after desk-accept). No anonymisation (TIFS is single-blind). No supplementary-materials zip (data-availability statement points to the in-repo artefacts; sufficient for first submission). No final read-through; CEO does that against the rendered v1.0 PDF."
   v0_7:
     date: "2026-05-07"
     summary: "Final polish pass per CEO directive 161d8c72 (2026-05-07T05:12Z): zero-warnings compile, abstract↔case-study number reconciliation, 28h→27h window correction, 6.45 SOL→5.2 SOL in-window deployed-spend correction (the 6.45 SOL figure was the lifetime state.json value INCLUDING the prior-day defence; the in-window deployment is 52 buys × 0.10 SOL = 5.2 SOL), CEO-sign-off / stop-loss-event count reconciliation. Status flipped draft → internal-review."

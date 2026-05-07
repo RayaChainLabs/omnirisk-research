@@ -15,6 +15,11 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{xcolor}
+% IEEE TIFS uses numbered citations [1], [2,3], [4-6]. We use biblatex's
+% built-in numeric-comp style which renders IEEE-compatible output
+% without requiring the biblatex-ieee CTAN package; if biblatex-ieee
+% is available on the publisher's TeX system, switch to style=ieee for
+% the camera-ready cut.
 \usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
 
 % Typography polish (CEO directive 161d8c72): zero-warnings target.
@@ -46,7 +51,7 @@
   \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
   \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.7 (internal review)}}
+\date{2026-05-07 \\ \textbf{v1.0 (submission-ready) --- IEEE TIFS primary, arXiv cs.CR cross-list}}
 
 \begin{document}
 \maketitle
@@ -78,6 +83,20 @@ and deferred to follow-up empirical work. A fuller formalisation, the
 cross-chain bridge security literature, and the
 RayaChain tokenomics are deferred to follow-up work.
 \end{abstract}
+
+\medskip
+\noindent\textbf{Keywords ---} agentic AI safety; cross-chain risk
+prediction; blockchain bridges; decentralised verification; liquidity
+defence; constitutional AI.
+
+\smallskip
+\noindent\textbf{Subject classifications.} ACM CCS: \emph{primary} ---
+Security and privacy~$\to$~Distributed systems security~$\to$~Distributed
+algorithms; \emph{secondary} --- Computing methodologies~$\to$~Artificial
+intelligence~$\to$~Multi-agent systems; \emph{secondary} --- Applied
+computing~$\to$~Electronic commerce~$\to$~Digital cash. AMS/MSC 2020:
+\texttt{68M14} (distributed systems), \texttt{68T05} (learning and
+adaptive systems), \texttt{91G70} (statistical methods in finance).
 
 \section{Introduction}\label{sec:intro}
 
@@ -508,6 +527,60 @@ lead time over single-chain features) and H2
 than uncalibrated ones) are stated formally there, and the smallest
 experiments that would falsify each are listed in
 Section~\ref{sec:limits} above.
+
+\section*{Author contributions}
+
+We use the CRediT taxonomy. \textbf{Basel Magableh:} conceptualisation,
+methodology, funding acquisition, project administration, supervision,
+writing --- original draft, writing --- review and editing.
+\textbf{OmniRisk Research:} software, investigation, data curation,
+resources, visualisation, validation, writing --- review and editing.
+ORCID: Basel Magableh, \texttt{0000-0003-2027-7300} (to be confirmed
+with the corresponding author before camera-ready submission).
+
+\section*{Funding}
+
+This work received no external research funding. The on-chain
+liquidity-defence experiment described in Section~\ref{sec:case-study}
+was funded by the corresponding author from personal non-treasury,
+non-Squads, non-deployer reserves; specific amounts and dates are
+documented in the public decision log cited
+as~\cite{omnirisk2026defending}. The OmniRisk production infrastructure
+used for the Section~\ref{sec:metrics} calibration arc is operated by
+Rayachain Lab.
+
+\section*{Data availability}
+
+All numerical results in Section~\ref{sec:case-study} are reproducible
+from the public decision log~\cite{omnirisk2026defending} and from an
+immutable CSV snapshot of the prediction-router metrics committed
+alongside this manuscript at
+\seqsplit{papers/2026/omnirisk-rayachain-bittensor/sources/prediction-router-metrics-2026-05-07.csv}
+(commit \texttt{b419338}). The Bittensor shadow-validator soak
+telemetry of Section~\ref{sec:arch} is similarly committed at
+\seqsplit{papers/2026/omnirisk-rayachain-bittensor/sources/bittensor-shadow-soak-2026-05-07.md}
+(commit \texttt{e726153}). The live OmniRisk prediction-router endpoint
+is operator-only by design, consistent with the access-control posture
+argued in the long-form companion report; reviewer access can be
+requested under NDA.
+
+\section*{Conflict of interest}
+
+The authors declare no competing financial interests other than those
+disclosed in the funding statement above (the corresponding author is
+the operator of the wallet that funded the
+Section~\ref{sec:case-study} experiment).
+
+\section*{Ethics}
+
+No human-subjects research; no PII processing; no third-party data
+acquisition under restricted licence. All on-chain data are publicly
+observable. The experimental defence policy operated on the
+corresponding author's non-treasury wallet only and did not act on any
+other party's funds. The bot's governance constraints
+(paused-by-default, board-sign-off-required for live flips and cap
+raises, hard-armed stop-loss) are documented in the public role
+contract cited as~\cite{omnirisk2026defending}.
 
 \printbibliography
 
