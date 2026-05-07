@@ -1,0 +1,83 @@
+title: "RayaChain: An Omnichain Canary Layer for Cross-Chain Risk and Credit Signal Propagation in Decentralized Agentic Finance"
+slug: "rayachain-omnichain-canary"
+companion_to: "agentic-iov-risk-focused"
+target_length_pages: 14   # IEEEtran two-column journal; target 14, hard ceiling 16
+
+authors:
+  - name: "Basel Magableh"
+    email: "basel.magableh@tudublin.ie"
+    affiliation: "School of Computer Science, Technological University Dublin, Ireland"
+    orcid: "0000-0003-2337-637X"
+    ieee_membership: "Member"
+    order: 1
+    corresponding: true
+  - name: "Ahod [surname TBD]"
+    email: "[email TBD]"
+    affiliation: "[affiliation TBD]"
+    orcid: "[ORCID TBD]"
+    ieee_membership: "[membership TBD]"
+    order: 2
+    corresponding: false
+
+target_venue:
+  raw_url: "https://www.computer.org/csdl/journal/tq"
+  slug_resolves_to: "IEEE Transactions on Quantum Engineering (TQE) — TOPIC MISMATCH"
+  awaiting_ceo_confirmation: true
+  candidate_venues:
+    - "IEEE Transactions on Dependable and Secure Computing (TDSC)"
+    - "IEEE Transactions on Network and Service Management (TNSM)"
+    - "IEEE Transactions on Industrial Informatics (TII)"
+  document_class: "IEEEtran[journal]"
+
+status: "draft"           # scaffold → draft (after AW first populated cut) → CEO-review → submitted
+revision: "0.5"
+created_at: "2026-05-07"
+submitted_at: null
+published_at: null
+
+revision_log:
+  - revision: "0.5"
+    date: "2026-05-07"
+    issue: "OMN-171"
+    by: "Academic Writer (agent 06e03389-c313-44f8-846f-82f99e0b3b6c)"
+    changes:
+      - "Lifted §Background, §Problem Statement, §Related Work, §Research Gap, RQ1–RQ5, H1–H4 from shard/main2.tex; tightened for IEEE journal voice."
+      - "Re-cast all body content for the decentralized agentic-finance framing (autonomous agents, constitutional action surfaces) per CEO directive."
+      - "Added §Decentralised Validation Networks subsection under Related Work, summarising the Bittensor framing of the focused paper (4 cites)."
+      - "Added new §Verifiable Risk Intelligence section between Architecture and Use Cases. Pulled the validator-loss decomposition (Brier+Inconsistency+Calibration) verbatim from the focused paper."
+      - "Honest layer-1 (orchestration: 5,097 rounds, 0 auth failures, 11 Auth0 refreshes, 57h shadow soak) vs layer-2 (economic verification — deferred) split."
+      - "Added threat-model table (7 rows) and validation-status table (6 rows) tightened for the canary-layer substrate."
+      - "Added soak-telemetry summary table (Table II)."
+      - "Added typed wire-schema excerpt (WalletSignal IDL) under §Architecture."
+      - "Populated Use Cases, Experimental Design, Discussion, Conclusion sections; added Author Contributions, Funding, Data Availability, Conflict of Interest, Ethics blocks."
+      - "Ported bib entries from _bib/references.bib for: augusto2024sok, rao2021bittensor, steeves2022incentivizing, opentensor2024yuma, taoshi2024ptn, hanson2003combinatorial, bai2022constitutional, glasserman2003monte, daian2020flash, werner2022sok, gogol2024liquidity, palaiokrassas2023multichain, cong2022crypto, omnirisk2026soak, omnirisk2026agentic, omnirisk2026predmetrics, magableh2026agenticiov."
+      - "Renamed cite key bhowmik2021comparative → bhowmik2021 to match seed prose."
+      - "Switched typewriter font to lmtt (Latin Modern) so the local TeX install does not call Metafont for missing pcr Courier metrics."
+      - "Compiles to 10 IEEEtran two-column journal pages, zero overfull hboxes."
+    pending:
+      - "Author 2 (Ahod) \\thanks{} placeholders still TBD per CEO directive."
+      - "Target venue still unconfirmed; \\markboth still says [venue TBD]."
+      - "Below the 14-page target; CEO may request body expansion (e.g., a system-architecture figure, expanded experimental design)."
+
+provenance:
+  seed_source: "papers/2026/../../shard/main2.tex (verbatim seed for Background, Problem Statement, Related Work, RQ/H block)"
+  bibliography_seed: "papers/2026/../../shard/references.bib (copied as-is)"
+  companion_paper: "papers/2026/agentic-iov-risk-focused/manuscript.tex v1.2 (Bittensor verifiability framing)"
+
+ceo_directive_log:
+  - date: "2026-05-07"
+    text: "ask the AWS to create a new article ... i will provide you with seeding text"
+  - date: "2026-05-07"
+    text: "this paper will be submited to https://www.computer.org/csdl/journal/tq /Users/bazmini/omnirisk-papers/shard study the journal latext template and stud the papers i shard folder to seed the new artilce. Act a Top ieee journal and use the same author block and add a 2nd authoer Ahod"
+
+pending_before_ceo_handoff:
+  - "CEO confirms target journal (likely meant TDSC, TNSM, or other — `tq` slug resolves to TQE which is topic-mismatch)"
+  - "CEO provides Author 2 (Ahod) full info: surname, email, affiliation, ORCID, IEEE membership grade"
+  - "AW dispatched once both confirmations are in"
+
+pending_before_submission:
+  - "AW first populated draft (lift+tighten from seed; add Bittensor §; agentic-finance reframe)"
+  - "Citation port from _bib/references.bib for the Bittensor/validator-loss subset"
+  - "Author biographies (IEEEbiography blocks) once Ahod's affiliation is confirmed"
+  - "Final two-column pdflatex compile clean of warnings"
+  - "CEO read-through and submission decision"

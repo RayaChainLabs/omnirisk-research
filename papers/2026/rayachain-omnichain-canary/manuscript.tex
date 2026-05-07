@@ -1,0 +1,1130 @@
+\documentclass[journal]{IEEEtran}
+
+%% Use Latin Modern for the entire family (text + tt) so the local TeX
+%% install does not try to call Metafont for pcr Courier metrics that
+%% live in the (separately distributed) psnfss bundle.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\renewcommand*{\ttdefault}{lmtt}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[colorlinks=true,
+            linkcolor=blue,
+            citecolor=blue,
+            urlcolor=blue]{hyperref}
+
+%% Fix bad-break tolerance for IEEE journal two-column.
+\setlength{\emergencystretch}{2em}
+\widowpenalty=10000
+\clubpenalty=10000
+
+%% Allow ragged-right + a much larger emergency stretch inside the
+%% bibliography so long urls / paths in the citations wrap rather than
+%% overrun column boundaries.
+\let\oldbibliography\bibliography
+\renewcommand{\bibliography}[1]{%
+  \begingroup
+  \sloppy
+  \raggedright
+  \setlength{\emergencystretch}{6em}%
+  \oldbibliography{#1}%
+  \endgroup
+}
+
+\title{RayaChain: An Omnichain Canary Layer for
+       Cross-Chain Risk and Credit Signal Propagation in
+       Decentralized Agentic Finance}
+
+%% Author block --- IEEEtran journal style.
+%% Author 2 details (surname / email / affiliation / ORCID / IEEE membership)
+%% are AWAITING CEO confirmation. Placeholders in the \thanks below must be
+%% filled before submission. Do not submit with placeholders.
+\author{Basel~Magableh,~\IEEEmembership{Member,~IEEE,}
+        and~Ahod~[surname~TBD]%
+\thanks{B. Magableh is with the School of Computer Science, Technological
+University Dublin, Dublin, Ireland (e-mail: basel.magableh@tudublin.ie).
+ORCID: 0000-0003-2337-637X.}%
+\thanks{A. [surname TBD] is with [affiliation TBD] (e-mail: [email TBD]).}%
+\thanks{Manuscript received May~7,~2026.}}
+
+\markboth{IEEE Transactions on [venue~TBD],~Vol.~XX, No.~X, May~2026}%
+{Magableh \MakeLowercase{\textit{et al.}}: RayaChain Omnichain Canary Layer}
+
+\IEEEpubid{0000--0000/00\$00.00~\copyright~2026 IEEE}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Cross-chain interoperability has enabled the seamless movement of value
+across blockchain ecosystems, yet risk and credit intelligence remain
+fragmented, chain-local, and reactive. Existing interoperability
+protocols transport value and arbitrary messages but do not propagate
+\emph{evaluated risk context} or \emph{portable credit intelligence}
+across heterogeneous networks. This paper introduces \textbf{RayaChain},
+an omnichain \emph{canary layer} for cross-chain risk and credit signal
+propagation in decentralized agentic finance, in which autonomous
+agents---rather than human traders alone---consume the propagated
+context to drive routing, lending, and liquidity decisions. RayaChain is
+built on LayerZero OFT messaging and composes signal generation,
+semantic encoding, cross-chain transmission, and signal-consumption
+layers into a single primitive. We formalise the canary-layer
+abstraction, define wallet-, protocol-, and market-level signals, and
+evaluate the system across exploit-propagation, credit-portability, and
+liquidity-stress scenarios. We further argue that cross-chain risk
+intelligence becomes verifiable when paired with a Bittensor-style
+decentralised validation subnet, and report orchestration evidence
+($5{,}097$ successful rounds, zero authentication failures) from a
+testnet shadow deployment. The contribution is a missing infrastructure
+primitive for the decentralized agentic-finance stack: an
+interoperability layer for \emph{intelligence}, not value.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Blockchain, decentralized finance, cross-chain interoperability, risk
+intelligence, wallet scoring, LayerZero, omnichain systems, Bittensor,
+agentic finance, constitutional AI.
+\end{IEEEkeywords}
+
+%% =====================================================================
+\section{Introduction}
+%% =====================================================================
+
+\IEEEPARstart{D}{ecentralized} finance (DeFi) has evolved into a
+heterogeneous, multi-chain ecosystem in which value flows freely across
+networks~\cite{BelchiorVGC22,00330023}. The next architectural shift,
+already visible in production, replaces the human trader at the
+edge of that system with \emph{autonomous agents}: LLM- or policy-driven
+processes that observe on-chain and off-chain context, select an action
+under role-bound constitutional
+constraints~\cite{bai2022constitutional}, and execute against
+cross-chain venues without a human in the loop for every step. We refer
+to this regime as \emph{decentralized agentic finance}.
+
+Despite the maturity of cross-chain \emph{value} transfer, risk
+intelligence remains siloed within individual chains. Wallet
+reputation, behavioural risk, protocol exposure, and route health do
+not travel with assets~\cite{HasanBB23}. The blind spots this creates
+are not merely operational: an autonomous agent acting on incomplete
+cross-chain context will, by construction, route capital into
+exploit-active venues, refuse credit to wallets whose entire repayment
+history lives on a different chain, and miss liquidity stress that is
+visible one bridge away.
+
+This paper introduces the concept of a \textit{canary layer}: a
+distributed early-warning system for risk propagation across chains.
+We present \textbf{RayaChain} as an implementation of the concept,
+positioned within the emerging stack of decentralized agentic finance
+where autonomous agents take liquidity-, routing-, and credit-allocation
+decisions on behalf of human and protocol principals. RayaChain is
+built on LayerZero's omnichain messaging
+substrate~\cite{abs-2110-13871} and is designed to interoperate with a
+decentralised validation subnet for verifiable risk
+intelligence~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}.
+
+\paragraph*{Contributions.}
+This paper contributes:
+\begin{enumerate}
+\item A formal definition of the \emph{canary layer} as a missing
+      infrastructure primitive for decentralized agentic finance: an
+      interoperability layer for evaluated intelligence, separate from
+      and complementary to value- and message-transport layers.
+\item A cross-chain risk- and credit-signal propagation model with a
+      three-tier signal taxonomy (wallet, protocol, market) and a
+      semantic encoding distinct from raw bridge messaging.
+\item A \emph{verifiable risk intelligence} layer that pairs the canary
+      layer with a Bittensor-style validation subnet, with a formal
+      validator-loss decomposition (Brier accuracy + paired-query
+      inconsistency + binned miscalibration) and an honest split between
+      orchestration evidence (already in hand: $5{,}097$ successful
+      rounds, zero authentication failures over a 57-hour testnet
+      shadow soak~\cite{omnirisk2026soak}) and economic verification at
+      scale (deferred).
+\item Three use-case scenarios (exploit propagation, credit
+      portability, liquidity stress) and a metric set (detection
+      latency, signal accuracy, cross-chain coverage) that ground the
+      empirical agenda.
+\end{enumerate}
+
+\paragraph*{Roadmap.}
+Section~\ref{sec:bg} states the background and the problem.
+Section~\ref{sec:rw} reviews interoperability, analytics, wallet
+scoring, and decentralised validation networks.
+Section~\ref{sec:arch} specifies the RayaChain architecture and signal
+taxonomy. Section~\ref{sec:vri} states the verifiable
+risk-intelligence layer formally. Sections~\ref{sec:uc}--\ref{sec:eval}
+ground the architecture in three use cases and the experimental design
+that operationalises them. Section~\ref{sec:disc} states benefits,
+limitations, and future work, and Section~\ref{sec:concl} closes.
+
+%% =====================================================================
+\section{Background and Motivation}\label{sec:bg}
+%% =====================================================================
+
+\subsection{Cross-Chain Value vs.\ Cross-Chain Intelligence}
+
+Blockchain technology has emerged as a decentralised paradigm for
+secure, peer-to-peer value exchange without reliance on centralised
+authorities. A blockchain operates as a distributed ledger that records
+and verifies transactions through consensus, ensuring immutability,
+transparency, and trust among untrusted participants~\cite{MukhopadhyaySHO16,
+00330023}. Cryptocurrencies and decentralised applications (DApps)
+leverage these properties to enable financial interactions, asset
+ownership, and programmable logic via smart contracts~\cite{KhanAAA21a}.
+
+The ecosystem has expanded into a fragmented landscape of heterogeneous
+networks with distinct protocols, consensus models, and execution
+environments. This fragmentation limits interoperability: blockchains
+are inherently isolated and cannot natively communicate or exchange
+information across network boundaries~\cite{BelchiorVGC22}. Users and
+applications are therefore constrained within individual ecosystems,
+producing inefficiencies in asset utilisation and system-wide
+coordination.
+
+Cross-chain interoperability solutions, particularly cross-chain
+bridges, address this gap by transferring assets and data between
+disparate networks. Such bridges enable token mobility and unlock
+multi-chain DeFi~\cite{ZhangZZL24}. They operate fundamentally at the
+asset layer and do not propagate the contextual or behavioural
+information attached to those assets. Existing validation mechanisms
+verify the correctness of transactions but do not assess the
+\emph{intent} or behavioural patterns of participating
+entities~\cite{bhowmik2021}. As a result, transactions deemed valid by
+consensus may still encode malicious or fraudulent activity, exposing
+a structural absence of intelligence-driven risk assessment.
+
+Cross-chain bridges introduce significant security and architectural
+challenges. Their design---verification mechanisms, relayers, and smart
+contracts---creates expanded attack surfaces that have been exploited
+repeatedly, with cumulative losses in the multi-billion-dollar
+range~\cite{MishraP25,LiQXZZWX25,augusto2024sok}. The interoperability
+infrastructure remains immature, with unresolved trust assumptions,
+verification models, and systemic
+vulnerabilities~\cite{MishraP25,werner2022sok}. Existing cross-chain
+systems therefore enable the mobility of \emph{value} but not the
+mobility of \emph{intelligence}: risk signals, behavioural history, and
+trust assessments do not travel with the assets they describe. This
+asymmetry is the architectural gap this paper closes.
+
+\subsection{Problem Statement}
+
+Despite the rapid growth of decentralised finance and multi-chain
+ecosystems, current blockchain infrastructures lack a unified mechanism
+for sharing risk, trust, and behavioural context across chains. The
+problem decomposes into five dimensions.
+
+\subsubsection*{Signal fragmentation}
+Wallet reputation, protocol exposure, and anomalous behaviour are
+visible only on the chain where they originate. Reputation systems
+that are essential for evaluating trustworthiness in decentralised
+environments aggregate user interactions and feedback to derive trust
+scores~\cite{HasanBB23}, but are platform-specific: a user's reputation
+on one chain does not transfer to another.
+
+\subsubsection*{Reliability and manipulation}
+Existing reputation frameworks suffer from limitations in reliability,
+portability, and resistance to manipulation, including false feedback,
+reputation fraud, Sybil attacks, and the absence of standardised
+aggregation mechanisms~\cite{AlmasoudHH20}. Most systems do not treat
+reputation as a transferable, composable digital asset, preventing
+integration into broader decentralised ecosystems. Traditional
+cryptography and access control address external threats but do not
+capture the dynamic behaviour of internal entities, motivating trust
+management systems that evaluate behavioural patterns and interaction
+histories~\cite{ArshadKAKYZ23}.
+
+\subsubsection*{Latency}
+The absence of real-time, cross-chain risk intelligence delays
+detection of malicious behaviour~\cite{MishraP25,NahaZ24}. Blockchain
+transactions are transparent, yet the lack of a shared intelligence
+layer means risk signals---suspicious transaction patterns, wallet
+behaviours, or liquidity anomalies---are confined within individual
+chains. Malicious actors exploit this fragmentation by moving assets
+rapidly across chains before chain-local detection can
+respond~\cite{DBLP:journals/spe/DelgadovonEitzenRMF25,DudaniBRM23}.
+
+\subsubsection*{Systemic risk in agentic regimes}
+Reliance on cross-chain infrastructure amplifies systemic
+risk~\cite{LiQXZZWX25,ZhangZZL24}. As assets move seamlessly across
+chains, vulnerabilities in one ecosystem propagate indirectly to
+others. The agentic regime sharpens the consequence: an autonomous
+agent that allocates capital under a constitutional
+contract~\cite{bai2022constitutional} can only be safe if its action
+surface is constrained by the same risk context human operators would
+demand. Without a cross-chain intelligence layer, the agent acts on
+chain-local information and cascades the exposure.
+
+\subsubsection*{Credit portability}
+A wallet may exhibit a strong repayment or behavioural history on one
+chain and appear as a blank identity on another, preventing the
+emergence of portable on-chain credit and risk-aware
+under-collateralised finance.
+
+Collectively, these dimensions reveal that while value moves freely
+across chains, intelligence does not. Closing the gap requires an
+interoperable intelligence layer capable of aggregating, analysing, and
+propagating risk and trust signals across heterogeneous networks in a
+form that autonomous agents can consume.
+
+\subsection{Research Questions and Hypotheses}\label{sec:rq}
+
+We re-cast the problem as five research questions and four
+hypotheses, framed for the agentic regime.
+
+\paragraph*{Main research question}
+\textbf{RQ1.} How can cross-chain systems propagate evaluated wallet-,
+protocol-, and market-level risk signals in a timely and trustworthy
+way to support proactive decision-making by autonomous agents in
+decentralized finance?
+
+\paragraph*{Supporting questions}
+\textbf{RQ2.} What classes of on-chain behaviour are most predictive as
+early-warning signals when aggregated across multiple chains?
+
+\textbf{RQ3.} How should cross-chain risk signals be encoded,
+transported, and consumed so that they remain interpretable and useful
+to downstream protocols and agentic policies?
+
+\textbf{RQ4.} What trade-offs emerge between signal speed, reliability,
+granularity, and false-positive risk in an omnichain risk-distribution
+architecture?
+
+\textbf{RQ5.} To what extent can portable cross-chain behavioural
+history support a practical notion of decentralised creditworthiness
+under constitutional agentic constraints?
+
+\paragraph*{Hypotheses}
+\textbf{H1.} Cross-chain propagation of evaluated risk signals reduces
+detection latency relative to chain-local monitoring alone.
+
+\textbf{H2.} Multi-chain behavioural aggregation produces more
+predictive early-warning indicators than single-chain observations.
+
+\textbf{H3.} Portable risk and credit context improves downstream
+decision quality for lending, exchange screening, and liquidity
+management---and, in the agentic regime, narrows the action surface of
+constitutionally-constrained agents to safer policies.
+
+\textbf{H4.} A semantically-aware signal layer provides better
+operational utility than generic cross-chain messaging alone, because
+agentic consumers need decision-useful surfaces rather than raw bytes.
+
+%% =====================================================================
+\section{Related Work}\label{sec:rw}
+%% =====================================================================
+
+\subsection{Cross-Chain Interoperability Protocols}
+
+The expansion of blockchain ecosystems has produced multiple
+interoperability solutions for communication across heterogeneous
+networks~\cite{BelchiorVGC22}. LayerZero identifies fragmentation as a
+direct consequence of the proliferation of independent blockchains, in
+which each chain operates in isolation and forces users to split
+liquidity, applications, and state across disconnected
+ecosystems~\cite{abs-2110-13871}. Smart-contract-based approaches
+enable programmable coordination between chains, allowing decentralised
+applications to interact beyond a single network~\cite{KhanAAA21a}.
+LayerZero extends this paradigm with a trustless omnichain
+interoperability protocol that functions as a low-level messaging
+layer, enabling direct cross-chain communication without intermediary
+chains or custodial entities~\cite{abs-2110-13871}. Practical
+instantiations include LayerZero's Omnichain Fungible Token (OFT) and
+Chainlink's Cross-Chain Interoperability Protocol (CCIP).
+
+These protocols remain fundamentally focused on \textit{transport}.
+They move assets and data but do not account for the semantic meaning
+or contextual interpretation of that data. They lack mechanisms for
+propagating risk signals, behavioural insights, or trust-related
+information. Value moves seamlessly between ecosystems; the
+intelligence required to interpret that movement remains confined to
+its origin chain. Security challenges compound the
+limitation: cross-chain bridges introduce significant attack
+surfaces~\cite{ZhangZZL24,LiQXZZWX25,augusto2024sok}, and the
+ecosystem still lacks mature public mechanisms for collecting,
+organising, and visualising cross-chain operations at
+scale~\cite{SantosAVC25}, constraining security analysis and timely
+understanding of bridge activity.
+
+\subsection{Blockchain Analytics Platforms}
+
+Blockchain analytics platforms have emerged as critical tools for
+understanding on-chain behaviour and detecting anomalies. Platforms
+such as Nansen and Arkham Intelligence apply transaction-graph
+analysis, clustering, and labelled datasets to identify entities, trace
+fund flows, and detect suspicious patterns. Their foundations lie in
+graph-based representations of blockchain
+systems~\cite{MukhopadhyaySHO16,SerenaFD22}, extended to multi-layered
+graph systems that incorporate distinct interaction types---money
+flows, contract creation, contract invocation---to enable fine-grained
+behavioural and security analysis~\cite{ChenLZCLLLZ20}. Empirical
+studies confirm that cryptocurrency transaction networks exhibit
+power-law degree distributions and non-assortative behaviour, making
+them suitable for large-scale behavioural and network-level
+analysis~\cite{MotamedB19}. Recent work integrates security and
+forensic perspectives with machine learning and behavioural clustering
+for fraud and illicit-activity
+detection~\cite{MishraP25,FanLZJB20,electronics13173568}; existing
+forensic approaches still lack integrated support for real-time
+analytics and graph-based storage critical to modern
+investigations~\cite{NahaZ24,MasudHSAAAY21}.
+
+These platforms exhibit three structural limitations. First, they
+operate primarily as \textbf{centralised intelligence layers}, relying
+on proprietary data pipelines and off-chain processing. Second, their
+analysis is largely \textbf{chain-specific}, interpreting behavioural
+patterns within a single blockchain. Third, and most critically, they
+lack mechanisms for \textbf{real-time intelligence propagation}: risk
+signals identified on one chain are not communicated to other
+ecosystems, limiting effectiveness in multi-chain environments and
+making the platforms unsuitable as direct inputs to autonomous
+cross-chain agents.
+
+\subsection{Wallet Scoring and Trust Systems}
+
+Reputation and trust modelling quantify the reliability of blockchain
+participants from historical interactions, enabling more informed
+decision-making in trustless environments. Traditional reputation
+systems aggregate user feedback and behavioural data~\cite{HasanBB23};
+blockchain-based implementations enhance transparency and
+tamper-resistance, making them suitable for decentralised
+ecosystems. Smart-contract-based reputation systems automate trust
+management and policy enforcement~\cite{AlmasoudHH20}; a key residual
+limitation is the lack of interoperability across reputation
+systems---reputation values remain bound to a specific platform.
+
+Machine-learning-based wallet scoring detects fraudulent or high-risk
+behaviour by analysing transaction patterns, temporal features, and
+network structures~\cite{MishraP25,palaiokrassas2023multichain}.
+Multichain DeFi fraud detection across 12 chains and 23 protocols has
+been studied empirically~\cite{palaiokrassas2023multichain}, but, as
+with analytics platforms, models are typically trained centrally on
+isolated datasets and do not propagate the resulting scores back to
+the chains where the wallet acts.
+
+\subsection{Decentralised Validation Networks}\label{sec:rw:dvn}
+
+A separate strand of recent work asks how risk-relevant outputs
+themselves can be validated in a decentralised, economically incentivised
+manner. The canonical instantiation is Bittensor: a peer-to-peer
+intelligence market in which a heterogeneous population of \emph{miners}
+submits outputs for a task, and \emph{validators} score the miners
+against realised
+outcomes~\cite{rao2021bittensor,steeves2022incentivizing}. The Yuma
+Consensus rule clips outlier validator weight vectors against a
+stake-weighted threshold and emits stake-aligned
+rewards~\cite{opentensor2024yuma}, producing a coalition-resistant
+ranking under stake fractions below a known
+bound~\cite{steeves2022incentivizing}. The mechanism-design lineage is
+the prediction-market literature: Hanson's logarithmic market scoring
+rule is the canonical primitive that aggregates self-interested
+predictors into a calibrated forecast~\cite{hanson2003combinatorial},
+and Taoshi's Subnet 8 (Proprietary Trading Network) is the closest
+live-2026 precedent for a financial-prediction
+subnet~\cite{taoshi2024ptn}. A companion focused
+manuscript~\cite{magableh2026agenticiov} composes a five-engine
+architecture in which a Bittensor verification subnet decentralises a
+prediction engine and economically scores its outputs against
+realised cross-chain events; we adopt the same framing here, but apply
+it specifically to the canary-layer signal substrate.
+
+The relevance of decentralised validation networks to the canary layer
+is twofold. First, an autonomous agent that consumes propagated risk
+signals must trust the signal source; a Bittensor-scored signal is
+\emph{economically} backed rather than reputationally backed. Second,
+the validator-loss decomposition formalised in
+Section~\ref{sec:vri:formal} is falsifiable, so the canary layer
+inherits a measurable verification surface rather than a black-box
+trust claim.
+
+\subsection{Research Gap}
+
+Existing research provides strong foundations: interoperability
+protocols enable the movement of value and data; analytics platforms
+provide deep insights into on-chain behaviour; reputation systems offer
+mechanisms for evaluating trust; and decentralised validation networks
+make output quality economically scoreable. Forensic and analytical
+frameworks for blockchain remain incomplete, with several investigation
+phases either underexplored or
+unaddressed~\cite{MasudHSAAAY21,DudaniBRM23}.
+
+The gap is specific. Current systems move \textit{value} and, in some
+cases, arbitrary \textit{data}, but they do not move
+\textit{intelligence}. Risk signals, behavioural patterns, and credit
+information remain fragmented across chains, even as assets and users
+operate in increasingly interconnected environments. Worse, the next
+generation of consumers of these signals is no longer human: it is
+autonomous, constitutionally-constrained agents whose action surface is
+defined by the context they can actually
+see~\cite{bai2022constitutional}. The result is systemic blind spots in
+cross-chain agentic decision-making, not merely in cross-chain trader
+decision-making.
+
+This paper addresses the gap by introducing an interoperable
+intelligence layer that observes and analyses on-chain behaviour and
+propagates structured, actionable, agent-consumable insights across
+blockchain ecosystems in real time. Pairing the layer with a
+decentralised validation subnet makes the propagated signals
+economically verifiable, not merely operationally useful.
+
+%% =====================================================================
+\section{RayaChain Architecture}\label{sec:arch}
+%% =====================================================================
+
+\subsection{System Overview}
+
+RayaChain is an omnichain signal layer built on LayerZero OFT
+infrastructure~\cite{abs-2110-13871}. Where LayerZero transports value
+and arbitrary messages between chains, RayaChain transports
+\emph{evaluated context}: structured, semantically-typed risk and
+credit signals carrying a confidence and a window of validity. The
+layer is positioned beneath agentic policy engines and above existing
+interoperability primitives. Figure-conceptually, an originating chain
+emits a signal; a relayer carries the signal and its provenance to a
+target chain; and a consuming protocol or agent reads the signal under
+a typed schema before deciding to act.
+
+\subsection{Core Components}
+
+RayaChain decomposes into four components.
+
+\subsubsection*{Signal generation (OmniRisk engine)}
+A signal-generation engine ingests on-chain transactions, wallet
+behaviour logs, liquidity-pool state, bridge flow, and off-chain
+context (news, social streams, grey-literature feeds for emerging
+markets) and emits a typed signal of the form
+\[
+s = (\text{chain}_o, \text{subject}, \text{type}, v, c, w, \text{prov}),
+\]
+where $\text{chain}_o$ is the origin chain, $\text{subject}$ is the
+wallet, protocol, or market identifier, $\text{type}$ is one of the
+classes of Section~\ref{sec:arch:taxonomy}, $v$ is the signal value,
+$c \in [0,1]$ is a confidence, $w$ is a window of validity, and
+$\text{prov}$ is provenance metadata.
+
+\subsubsection*{Signal encoding}
+Signals are serialised against a versioned schema with a fixed byte
+budget and a deterministic canonical form so that two relayers agreeing
+on the same signal produce byte-identical payloads. Encoding decouples
+the semantics of a signal from the wire format used by the underlying
+transport, permitting the canary layer to ride on any messaging
+substrate---LayerZero OFT in this paper---without re-deriving the
+type system.
+
+\subsubsection*{Cross-chain transmission}
+Encoded signals are transmitted across chains using LayerZero's
+ultra-light-node messaging protocol~\cite{abs-2110-13871}. The
+canary-layer signal type is a strict subset of LayerZero's payload
+contract; we treat the underlying transport as a substitutable bearer.
+
+\subsubsection*{Signal-consumption layer}
+On the destination chain, a signal-consumption library exposes a
+typed read API to consuming protocols and agents. The consumer can
+filter by signal type, freshness window, and minimum confidence, and
+receive a typed object rather than raw bytes. This is the surface that
+distinguishes the canary layer from LayerZero alone: the consumer never
+parses the wire format directly, and a downstream agent can be
+constitutionally constrained to only act on signals of a declared
+type and confidence band.
+
+\subsection{Schema Excerpt}
+
+The wire-level schema is intentionally narrow. A canonical
+specification of the wallet-level signal type, in pseudo-IDL form,
+is:
+\begin{quote}\small
+\texttt{struct WalletSignal \{ chainId origin; bytes20 wallet;
+WalletSignalType type; int16 value\_bps; uint8 confidence\_q7; uint64
+window\_start; uint64 window\_end; bytes32 prov\_root; \}}
+\end{quote}
+\noindent
+where \texttt{value\_bps} is a fixed-point value in basis points,
+\texttt{confidence\_q7} is a Q0.7 fixed-point confidence in $[0,1]$,
+$[\texttt{window\_start}, \texttt{window\_end}]$ defines the validity
+window, and \texttt{prov\_root} is a Merkle root over the underlying
+evidence set. Equivalent structures are defined for the protocol- and
+market-level signal classes; the \texttt{prov\_root} field is the hook
+that lets a verifying consumer chase signal provenance back to an
+attestation set without re-deriving the signal value itself.
+
+\subsection{Canary Layer Definition}
+
+\textbf{Definition (Canary Layer).} A canary layer is an
+\emph{early-warning signal distribution system} for risk and credit
+context across blockchain ecosystems, with three hard properties:
+(i)~\emph{semantic typing}---signals are typed against a shared schema
+rather than carried as opaque bytes;
+(ii)~\emph{evaluated context}---signals carry a value, a confidence, and
+a window of validity, not merely a transaction record; and
+(iii)~\emph{cross-chain propagation}---signals are transported across
+heterogeneous networks under a single addressable namespace. A canary
+layer is therefore distinct from a value-transfer bridge (which moves
+assets), an arbitrary-message bridge (which moves bytes), and a
+chain-local analytics platform (which observes but does not propagate).
+
+\subsection{Signal Taxonomy}\label{sec:arch:taxonomy}
+
+We define three signal classes, each with a distinct generator, decay
+window, and downstream consumer.
+
+\subsubsection{Wallet-level signals}
+Behavioural anomalies attached to a wallet identifier: sudden
+diversification, interaction with known exploit contracts, liquidity
+withdrawal cascades, or repayment-failure history. Generators include
+graph-analytic
+features~\cite{ChenLZCLLLZ20,SerenaFD22,MotamedB19}, behavioural
+clustering~\cite{FanLZJB20}, and cross-chain reputation
+aggregation~\cite{HasanBB23,AlmasoudHH20}. Consumers include lending
+protocols (collateral haircuts), exchange-screening agents, and
+agent-task-management layers that gate which wallets an autonomous
+trader role may interact with.
+
+\subsubsection{Protocol-level signals}
+Liquidity-stress and bridge-anomaly indicators attached to a protocol
+or pool identifier: utilisation spikes, oracle divergence, bridge-flow
+asymmetries, and unusual TVL contraction. Generators draw on bridge
+forensics and analytics literature~\cite{MishraP25,LiQXZZWX25,
+ZhangZZL24,augusto2024sok} and on AMM-level liquidity studies that
+characterise how the same logical asset prices differently across
+venues~\cite{gogol2024liquidity}. Consumers include router agents,
+liquidity-management agents, and protocol-level circuit breakers.
+
+\subsubsection{Market-level signals}
+Systemic risk patterns attached to a market or correlated cluster of
+assets: liquidity-flight indicators, narrative shocks
+detectable as fusion-divergence between text-stream and on-chain-flow
+sentiment~\cite{cong2022crypto}, and sandwiching or MEV-active
+windows~\cite{daian2020flash}. Consumers are higher-order agents that
+must rebalance or pause when a systemic regime change is detected
+within the agent's constitutional action surface.
+
+%% =====================================================================
+\section{Verifiable Risk Intelligence}\label{sec:vri}
+%% =====================================================================
+
+A propagated signal is only as good as the trust that downstream
+agents can place in it. The canary layer of Section~\ref{sec:arch}
+provides typed propagation; it does not, by itself, provide a
+verifiable backing for the values it carries. This section adds that
+backing by composing the layer with a decentralised validation
+subnet, and states the specification formally.
+
+\subsection{Verification by Decentralised Subnet}
+
+We exposed the signal-generation engine of Section~\ref{sec:arch} as
+a Bittensor subnet, in which a heterogeneous population of miners
+emits forecasts of subject-level risk events and validators score the
+forecasts against realised outcomes under the Yuma Consensus
+rule~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}.
+The mechanism-design lineage is Hanson's market scoring
+rule~\cite{hanson2003combinatorial}, and the closest live-2026
+precedent for a Bittensor financial-prediction subnet is Taoshi's
+Subnet 8~\cite{taoshi2024ptn}.
+
+\subsection{Formal Validator-Loss Specification}\label{sec:vri:formal}
+
+We formalise the validator-side loss; the specification is reproduced
+from the companion focused manuscript~\cite{magableh2026agenticiov}
+and is a design proposal that we explicitly do not yet measure
+against a live multi-miner metagraph.
+
+\paragraph*{Miner output.}
+A miner $i$ emits, for each query, a pair
+\begin{equation}
+m_i = (p_i, c_i),
+\end{equation}
+where $p_i \in [0,1]$ is the predicted probability of the realised
+event over a scoring window $\Delta$, and $c_i \in [0,1]$ is the miner's
+self-stated calibration confidence in $p_i$.
+
+\paragraph*{Material chain-state event.}
+The realised-event indicator $y \in \{0,1\}$ is set to $1$ if any of
+four event classes occurs within $\Delta$ of the prediction emission:
+$E_1$, a route-level liquidity contraction beyond a configured
+threshold; $E_2$, a price drop beyond a configured threshold over a
+configured sub-window; $E_3$, a bridge or oracle anomaly registered by
+a cross-source redundancy check; $E_4$, a governance state change
+recorded on-chain. The thresholds and the union over $E_1$--$E_4$
+together define the resolver.
+
+\paragraph*{Validator loss.}
+The validator-side loss for miner $i$ is the convex combination
+\begin{align}
+L_i ={}& \alpha\,\mathrm{Brier}(p_i,y)
+       + \beta\,\mathrm{Inconsistency}(m_i) \notag\\
+      &+ \gamma\,\mathrm{Calibration}(c_i),
+\end{align}
+with $\alpha+\beta+\gamma = 1$.
+The Brier component $\mathrm{Brier}(p,y) = (p-y)^2$ penalises both
+wrong predictions and overconfidence. The inconsistency component
+penalises drift across paired queries that share the same chain-state
+context (no material change between query times). The calibration
+component is the per-bin gap between stated confidence $c_i$ and
+realised accuracy over the past $W$ paired $(c_i,y)$ samples.
+
+\paragraph*{Defaults.}
+We propose $\alpha = 0.6$, $\beta = 0.2$, $\gamma = 0.2$ as the design
+starting point. The Brier component carries the largest weight because
+it is the only component grounded directly in realised outcomes; the
+inconsistency and calibration components are intended to be hard to
+game without also producing accurate forecasts.
+
+\paragraph*{Killable-uplift property.}
+The verification subnet is a \emph{killable uplift} to the
+signal-generation engine: if the empirical distribution of $L_i$ across
+active miners has too high a variance over a fixed validation window,
+the operator can disable the subnet path without losing the production
+signal surface. This bounds the worst-case verification regression to
+the signal-generation engine's standalone calibration error.
+
+\subsection{Threat Model and Trust Assumptions}\label{sec:vri:threat}
+
+The verifiable canary layer is designed to tolerate a small but
+load-bearing set of adversaries. Table~\ref{tab:threat-model} states
+each as a row over capability, architectural defence, and the residual
+surface the architecture does not cover. The model is adapted from the
+companion focused
+manuscript~\cite{magableh2026agenticiov} and tightened for the
+canary-layer signal substrate.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{Threat model for the verifiable canary layer. Each row gives
+the adversary's assumed capability, the architectural defence, and the
+residual surface the architecture does not cover.}
+\label{tab:threat-model}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}p{0.16\linewidth} p{0.27\linewidth} p{0.27\linewidth} p{0.22\linewidth}@{}}
+\toprule
+\textbf{Adversary} & \textbf{Capability} & \textbf{Defence} &
+\textbf{Residual risk} \\
+\midrule
+Malicious miner & Arbitrary forecast emission, adaptive to validator
+queries & Three-component validator loss
+(Section~\ref{sec:vri:formal}); killable-uplift property of the subnet
+& Miner that learns the query distribution may game the inconsistency
+component \\
+Colluding validators & Coordinated weight submission across stake
+fraction $f$ & Clipped weights and stake distribution under the Yuma
+rule~\cite{opentensor2024yuma} & A $\geq 50\%$ stake coalition can
+still misrank; mitigated by stake-distribution governance \\
+Sentiment poisoning & Coordinated text injection across news, social,
+and grey-literature feeds & Provenance-tracked ingestion;
+deterministic lexicon; fusion-divergence detector vs.\ on-chain-only
+baseline & Attacker that also influences on-chain flow (e.g.\ wash
+trades) defeats the divergence detector~\cite{cong2022crypto} \\
+Oracle / route manipulation & Control over a single oracle or venue
+quote, including sandwiching~\cite{daian2020flash} & Cross-source
+redundancy in the signal-generation engine; divergence flags cohort
+\textsc{degraded} & Correlated manipulation across all sources is
+not detected \\
+Replay attacker & Re-emission of past signed signals & Window-aligned
+canonical timestamps; out-of-window signals rejected & Same-window
+replay between adjacent miners is indistinguishable from genuine
+convergence \\
+Bridge-substrate compromise & Exploit of the underlying LayerZero
+substrate~\cite{ZhangZZL24,augusto2024sok} & Killable-substrate
+property: the canary layer can be re-pointed to an alternative
+transport without re-deriving signal types & Substrate compromise
+during the re-point window is unmitigated \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Validation Status of the Architecture}
+
+Table~\ref{tab:validation-status} states which components of the
+architecture are measured in this paper, which are partially validated,
+and which are stated architecturally but not yet measured. The table
+preempts the reading of the paper as a uniformly empirical artefact:
+only the orchestration path is measured at this revision.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Validation status of the canary-layer components. \textsc{yes}
+denotes a live empirical measurement reported in this paper;
+\textsc{shadow only} denotes a testnet run not yet against a real
+metagraph; \textsc{architectural} denotes a component stated formally
+but not yet measured.}
+\label{tab:validation-status}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.34\linewidth} >{\raggedright\arraybackslash}p{0.30\linewidth} >{\raggedright\arraybackslash}p{0.30\linewidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Status} & \textbf{Evidence} \\
+\midrule
+Signal generation engine & \textsc{yes} (in production on the
+underlying eight-chain deployment) & Companion
+manuscript~\cite{magableh2026agenticiov} \\
+Signal encoding (typed schema) & \textsc{architectural} & This paper,
+Sec.~\ref{sec:arch} \\
+Cross-chain transmission (LayerZero) & \textsc{architectural} & This
+paper, Sec.~\ref{sec:arch} \\
+Signal-consumption library & \textsc{architectural} & This paper,
+Sec.~\ref{sec:arch} \\
+Bittensor verification orchestration & \textsc{shadow only} (testnet,
+57\,h, $5{,}097$ rounds) & Soak telemetry~\cite{omnirisk2026soak} \\
+Validator-loss decomposition & \textsc{architectural} (deferred) &
+Sec.~\ref{sec:vri:formal} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Layer-1 Orchestration vs.\ Layer-2 Economic Verification}
+
+A two-layer split discriminates what we have measured from what we
+have not.
+
+\paragraph*{Layer 1 (orchestration), measured.}
+We have deployed an engineering shadow run of the OmniRisk validator
+and miner pipeline against Bittensor testnet (netuid~60) since
+2026-05-04~\cite{omnirisk2026soak}. Over an approximately 57-hour
+window the run recorded \textbf{$5{,}097$ successful rounds} and
+\textbf{zero authentication failures} across eleven autonomous Auth0
+token refreshes (Table~\ref{tab:soak-telemetry}). The shadow run
+validates the orchestration path: the canary layer can emit signed
+signals to a Bittensor-style validation substrate continuously, under
+autonomous credential rotation, without operator intervention.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Bittensor testnet shadow soak summary, netuid~60, 2026-05-04
+to 2026-05-07. Reproduced from the engineering source-of-truth
+artefact~\cite{omnirisk2026soak}. The table is the smallest possible
+empirical surface for the layer-1 orchestration claim of
+Section~\ref{sec:vri}; the layer-2 validator-loss decomposition is not
+measured here.}
+\label{tab:soak-telemetry}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Window (hours) & $\approx 57$ \\
+Successful rounds & $5{,}097$ \\
+Authentication failures & $0$ \\
+Autonomous Auth0 token refreshes & $11$ \\
+Operator interventions & $0$ \\
+Validator-loss components reported & $0\,/\,3$ (deferred) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph*{Layer 2 (economic verification), not yet.}
+The three components of the validator loss
+(Section~\ref{sec:vri:formal})---Brier accuracy, paired-query
+inconsistency, binned miscalibration---are deferred. The smallest
+experiment that would close the gap is to introduce a second miner
+with a non-trivial protocol, accumulate $(c_i,y)$ pairs across
+realised events, and report the three-component decomposition in a
+follow-up. Until that runs, the verification claim is
+\emph{architectural}, not measured. We state this honestly here because
+the load-bearing claim of this paper is the canary-layer abstraction
+plus its verifiability \emph{primitive}, not yet the empirical
+validator-loss distribution at scale.
+
+%% =====================================================================
+\section{Use-Case Scenarios}\label{sec:uc}
+%% =====================================================================
+
+\subsection{Exploit Propagation}\label{sec:uc:exploit}
+
+\paragraph*{Scenario.}
+An attacker compromises a lending contract on chain~$A$ at time
+$t_0$ and moves drained funds across a bridge to chain~$B$ at time
+$t_0 + \delta$, where $\delta$ is bounded only by bridge latency and is
+typically minutes. Chain-local analytics on chain~$A$ flag the exploit
+at time $t_0 + \tau_A$ where $\tau_A$ is the chain-local detection
+latency. In the absence of a canary layer, chain~$B$'s lending and
+exchange-screening agents see the inbound wallet as clean for the
+entire interval $[t_0+\delta,\,t_0+\tau_A+\delta_{B}]$, where
+$\delta_{B}$ is the time it takes for the chain-$A$ analytics output to
+appear, by some unstructured channel, on chain~$B$. The agent allows a
+deposit, a swap, or a liquidation to settle, and the exploited capital
+is laundered across chains.
+
+\paragraph*{Canary-layer behaviour.}
+With a canary layer, the wallet-level exploit signal generated on
+chain~$A$ at $t_0+\tau_A$ is propagated under the typed schema and
+arrives on chain~$B$ within the relayer-bound latency $\tau_R$.
+Chain~$B$'s consumers reject the interaction or apply collateral
+haircuts before settlement, provided $\tau_R \ll \delta_B$. The
+operational metric of interest is the difference $\delta_B - \tau_R$
+(Section~\ref{sec:eval:metrics}); the architectural metric is whether
+chain~$B$'s consumer agents \emph{can} act on the propagated signal at
+all under their constitutional action
+surface~\cite{bai2022constitutional}---an agent whose policy whitelist
+does not include canary-layer signal types is, by construction, blind
+to the exploit.
+
+\subsection{Credit Portability}\label{sec:uc:credit}
+
+\paragraph*{Scenario.}
+A wallet has a strong repayment and behavioural history on chain~$A$
+(high repayment ratio, no liquidation events, sustained protocol
+interaction over a multi-month window) but appears as a blank identity
+on chain~$B$. Existing chain-specific reputation
+systems~\cite{HasanBB23,AlmasoudHH20} cannot project the chain-$A$
+history onto chain~$B$, so an under-collateralised lending protocol on
+chain~$B$ either rejects the wallet or applies its conservative-default
+haircut. The wallet's effective cost of capital is therefore
+chain-local, even though its underlying creditworthiness is not.
+
+\paragraph*{Canary-layer behaviour.}
+With a canary layer carrying the wallet-level reputation signal under
+a typed schema, an attached confidence, and a window of validity, the
+lending agent on chain~$B$ extends risk-aware credit and reduces the
+haircut by a function of the propagated score's confidence band. The
+agentic-finance refinement is operationally important: a constitutional
+Trader-role contract on chain~$B$ can declare a per-signal-type minimum
+confidence, so a low-confidence cross-chain reputation signal is
+silently downweighted rather than producing a deterministic credit
+extension. RQ5 asks how far this generalises; we treat the use case
+here as a structural argument, not yet a randomised experiment.
+
+\subsection{Liquidity Stress}\label{sec:uc:liquidity}
+
+\paragraph*{Scenario.}
+A market-wide stress event manifests first as cross-chain withdrawal
+correlation, bridge-flow asymmetry, and divergent quotes for the same
+logical asset across L1 and L2 venues~\cite{gogol2024liquidity}, before
+chain-local liquidity metrics on any single chain register the regime
+change. Chain-local monitors therefore lag the systemic event by an
+amount that, in the agentic regime, is sufficient for an autonomous
+agent to drain liquidity from a pool whose state has already shifted.
+
+\paragraph*{Canary-layer behaviour.}
+A protocol-level signal (TVL contraction, oracle divergence) and a
+market-level signal (correlated cross-chain withdrawal indicator) are
+jointly consumed by liquidity-management agents whose constitutional
+action surface includes pausing market-making, raising borrow rates
+pre-emptively, or de-staking from at-risk pools. The architectural
+prediction is that aggregating across chains shortens detection
+latency relative to chain-local monitoring; the falsification condition
+is stated in Section~\ref{sec:eval:metrics}.
+
+%% =====================================================================
+\section{Experimental Design and Evaluation}\label{sec:eval}
+%% =====================================================================
+
+This section sets out the experimental scaffold for the next-revision
+evaluation. The architecture described in Sections~\ref{sec:arch}
+and~\ref{sec:vri} is deployable; the empirical evaluation programme is
+a road map of falsifiable measurements rather than a complete
+empirical contribution at this revision.
+
+\subsection{Datasets}
+
+The evaluation draws on three dataset classes.
+First, on-chain transaction streams across the eight chains covered by
+the production deployment of the underlying signal engine
+(Ethereum, BNB, Arbitrum, Optimism, Solana, Base, Polygon, Bittensor).
+Second, wallet behaviour logs and labelled fraud cohorts from the
+multichain DeFi fraud-detection
+literature~\cite{palaiokrassas2023multichain,bhowmik2021,FanLZJB20}.
+Third, protocol- and pool-level liquidity time series across L1 and
+L2 venues, capturing the same logical asset across multiple
+chains~\cite{gogol2024liquidity}.
+
+\subsection{Metrics}\label{sec:eval:metrics}
+
+We report three primary metrics.
+
+\paragraph*{Detection latency}
+The interval between the on-chain event that materialises a risk and
+the moment the typed signal becomes consumable on a remote chain.
+Hypothesis H1 predicts that cross-chain propagation reduces detection
+latency relative to chain-local monitoring; the falsification
+condition is that the propagated-signal latency is statistically
+indistinguishable from the chain-local latency over a sufficiently
+large event sample.
+
+\paragraph*{Signal accuracy}
+The directional accuracy and Brier calibration error of the signal
+against realised outcomes. Calibration is reported alongside accuracy
+because, in production deployments of the underlying prediction
+engine, headline accuracy is class-imbalance-bounded and the survival
+metric is the Brier
+score~\cite{omnirisk2026predmetrics,omnirisk2026agentic}.
+
+\paragraph*{Cross-chain coverage}
+The fraction of qualifying events on each origin chain for which a
+typed canary-layer signal is emitted within a fixed latency budget,
+and the fraction of consuming chains that successfully decode and act
+on the signal.
+
+\subsection{Results: Orchestration Telemetry}
+
+The only empirical surface in this revision is the orchestration soak
+of Section~\ref{sec:vri}: $5{,}097$ successful rounds and zero
+authentication failures over a 57-hour Bittensor testnet shadow
+run~\cite{omnirisk2026soak}, with eleven autonomous Auth0 token
+refreshes. The figure of merit here is operational: the orchestration
+path holds under continuous unattended operation and meets the
+preconditions for a multi-miner economic-verification experiment
+without further operator scaffolding. We do not report validator-loss
+distributions at this revision.
+
+%% =====================================================================
+\section{Discussion}\label{sec:disc}
+%% =====================================================================
+
+\subsection{Benefits}
+
+The canary layer provides three categories of benefit. First,
+\emph{earlier detection}: cross-chain propagation tightens the window
+between exploit occurrence and consumer-side reaction
+(Section~\ref{sec:uc:exploit}). Second, \emph{better protocol
+decisions}: typed, confidence-bearing signals enable lending,
+exchange-screening, and liquidity-management protocols to apply
+context-aware policies rather than chain-local
+defaults~\cite{HasanBB23}. Third, \emph{constitutional safety for
+agents}: an autonomous agent under a constitutional
+contract~\cite{bai2022constitutional} acts only on signals within its
+declared type and confidence surface, so the canary layer narrows the
+agent's effective action set to safer policies, especially under
+liquidity stress and exploit-active regimes.
+
+\subsection{Limitations}
+
+We state the load-bearing limitations as falsification statements,
+adopting the discipline of the companion focused
+paper~\cite{magableh2026agenticiov}.
+
+\paragraph*{Validator loss not yet measured at scale.}
+The verification claim of Section~\ref{sec:vri} is supported only by
+the orchestration soak; the three-component validator loss is not yet
+measured against a live multi-miner metagraph. A follow-up that
+introduces a second miner protocol and reports the decomposition
+across realised events is the smallest experiment that would
+falsify or substantiate the claim.
+
+\paragraph*{Data-quality dependence.}
+Wallet- and protocol-level signal quality is bounded by the quality of
+upstream on-chain and off-chain ingestion. Coordinated wash trading
+poisons the very signals the layer is meant to
+propagate~\cite{cong2022crypto}; a sentiment-poisoned grey-literature
+feed degrades the market-level signal class.
+
+\paragraph*{False positives.}
+A propagated risk signal that fires inappropriately is more harmful in
+the agentic regime than in a human-trader regime, because an
+autonomous agent acts on the signal at machine speed. False-positive
+budgets must be declared per signal class, and the consumption layer
+must support hysteresis and quorum requirements.
+
+\paragraph*{Bridge-substrate trust.}
+The canary layer inherits the trust assumptions of its underlying
+transport. LayerZero's ultra-light-node design is itself a security
+surface~\cite{ZhangZZL24,LiQXZZWX25,augusto2024sok}; an exploit of the
+substrate is an exploit of the layer.
+
+\subsection{Future Work}
+
+Three lines of work follow directly. First, a multi-miner economic
+verification of the validator loss against a Bittensor metagraph,
+closing the layer-2 gap of Section~\ref{sec:vri}. Second, an
+agentic consumer integration: a constitutional Trader-role policy
+whose action surface is keyed to canary-layer signal types, building
+on the policy-constrained execution
+machinery~\cite{omnirisk2026agentic}. Third, predictive scoring under
+distribution shift: AI-based scorers that adapt to evolving exploit
+classes without sacrificing calibration on the cohorts they were
+trained on.
+
+%% =====================================================================
+\section{Conclusion}\label{sec:concl}
+%% =====================================================================
+
+RayaChain introduces a missing infrastructure primitive for
+decentralized agentic finance: an interoperability layer for
+\emph{intelligence}, not value. Where existing protocols transport
+value and arbitrary messages, the canary layer transports
+evaluated risk and credit context under a typed schema with
+confidence and a window of validity. We formalised the abstraction,
+characterised the signal taxonomy, and demonstrated that the layer
+becomes verifiable in expectation when paired with a Bittensor-style
+decentralised validation subnet. The two empirical anchors are an
+orchestration shadow soak ($5{,}097$ rounds, zero authentication
+failures, eleven autonomous credential rotations) and a forward
+agenda whose three falsifiable hypotheses are stated formally enough
+that the next revision can refute them. The contribution is
+architectural: a canary layer that lets autonomous agents on
+heterogeneous chains act on the same evaluated context, rather than
+on chain-local fragments of it.
+
+%% =====================================================================
+\section*{Author Contributions}
+%% =====================================================================
+
+We use the CRediT taxonomy. \textbf{Basel Magableh:}
+conceptualisation, methodology, project administration, supervision,
+writing -- original draft, writing -- review and editing.
+\textbf{Ahod [surname TBD]:} contribution roles to be confirmed at the
+time of submission. ORCIDs: Basel Magableh,
+\texttt{0000-0003-2337-637X}; Ahod, \texttt{[ORCID TBD]}.
+
+%% =====================================================================
+\section*{Funding}
+%% =====================================================================
+
+This work received no external research funding. The on-chain shadow
+soak telemetry referenced in Section~\ref{sec:vri} was collected on
+Bittensor testnet (netuid~60) using infrastructure operated by the
+Rayachain~Lab; no production funds were placed at risk during the
+soak.
+
+%% =====================================================================
+\section*{Data Availability}
+%% =====================================================================
+
+The Bittensor shadow-soak telemetry summarised in
+Table~\ref{tab:soak-telemetry} is committed alongside this manuscript
+in the engineering source-of-truth
+artefact~\cite{omnirisk2026soak}. The signal-schema definition of
+Section~\ref{sec:arch} is reproducible from the typed-IDL listing in
+that section; reference encoders and decoders are available to
+reviewers under NDA on request.
+
+%% =====================================================================
+\section*{Conflict of Interest}
+%% =====================================================================
+
+The corresponding author is the operator of the OmniRisk production
+deployment cited as the underlying signal-generation
+engine~\cite{omnirisk2026agentic,omnirisk2026predmetrics}. No other
+competing financial interests are disclosed.
+
+%% =====================================================================
+\section*{Ethics}
+%% =====================================================================
+
+No human-subjects research; no PII processing; no third-party data
+acquisition under restricted licence. All on-chain data referenced are
+publicly observable. The shadow-soak experiment of Section~\ref{sec:vri}
+operated entirely on Bittensor testnet and did not act on any other
+party's funds or data.
+
+%% =====================================================================
+%% Bibliography
+%% =====================================================================
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+%% =====================================================================
+%% Author biographies
+%% =====================================================================
+
+%% Author biographies (IEEEbiography blocks) deferred until Author~2
+%% (Ahod) affiliation is confirmed by the editorial process.
+
+\end{document}
