@@ -1,0 +1,111 @@
+direction: down
+
+fabric: {
+  label: "Shared Fabric\n(ingestion · signal schema · observability)"
+  shape: rectangle
+  style.fill: "#fef3c7"
+  style.stroke: "#a16207"
+  style.stroke-width: 2
+  style.border-radius: 6
+  style.font-size: 15
+  style.bold: true
+}
+
+engines: {
+  label: "Five-Engine Composition"
+  style.fill: "#eff6ff"
+  style.stroke: "#1e40af"
+  style.stroke-width: 2
+  style.border-radius: 8
+  style.font-size: 13
+  style.bold: true
+
+  prediction: {
+    label: "Prediction Engine\nprice · liquidity · route health"
+    style.fill: "#dbeafe"
+    style.stroke: "#2563eb"
+    style.stroke-width: 2
+    style.border-radius: 5
+    style.font-size: 13
+  }
+  scenario: {
+    label: "API-Risk & Scenario\npre-committed action programs"
+    style.fill: "#dbeafe"
+    style.stroke: "#2563eb"
+    style.stroke-width: 2
+    style.border-radius: 5
+    style.font-size: 13
+  }
+  sentiment: {
+    label: "Sentiment Fusion\nearly · late · stacking"
+    style.fill: "#dbeafe"
+    style.stroke: "#2563eb"
+    style.stroke-width: 2
+    style.border-radius: 5
+    style.font-size: 13
+  }
+  agentic: {
+    label: "Agentic Engine\nrole-bound · constitutional"
+    style.fill: "#fce7f3"
+    style.stroke: "#be185d"
+    style.stroke-width: 2
+    style.border-radius: 5
+    style.font-size: 13
+    style.bold: true
+  }
+  bittensor: {
+    label: "Bittensor Subnet\n(verifiable uplift · killable)"
+    style.fill: "#f0fdf4"
+    style.stroke: "#15803d"
+    style.stroke-width: 2
+    style.stroke-dash: 4
+    style.border-radius: 5
+    style.font-size: 13
+  }
+}
+
+governance: {
+  label: "Governance Gate\n(paused-by-default\nboard sign-off required)"
+  shape: cylinder
+  style.fill: "#fee2e2"
+  style.stroke: "#991b1b"
+  style.stroke-width: 3
+  style.font-size: 13
+  style.bold: true
+}
+
+fabric -> engines.prediction: {style.stroke: "#a16207"; style.stroke-width: 2}
+fabric -> engines.scenario: {style.stroke: "#a16207"; style.stroke-width: 2}
+fabric -> engines.sentiment: {style.stroke: "#a16207"; style.stroke-width: 2}
+
+engines.bittensor -> engines.prediction: "verifiable scoring" {
+  style.stroke: "#15803d"
+  style.stroke-dash: 4
+  style.stroke-width: 2
+  style.font-color: "#15803d"
+  style.font-size: 11
+  style.bold: true
+}
+
+engines.prediction -> engines.agentic: "forecasts" {
+  style.stroke: "#2563eb"
+  style.stroke-width: 2
+  style.font-size: 11
+}
+engines.scenario -> engines.agentic: "action programs" {
+  style.stroke: "#2563eb"
+  style.stroke-width: 2
+  style.font-size: 11
+}
+engines.sentiment -> engines.agentic: "fused signals" {
+  style.stroke: "#2563eb"
+  style.stroke-width: 2
+  style.font-size: 11
+}
+
+engines.agentic -> governance: "actions (gated)" {
+  style.stroke: "#991b1b"
+  style.stroke-width: 2
+  style.font-size: 11
+  style.bold: true
+}
