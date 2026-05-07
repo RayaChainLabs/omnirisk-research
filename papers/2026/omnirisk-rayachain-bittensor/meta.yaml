@@ -13,7 +13,7 @@ authors:
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
 status: "internal-review"    # draft | internal-review | submitted | published | archived
-revision: "0.21"
+revision: "0.22"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -58,6 +58,21 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_22:
+    date: "2026-05-07"
+    summary: "Per CEO directive comment 45c0e62a (2026-05-07T03:41Z): replace the prior 'Paperclip server is the orchestration backbone' framing in §arch:scenario with the LangGraph runtime as the engine-orchestration backbone, and reposition Paperclip as the upstream agent-task management layer. The fix anchors the architecture to the production engineering documentation at risk-intel/golden-docs/AGENTIC_RISK_PREDICTION_ENGINE.md (cite key omnirisk2026agentic, already in references.bib from v0.15). The Designer follow-up to rework Figure 4 (scenario-engine-dataflow.pdf) is dispatched separately under OMN-165."
+    changes:
+      - "§arch:scenario 'As-is API surface' description-list: the v0.21 first-bullet 'Paperclip server (:3100/api/...). The orchestration backbone' is replaced. The new structure separates orchestration of engines (LangGraph) from orchestration of agents (Paperclip). New first bullet 'LangGraph runtime (apps/api/Dockerfile.langgraph, port :8787)' documents: (a) the in-process default vs. remote ECS/Fargate switch via AGENT_LANGGRAPH_REMOTE_ENABLED; (b) the three production-wired graphs token_risk (6 steps), wallet_risk (3 steps), monitoring/alert; (c) the X-LangGraph-Secret shared-secret auth between API and remote runtime; (d) the Redis langgraph:checkpoint:{agentRunId} fire-and-forget checkpoint store with 24h TTL; (e) the production defaults AGENT_LANGGRAPH_ENABLED=false and AGENT_LANGGRAPH_REMOTE_ENABLED=false (the architecture references are explicit about LangGraph being built+tested but NOT on by default); (f) the 145-test Phase-6 staging gate spanning nine test files; (g) the hard architectural rule that a direct LangGraph→LocalAI HTTP path is prohibited and LangGraph nodes must call the OmniRisk AiRouter in-process so model selection, fallback, daily-cost limits, and audit logs are respected. All seven facts are sourced from omnirisk2026agentic §6 (LangGraph Runtime)."
+      - "§arch:scenario second bullet 'Paperclip server' rewritten as the agent-task management layer (NOT the orchestration backbone): role contracts, threaded issue comments, hand-offs between agents, heartbeat invocation. Idempotency and auth model preserved verbatim. Last sentence makes the boundary explicit: 'Paperclip orchestrates the agents that operate the engines; LangGraph orchestrates the engines themselves. Confusing the two boundaries was a documentation bug in earlier revisions of this paper that has been corrected here.'"
+      - "§arch:scenario new pre-list paragraph: 'OmniRisk separates engine orchestration from agent-task management.' Sets up the bullet structure so the LangGraph-vs-Paperclip distinction is explicit at first encounter."
+      - "§engine:agentic: new 'Agent-task management vs. engine orchestration' paragraph at the end. Explicitly names the boundary: agentic engine orchestrated at runtime by LangGraph (per §arch:scenario), but role contracts + issue thread + hand-offs live in a separate Paperclip server upstream. Cites the per-role constitution at agents/<slug>/AGENTS.md."
+      - "Figure tab:scenario-engine-dataflow caption tightened: 'the Paperclip server' → 'the Paperclip task-management server, the LangGraph orchestration runtime'. Caption also notes that a Designer-led rework of the figure into a clearer subsystem-grouped layout is filed under OMN-152 follow-up; structure described in the caption is unchanged."
+      - "Other Paperclip references in §arch:scenario (Telegram bridge → Paperclip issues; agentic-composition → Paperclip request_confirmation interaction; smallest-delta-build option (ii) → Paperclip plugin) are LEFT UNCHANGED — these references are correct: Paperclip is the issue/comment/confirmation surface, which is exactly the agent-task management role the new framing specifies. They are NOT the orchestration-backbone framing the directive struck."
+      - "Bibliography: omnirisk2026agentic was already added in v0.15 (cite key already present in references.bib). No new bibliography entries; total stays at 52."
+      - "Title page revision tag bumped 0.21 → 0.22."
+      - "Designer follow-up filed for Figure 4 rework: OMN-165 captures the existing replot follow-up; CEO directive 45c0e62a §Correction-2 lists the visual-clarity fixes (subsystem grouping, larger fonts, tighter edge routing, fewer encodings, optional split into two figures, one-line legend). Academic Writer will update the caption + cross-references when Designer ships."
+      - "What is NOT changed: §case-study still frozen at v0.18 narrative arc (third-act stop-loss override pending CEO call); the v0.21 IoV-opener abstract is held; the v0.21 textsuperscript-numbered author block is held; the equation symbol-discipline audit from v0.20/v0.21 is preserved; jargon-reduction substitutions, storytelling rewrites, §security data-access posture, gated-by-design framing all preserved."
+      - "Companion paper at papers/2026/agentic-iov-risk-focused/ is explicitly NOT touched in this iteration per CEO directive footer."
   v0_21:
     date: "2026-05-07"
     summary: "Per CEO directives 98f6616f and d0cfd527 (2026-05-07T03:23–03:26Z): hold abstract at the v0.20 IoV-opener restore (rejecting the v0.18 'Cross-chain financial systems' substitution); preserve the v0.20 textsuperscript-numbered author block (Basel Magableh^{1,*} \\and OmniRisk Research^{2}, with TUD School of Computer Science + Rayachain Lab affiliations); ratify the equation symbol-discipline audit that landed alongside v0.20. Bump revision 0.19 → 0.21 per CEO instruction (v0.20 was the parallel abstract-restore + author-block commit, this v0.21 is the bookkeeping cut on top)."
@@ -281,7 +296,7 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: "2026-05-07T04:31Z (v0.21, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 52 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
+last_local_compile: "2026-05-07T04:46Z (v0.22, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 52 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf; seqsplit \\providecommand fallback added so build succeeds whether or not the seqsplit.sty package is installed)"
 
 # pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
 # engineering-side (delegated, separate track from publication).

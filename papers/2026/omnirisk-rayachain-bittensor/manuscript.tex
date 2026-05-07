@@ -9,7 +9,9 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{tabularx}
-\usepackage{seqsplit}
+% seqsplit is optional: degrades to identity on TeX installs without it.
+\providecommand{\seqsplit}[1]{#1}
+\IfFileExists{seqsplit.sty}{\usepackage{seqsplit}}{}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{xcolor}
@@ -34,7 +36,7 @@
   \textsuperscript{2}Rayachain Lab, Dublin, Ireland\\[0.4em]
   \textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.21 (internal review)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.22 (internal review)}}
 
 \begin{document}
 \maketitle
@@ -421,6 +423,20 @@ boundary of cap-raise and live-flip.
 intersection of the engine's general principles with the role's specific
 restrictions (e.g.\ ``buy-only, never sell'' for the Trader role of the case study
 in Section~\ref{sec:case-study}).
+
+\paragraph{Agent-task management vs.\ engine orchestration.} It is worth
+naming the boundary explicitly, because earlier OmniRisk documentation
+conflated the two: the agentic engine of this section is orchestrated at
+runtime by the LangGraph graphs of Section~\ref{sec:arch:scenario}, but the
+\emph{role contracts} that constrain the agentic engine --- and the
+issue-thread surface on which board sign-offs, hand-offs between roles,
+and human approvals are recorded --- live in a separate Paperclip server
+that sits \emph{upstream} of the engines. Each role's constitution is a
+tracked file at \texttt{agents/<slug>/AGENTS.md} in the OmniRisk operations
+repository; Paperclip's role is to enforce that the constitution is loaded
+on every agent invocation and that the issue thread carries the durable
+sign-off record. LangGraph orchestrates the engines; Paperclip orchestrates
+the agents that operate the engines.
 
 \subsection{API risk + scenario engine}\label{sec:engine:scenario}
 
@@ -1085,19 +1101,62 @@ action programs. We characterise the as-is surface concretely (because every pub
 description so far has been at the abstract layer), specify the demands the scenario
 engine adds, and quote the smallest-delta build cost in engineer-days.
 
-\paragraph{As-is API surface.} OmniRisk currently runs five distinct HTTP boundaries
-plus one bot runtime with file-based control surfaces, all on the operator's machine.
+\paragraph{As-is API surface.} OmniRisk separates \emph{engine orchestration}
+from \emph{agent-task management}. The engines (prediction, sentiment fusion,
+agentic, scenario) are orchestrated by a LangGraph runtime; the agents that
+operate the engines (the human and AI roles that propose policy, sign off on
+cap raises, and own role contracts) are managed by a separate Paperclip
+server. Both run on the operator's machine alongside three outbound
+social-channel bridges, a polling risk-alert client, and the bot's
+file-based control surfaces.
 
 \begin{description}
-  \item[Paperclip server (\texttt{:3100/api/\dots}).] The orchestration backbone.
-        REST API for company and agent enumeration, issue lifecycle (\texttt{POST/GET/
-        PATCH /api/issues/:id}), threaded comments, document attachment, and agent
-        heartbeat invocation (\texttt{POST /api/agents/:id/heartbeat/invoke}). Auth
-        model: \texttt{local\_trusted} --- localhost requests are treated as the
-        board user. Idempotency: issue creation is keyed on caller-provided
-        \texttt{idempotencyKey}; heartbeat invocations are fire-and-forget with no
-        delivery guarantee. Observability: structured JSON logs;
-        no metrics endpoint.
+  \item[LangGraph runtime
+        (\texttt{apps/api/Dockerfile.langgraph}, port \texttt{:8787}).]
+        The orchestration backbone for the engines, run either in-process
+        inside the API Lambda/Express process (default) or as a remote
+        ECS/Fargate task switched on by
+        \texttt{AGENT\_LANGGRAPH\_REMOTE\_ENABLED}~\cite{omnirisk2026agentic}.
+        Three production graphs are wired today: \texttt{token\_risk}
+        (six steps), \texttt{wallet\_risk} (three steps), and
+        \texttt{monitoring}\,/\,\texttt{alert}. Authentication between the
+        API and the remote runtime uses a single shared secret
+        (\texttt{LANGGRAPH\_SERVICE\_SECRET}) on the \texttt{X-LangGraph-Secret}
+        header. Per-graph state is checkpointed fire-and-forget to Redis
+        under the key \texttt{langgraph:checkpoint:\{agentRunId\}} with a
+        24-hour TTL. The runtime ships behind two production-disabled
+        flags --- \texttt{AGENT\_LANGGRAPH\_ENABLED=false} and
+        \texttt{AGENT\_LANGGRAPH\_REMOTE\_ENABLED=false} --- so that this
+        paper's references to LangGraph as the orchestration backbone are
+        \emph{architectural}, not \emph{currently-on-the-default-path}; the
+        rollout is gated by a Phase~6 staging cut covered by 145 LangGraph
+        tests across nine test files (adapter, approval-checkpoint,
+        checkpoint-store, observability, runner, service-client, state,
+        token-risk-graph, wallet-risk-graph). One hard architectural rule
+        is enforced at the runtime boundary and is exactly the kind of
+        constitutional-action constraint Section~\ref{sec:engine:agentic}
+        argues for: \emph{a direct LangGraph$\to$LocalAI HTTP path is
+        prohibited; LangGraph nodes must call the OmniRisk
+        \texttt{AiRouter} in-process so that model selection, fallback,
+        daily-cost limits, and audit logs are
+        respected}~\cite{omnirisk2026agentic}.
+  \item[Paperclip server (\texttt{:3100/api/\dots}).]
+        The agent-task management layer that lives \emph{upstream} of the
+        engines: it stores agent role contracts (paused-by-default,
+        board-sign-off-required), threaded issue comments, hand-offs
+        between agents, and the heartbeat invocation that wakes a role
+        owner when the issue thread changes. REST API for company and
+        agent enumeration, issue lifecycle (\texttt{POST/GET/PATCH /api/
+        issues/:id}), threaded comments, document attachment, and agent
+        heartbeat invocation (\texttt{POST /api/agents/:id/heartbeat/invoke}).
+        Auth model: \texttt{local\_trusted} --- localhost requests are
+        treated as the board user. Idempotency: issue creation is keyed
+        on caller-provided \texttt{idempotencyKey}; heartbeat invocations
+        are fire-and-forget. Observability: structured JSON logs; no
+        metrics endpoint. Paperclip orchestrates \emph{the agents} that
+        operate the engines; LangGraph orchestrates \emph{the engines}
+        themselves. Confusing the two boundaries was a documentation bug
+        in earlier revisions of this paper that has been corrected here.
   \item[X bridge (\texttt{:8790}).] Outbound-only to the X v2 API. Surfaces:
         \texttt{POST /tweet} (single tweet, 280-char validated), \texttt{POST /thread}
         (sequential multi-tweet, 500\,ms gap enforced), \texttt{POST /notify}
@@ -1191,18 +1250,22 @@ the rule-based level.
 \centering
 \includegraphics[width=0.96\linewidth]{figures/scenario-engine-dataflow.pdf}
 \caption{Data flows for the v0 scenario engine, overlaid on the as-is API
-surface. New components (amber): the scenario evaluator, the JSON template store,
-the run-history extension to \texttt{decisions.jsonl}, the action dispatcher, and
-the scenario HTTP shim on \texttt{:8791}. Existing components (grey): the bot
-\texttt{priceWatcher}, the bot tick loop, the Telegram and X bridges, the Paperclip
-server, and the risk-alert poller. External actors (blue): market data sources,
-Jupiter swap, and the agents/board surface that interacts via the HTTP shim. File
-stores (yellow): \texttt{bot/state.json} and \texttt{bot/KILL}. Edge styles: solid
-$=$ synchronous call; dashed $=$ file I/O; double-line $=$ two-flag gated (the
-generalised \texttt{DRY\_RUN}~$\land$~\texttt{LIVE\_CONFIRM} contract). The
-double-line on the action-dispatcher$\to$Jupiter edge is the scenario-engine
-analogue of the agentic engine's governance gate
-(Section~\ref{sec:engine:agentic}).}
+surface. New components (amber): the scenario evaluator, the JSON template
+store, the run-history extension to \texttt{decisions.jsonl}, the action
+dispatcher, and the scenario HTTP shim on \texttt{:8791}. Existing components
+(grey): the bot \texttt{priceWatcher}, the bot tick loop, the Telegram and X
+bridges, the Paperclip task-management server, the LangGraph orchestration
+runtime, and the risk-alert poller. External actors (blue): market data
+sources, Jupiter swap, and the agents/board surface that interacts via the
+HTTP shim. File stores (yellow): \texttt{bot/state.json} and
+\texttt{bot/KILL}. Edge styles: solid $=$ synchronous call; dashed $=$ file
+I/O; double-line $=$ two-flag gated (the generalised
+\texttt{DRY\_RUN}~$\land$~\texttt{LIVE\_CONFIRM} contract). The double-line
+on the action-dispatcher$\to$Jupiter edge is the scenario-engine analogue
+of the agentic engine's governance gate
+(Section~\ref{sec:engine:agentic}). A Designer-led rework of this figure
+into a clearer subsystem-grouped layout is filed under OMN-152 follow-up;
+the structure described in this caption is unchanged.}
 \label{fig:scenario-engine-dataflow}
 \end{figure}
 
