@@ -30,7 +30,7 @@
   Basel Magableh\thanks{Technological University of Dublin. Correspondence to \texttt{basel.magableh@tudublin.ie}.} \\
   \and OmniRisk Research\thanks{\texttt{research@omnirisk.io}.}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.16 (internal review)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.17 (internal review)}}
 
 \begin{document}
 \maketitle
@@ -1920,13 +1920,21 @@ quorum (Section~\ref{sec:arch:bittensor}) could meaningfully score miners,
 \paragraph{Reproducibility.} The 31-row metrics scan that backs
 Table~\ref{tab:prediction-router} is committed as
 \texttt{papers/2026/omnirisk-rayachain-bittensor/sources/prediction-router-metrics-2026-05-07.csv}
-in the \texttt{omnirisk-papers} repository (commit \texttt{b419338}). Any IAM
-principal with read access to the \texttt{RiskIntelPredictionMetrics}
-DynamoDB table in Blue \texttt{us-east-1} can independently reproduce the scan;
-the underlying public endpoint
-\texttt{https://api.omnirisk.io/v1/prediction-router/report.json?windowHours=168}
-is currently authentication-gated and is itself the next operational step
-toward independently verifiable third-party validation.
+in the \texttt{omnirisk-papers} repository (commit \texttt{b419338}); that
+immutable CSV snapshot is the artefact accompanying this submission. The
+producer of the rows is the EventBridge-scheduled Lambda
+\texttt{RiskIntelBlueJobs-PredictionRouterJobHandler}; the read path through
+API~Gateway (\texttt{/v1/prediction-router/report.\{json,csv\}}) is
+\emph{operator-only by design}: it is gated by the
+\texttt{requireOperatorAccess} middleware against an Auth0 tenant
+(\texttt{login.omnirisk.io}, audience \texttt{https://api.omnirisk.io}) and
+that gating is intentional, not a transitional posture. Reproducibility for
+peer reviewers is provided by request, on an NDA basis if the venue requires
+it; the underlying DynamoDB scan is reproducible to any IAM principal granted
+explicit read access on the \texttt{RiskIntelPredictionMetrics} table in
+\texttt{us-east-1}. We do not point to a live endpoint URL as a verifiable
+resource; the committed CSV snapshot is what a reviewer should treat as the
+source.
 
 \section{Economic Model and Tokenomics}\label{sec:economics}
 
@@ -2285,6 +2293,17 @@ The threat surface is dominated by three classes:
         Casper FFG~\cite{buterin2017casper} on the destination side; both are
         properties of the underlying consensus, not of the OFT lane itself.
 \end{description}
+
+\paragraph{Data-access posture.} Operator-grade telemetry --- per-asset
+prediction outcomes, calibration buckets, validator-loss decompositions --- is
+gated through the agentic engine's role-contract layer
+(Section~\ref{sec:engine:agentic}) by design. The paper publishes immutable
+summary snapshots committed alongside the manuscript (the CSV at commit
+\texttt{b419338} for the prediction-router rollups; the soak telemetry report
+for the Bittensor pipeline), not raw access to live operator endpoints.
+Exposing raw rollups to anonymous traffic would create incentives for
+adversaries to game the prediction surface, which is the same threat-class
+\cite{cong2022crypto} document at the AMM layer.
 
 \section{Implementation Status}\label{sec:status}
 

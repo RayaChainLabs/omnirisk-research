@@ -12,7 +12,7 @@ authors:
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
 status: "internal-review"    # draft | internal-review | submitted | published | archived
-revision: "0.16"
+revision: "0.17"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -57,6 +57,15 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_17:
+    date: "2026-05-07"
+    summary: "Correct the public-endpoint framing in §case-study:prediction-router per CEO directive 514c1ed7 (2026-05-07T01:56Z): the prediction-router report endpoint stays auth-gated by design, and the paper must point reviewers to the committed CSV snapshot — not to a live endpoint URL — as the verifiable source. Also adds a 'Data-access posture' paragraph to §security."
+    changes:
+      - "§case-study:prediction-router 'Reproducibility' paragraph: the v0.16 sentence ending 'underlying public endpoint /v1/prediction-router/report.json... is currently authentication-gated and is itself the next operational step toward independently verifiable third-party validation' has been replaced with the CEO's verbatim gated-by-design framing: the read path (/v1/prediction-router/report.{json,csv}) is operator-only by design, gated by requireOperatorAccess against the Auth0 tenant login.omnirisk.io / audience https://api.omnirisk.io, and that gating is intentional, not a transitional posture; reproducibility for peer reviewers is provided by request, on an NDA basis if the venue requires it; the underlying DDB scan is reproducible to any IAM principal granted explicit read access on the RiskIntelPredictionMetrics table; we do NOT point to a live endpoint URL as a verifiable resource — the committed CSV snapshot at commit b419338 is what a reviewer should treat as the source."
+      - "§security: new 'Data-access posture' paragraph after the three-class threat-surface block. States that operator-grade telemetry (per-asset prediction outcomes, calibration buckets, validator-loss decompositions) is gated through the agentic engine's role-contract layer (§engine:agentic) by design; the paper publishes immutable summary snapshots committed alongside the manuscript, not raw access to live operator endpoints. Frames the gating as a defence against adversarial gaming of the prediction surface, citing cong2022crypto for the AMM-layer analogue. This makes the access-control posture itself part of the contribution rather than an unstated operational quirk."
+      - "Title page revision tag bumped 0.16 → 0.17. Status remains internal-review. No bibliography changes — total stays at 52 entries."
+      - "What is NOT done: the v0.16 calibration-arc table, class-imbalance caveats, and 53.15% live-baseline framing are preserved verbatim — the directive only struck the public-endpoint sentence, not the empirical framing."
+      - "Repo-housekeeping note (separate engineering issue, not paper task): the stale task at risk-intel/repo_doc/THELOGS/2026-04-25_23-33_operator-prediction-router-public-report.md should be marked 'rejected — auth gate stays' so it is not picked up again by a future engineer assuming the auth removal is just 'pending'. Listed below in pending_before_submission_engineering."
   v0_16:
     date: "2026-05-07"
     summary: "Integrate the production prediction-router scheduled-evaluation metrics into the case study (CEO directive 8780528b, 2026-05-07T01:52Z). The freshest 168h run on Blue us-east-1 reports 99.34% didCrashAccuracy on a 915-sample cohort with Brier 0.1335; surface the calibration arc and the class-imbalance / cohort-recomposition / live-baseline caveats so the headline cannot be misread as standalone accuracy."
@@ -226,7 +235,7 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: "2026-05-07T02:56Z (v0.16, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 49 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
+last_local_compile: "2026-05-07T03:00Z (v0.17, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 49 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
 
 # pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
 # engineering-side (delegated, separate track from publication).
@@ -263,6 +272,9 @@ pending_before_submission_engineering:
       action: "Identify a Bittensor cross-chain risk subnet sponsor (subnet partner) for the prediction-engine production deployment."
     - owner: "Academic Writer (follow-up paper)"
       action: "Instantiate baselines B1–B4 of §eval:baselines and report H1/H2 outcomes against MAINNET RayaChain flows once mainnet cuts over. Separate publication, not v0.14."
+    - owner: "Risk-Intel housekeeping"
+      delegate_to: "separate engineering issue (not OMN-152)"
+      action: "Mark the stale task at risk-intel/repo_doc/THELOGS/2026-04-25_23-33_operator-prediction-router-public-report.md as 'rejected — auth gate stays by design' (per CEO directive 514c1ed7, 2026-05-07T01:56Z), so it is not picked up again by a future engineer assuming the auth-removal is 'pending'. The /v1/prediction-router/report.{json,csv} endpoint stays operator-only; reproducibility for the manuscript is provided by the committed CSV snapshot at commit b419338."
 
 pending_before_submission_board:
   status: "ack-only-not-blocking"
