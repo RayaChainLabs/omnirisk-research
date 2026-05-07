@@ -65,9 +65,8 @@ baseline to 99\% on a top-cap-restricted cohort, with explicit
 class-imbalance honesty. The case study supports the architecture's
 deployability; the validator-loss decomposition is stated as falsifiable
 and deferred to follow-up empirical work. A fuller formalisation, the
-cross-chain bridge SoK literature review, and the
-RayaChain tokenomics are in the companion technical
-report~\cite{omnirisk2026techreport}.
+cross-chain bridge security literature, and the
+RayaChain tokenomics are deferred to follow-up work.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -136,9 +135,7 @@ Sections~\ref{sec:case-study}--\ref{sec:metrics} report the empirical
 anchors. Section~\ref{sec:langgraph} names the production orchestration
 runtime (LangGraph) and the agent-task management surface (Paperclip).
 Section~\ref{sec:limits} states the falsifiable limitations.
-Section~\ref{sec:conclusion} closes; the long-form
-formalisation~\cite{omnirisk2026techreport} carries every detail this
-paper compresses.
+Section~\ref{sec:conclusion} closes.
 
 \section{The Five-Engine Architecture}\label{sec:arch}
 
@@ -342,9 +339,9 @@ reconstruct the entire decision chain from the public issue thread plus
 the public decision log; (iii)~the role contract holds across
 two~stop-loss events and three CEO sign-offs without violating any of
 its hard rules. The companion operator-side narrative is published
-at~\cite{omnirisk2026defending}; the long-form
-report~\cite{omnirisk2026techreport} carries the buy-by-buy table
-(52~rows) and the price- and liquidity-time series figures.
+at~\cite{omnirisk2026defending}; the buy-by-buy decision log (52 rows
+of timestamps, prices, tier-trigger values, and slice-level execution
+records) is publicly available alongside that writeup.
 
 \section{Production Calibration Arc}\label{sec:metrics}\label{sec:case-study:prediction-router}
 
@@ -493,10 +490,8 @@ empirical artefacts: a 28-hour \textsc{RYA} liquidity-defence cycle
 that holds its constitution across two stop-loss events and three
 human approvals, and a 168-hour production calibration arc that we
 report with the class-imbalance and cohort-recomposition caveats that
-prevent the headline from being misread as a standalone accuracy. The
-fuller formalisation, the full cross-chain bridge SoK literature
-review, and the RayaChain tokenomics are in the companion technical
-report~\cite{omnirisk2026techreport}; falsifiable hypotheses H1
+prevent the headline from being misread as a standalone accuracy.
+Falsifiable hypotheses H1
 (cross-chain liquidity-fragmentation features improve early-detection
 lead time over single-chain features) and H2
 (confidence-calibrated miners receive monotonically higher Yuma weight
