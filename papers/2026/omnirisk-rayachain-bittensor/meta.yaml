@@ -13,7 +13,7 @@ authors:
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
 status: "internal-review"    # draft | internal-review | submitted | published | archived
-revision: "0.19"
+revision: "0.21"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -58,6 +58,22 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_21:
+    date: "2026-05-07"
+    summary: "Per CEO directives 98f6616f and d0cfd527 (2026-05-07T03:23–03:26Z): hold abstract at the v0.20 IoV-opener restore (rejecting the v0.18 'Cross-chain financial systems' substitution); preserve the v0.20 textsuperscript-numbered author block (Basel Magableh^{1,*} \\and OmniRisk Research^{2}, with TUD School of Computer Science + Rayachain Lab affiliations); ratify the equation symbol-discipline audit that landed alongside v0.20. Bump revision 0.19 → 0.21 per CEO instruction (v0.20 was the parallel abstract-restore + author-block commit, this v0.21 is the bookkeeping cut on top)."
+    changes:
+      - "manuscript.tex: title-page revision tag bumped 0.19 → 0.21. Abstract held at the v0.20 IoV-opener restore — explicitly NOT reintroducing the v0.18 'Cross-chain financial systems present a class of systemic risk' opener (rejected by CEO directive 98f6616f as treating IoV as downstream rather than as the headline). Author block preserved as the textsuperscript-numbered format from v0.20 — explicitly NOT reverting to the v0.18 \\thanks{} style (rejected by CEO directive d0cfd527)."
+      - "Equation symbol-discipline audit (CEO directive 51f09429, original target was v0.19) is preserved verbatim from the v0.20 working tree. All seven equations carry where-blocks meeting the directive standard; index discipline consistent across §formal, §arch:bittensor, §engine:sentiment, §arch:sentiment."
+      - "What is NOT changed in v0.21: §case-study still frozen at the v0.18 narrative arc (third-act 2026-05-07 02:38 UTC stop-loss not yet integrated, pending CEO override decision); bibliography unchanged (52 entries); title unchanged; pdfauthor metadata unchanged; jargon-reduction substitutions from v0.18 preserved; storytelling rewrites from v0.18 preserved; §security data-access posture from v0.17 preserved."
+  v0_20:
+    date: "2026-05-07"
+    summary: "Out-of-band CEO commit 0302504 (committed during the v0.19 equation-rigour heartbeat). Two simultaneous directives: (i) restore the v0.12-era IoV-opener abstract — rejecting the v0.18 'Cross-chain financial systems' substitution, on the grounds that the paper's title is 'Agentic, Context-Aware Risk Prediction for the *Internet of Value*' and opening with the IoV reframe sets up the title rather than treating IoV as a downstream concept; (ii) update the author block from \\thanks{} footnotes to a standard \\textsuperscript-numbered affiliation format with TUD School of Computer Science and Rayachain Lab as the two named affiliations. The commit additionally caught the pending equation symbol-discipline audit (CEO directive 51f09429) that the v0.19 heartbeat was producing in parallel."
+    changes:
+      - "Abstract: replaced the v0.18 'Cross-chain financial systems present a class of systemic risk that existing risk frameworks are ill-equipped to address' opener with the v0.12-era IoV opener: 'The Internet of Value (IoV) — the heterogeneous network of chains, bridges, AMMs, and tokens through which value is moved and held — has matured to the point that the dominant marginal risk has shifted from any single venue to the composite, agentic context...'. The five-engine taxonomy (prediction / agentic / sentiment-fusion / Bittensor / API risk + scenario), the Anthropic constitutional-AI anchor, the financial-NLP fusion taxonomy, and the explicit case-study scope statement are all named in the abstract."
+      - "Author block: changed from \\thanks{}-footnoted form to numbered-superscript affiliation form. New form: 'Basel Magableh^{1,*} \\and OmniRisk Research^{2}'; affiliation 1: 'School of Computer Science, Technological University Dublin, Ireland'; affiliation 2: 'Rayachain Lab, Dublin, Ireland'; correspondence: basel.magableh@tudublin.ie."
+      - "meta.yaml authors block updated with the matching affiliation strings. pdfauthor metadata unchanged (Basel Magableh; OmniRisk Research)."
+      - "Title-page revision tag bumped 0.18 → 0.19 inside this commit; the canonical revision label v0.20 is the commit message label, not the in-file label. The v0.21 commit (this revision) corrects the in-file revision tag to 0.21 to align with the canonical commit-message labelling."
+      - "Equation symbol-discipline audit (CEO directive 51f09429): all seven equations gained 'where' blocks declaring symbol / type / domain / index range / origin / units. eq:route, eq:risk, eq:brier, eq:vloss, eq:vweight, eq:yuma-consensus, eq:lexicon. The work was originally targeted at v0.19 but landed in this v0.20 commit because the working tree was committed as part of the abstract-restore. The v0.21 entry above ratifies the equation work."
   v0_19:
     date: "2026-05-07"
     summary: "Equation symbol-discipline audit per CEO directive 51f09429 (2026-05-07T03:21Z). Every equation in the paper now has a 'where' block declaring each symbol with type, domain, index range, origin, and units. Index discipline made consistent across §formal, §arch:bittensor, and §engine:sentiment (i = miner everywhere except eq:vweight, where i = validator on the on-chain weight-submission convention; this exception is now stated explicitly). §case-study NOT touched — third act in flight per CEO directive footer."
@@ -265,7 +281,7 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: "2026-05-07T04:25Z (v0.19, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 52 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
+last_local_compile: "2026-05-07T04:31Z (v0.21, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 52 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
 
 # pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
 # engineering-side (delegated, separate track from publication).
