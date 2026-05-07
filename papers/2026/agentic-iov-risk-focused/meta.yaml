@@ -13,8 +13,8 @@ authors:
     affiliation: "Rayachain Lab, Dublin, Ireland"
     order: 2
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list — same as long paper
-status: "scaffold"           # scaffold | draft | internal-review | submitted | published
-revision: "0.1"
+status: "draft"              # scaffold | draft | internal-review | submitted | published
+revision: "0.5"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
@@ -45,9 +45,28 @@ provenance:
     paper that are not also in the long paper, with the same primary-source anchors.
   bibliography: "../../../_bib/references.bib (shared, 52 entries; focused paper cites a subset of ~20-25)"
 
-last_local_compile: null
+last_local_compile: "2026-05-07T05:15Z (v0.5, latexmk + biber, papers/2026/agentic-iov-risk-focused; ≤15 pages target)"
+
+revision_log:
+  v0_5:
+    date: "2026-05-07"
+    summary: "First populated draft of the focused arXiv submission per CEO directive 4b2a8788 (2026-05-07T04:08Z): polished, easy-to-read, ≤15 pages, ready to publish 2026-05-08 UTC. Long paper at papers/2026/omnirisk-rayachain-bittensor/ goes on hold at v0.22 as the technical-report companion."
+    changes:
+      - "Abstract: 180-word IoV-opener compression that names all five engines, anchors on the RYA case study + 168h prediction-router calibration arc, and forward-references the long paper as the technical report."
+      - "§intro: three-sentence IoV reframe; one-paragraph five-engine thesis (forward-reference §arch); one-paragraph empirical-anchor on the RYA cycle and the calibration arc; three-bullet contributions list; roadmap. Bridge SoK literature compressed to a single citation cluster (augusto2024sok, zhang2023sok, belchior2021survey, wu2025safeguarding)."
+      - "§arch: lifts fig:five-engine-dependency from the long paper (relative path to ../omnirisk-rayachain-bittensor/figures/five-engine-dependency-graph.pdf). Five engines each at ~120 words: prediction (66,118-sample calibration v1, 53% live-API baseline 'barely above chance'), Bittensor verification subnet (Yuma + Hanson LMSR + Taoshi PTN reference + 5,097-round 57h shadow soak), sentiment-fusion (12 news + 3 social adapters; early/late/stacking taxonomy), agentic (constitutional-AI, paused-by-default), API-risk + scenario (Glasserman MC scenario generation + NIST tabletop precondition/trigger/action structure). Plus a 'Composition' paragraph aligned with the dependency graph."
+      - "§case-study: three-act chronological narrative anchored on UTC timestamps. Act I = 2026-05-06 dump → 30-buy 5h defence → +20% recovery → first organic buyer. Act II = 21:30 second sell wave → cap raise 3.0→5.0 SOL → 22 more buys → ratchet step 3 at lifetime 6.0 SOL. Act III = 2026-05-07 02:38 stop-loss event (price -46% in 3-10 min, $1,666 liquidity drained, bot auto-paused per STOP_LOSS_DROP_PCT=30) → 03:44 CEO override 'some one trying to dump RYA now defend it' → defence resumes at $0.0000414 floor. Frame: the safety circuit firing IS the architectural feature. Cycle continues at the time of writing."
+      - "§metrics: Table tab:calibration-arc with five representative 168h cohorts (pre-fix 50.90% / Brier 0.1983 → post-fix 77% range → small cohort 100% → freshest 99.34%) and the three explicit caveats (class imbalance via top-1000 mcap; Brier 0.1335 is the imbalance-robust metric; the 53% live-API baseline is the right denominator). Cited to omnirisk2026predmetrics + omnirisk2026systemdesign."
+      - "§langgraph: one-section crisp explanation of the LangGraph runtime per omnirisk2026agentic — port :8787, in-process default vs. remote ECS/Fargate switch, three production graphs (token_risk, wallet_risk, monitoring/alert), Redis 24h checkpoint TTL, AGENT_LANGGRAPH_*=false production defaults (architectural, not currently-on-the-default-path), 145-test gate, hard rule that LangGraph→LocalAI HTTP is prohibited. One-sentence Paperclip mention as the upstream agent-task management layer."
+      - "§limits: three falsification statements (single-pool deployability; top-cap-cohort calibration arc; deferred validator-loss components) + one honest disclosure (deterministic Trader-role policy is not the LLM-mediated agentic engine)."
+      - "§conclusion: two sentences pointing to the long paper for full formalisation; one sentence on H1/H2 + the falsification paths in §limits."
+      - "Cross-references: §intro and §conclusion both cite omnirisk2026techreport (long-paper self-reference, newly added to references.bib in this revision). The long paper's §intro will gain a footnote pointing to this focused paper in a separate small commit."
+      - "Bibliography: omnirisk2026techreport added to references.bib as a new self-reference entry. Total bibliography 52 → 53 entries; the focused paper's body cites a curated subset (currently approximately 23 of the 53 entries; biblatex's filter renders only the cited subset)."
+      - "Title page: revision tag v0.1 (scaffold) → v0.5 (draft); status field scaffold → draft."
+      - "What is NOT done in v0.5: byte-for-byte parity with the long paper has been intentionally relaxed for the easy-to-read register per CEO directive (the focused paper is rewritten for accessibility, not extracted verbatim); however every numeric claim in the focused paper appears in the long paper or in a primary-source artefact (the calibration manifest, the soak telemetry, the prediction-router CSV, SOL.md). No new claims appear in the focused paper that are not also in the long paper."
+
 pending_before_submission:
-  - "First-pass extraction from long paper into focused-paper structure (Abstract / Intro / Architecture / Case study / Metrics / Limitations / References)"
-  - "Compile clean (make pdf)"
-  - "CEO read-through"
-  - "Cross-link from long paper's §intro to this focused companion (and vice-versa)"
+  - "DONE in v0.5: first-pass extraction from long paper; compile clean (make pdf); revision_log entry with provenance."
+  - "Open: Designer follow-up on figure choices (the focused paper currently references the long paper's fig:five-engine-dependency by relative path; if Designer ships a focused-paper-specific tighter version, swap the path)."
+  - "Open: CEO read-through before 2026-05-08 UTC publication."
+  - "Open: cross-link the long paper's §intro to this focused paper (small follow-up commit)."
