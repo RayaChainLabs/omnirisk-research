@@ -3,16 +3,17 @@ slug: "omnirisk-rayachain-bittensor"
 authors:
   - name: "Basel Magableh"
     email: "basel.magableh@tudublin.ie"
-    affiliation: "Technological University of Dublin"
+    affiliation: "School of Computer Science, Technological University Dublin, Ireland"
     order: 1
     corresponding: true
   - name: "OmniRisk Research"
     email: "research@omnirisk.io"
+    affiliation: "Rayachain Lab, Dublin, Ireland"
     order: 2
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
 status: "internal-review"    # draft | internal-review | submitted | published | archived
-revision: "0.18"
+revision: "0.19"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -57,6 +58,20 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_19:
+    date: "2026-05-07"
+    summary: "Equation symbol-discipline audit per CEO directive 51f09429 (2026-05-07T03:21Z). Every equation in the paper now has a 'where' block declaring each symbol with type, domain, index range, origin, and units. Index discipline made consistent across §formal, §arch:bittensor, and §engine:sentiment (i = miner everywhere except eq:vweight, where i = validator on the on-chain weight-submission convention; this exception is now stated explicitly). §case-study NOT touched — third act in flight per CEO directive footer."
+    changes:
+      - "eq:route (Section §formal:route): expanded 'where' block declares q ∈ Q (5-tuple route in the route space Q = C × C × A × R_{>0} × R_{≥0}); c_s, c_d ∈ C (categorical chain identifiers, observed); a ∈ A (asset, observed from the canonical registry rayachain2026registry); x ∈ R_{>0} (transfer amount, smallest unit of a, observed); t ∈ R_{≥0} (wall-clock seconds since Unix epoch, observed; finalised-block discrete representation in implementation)."
+      - "eq:risk (Section §formal:score): expanded 'where' block declares s(q,t) ∈ [0,1] (scalar probability, derived); E_{q,t+Δ} ∈ {0,1} (binary realised-event indicator, computed retrospectively); Δ ∈ R_{>0} (event horizon, seconds, parameter); X_{q,t} (observed information set with explicit field enumeration); s_i, c_i ∈ [0,1] (per-miner probability + confidence, computed); r_i ∈ R (structured-reasoning record, schema in §miner)."
+      - "eq:brier (Section §formal:calibration): expanded 'where' block declares Brier_i ∈ [0,1] (calibration error, lower is better; perfect = 0, marginal-50/50 = 0.25); i ∈ M (miner index); n ∈ {1, …, N} (sample index); N ∈ Z_{>0} (window size; the production prediction-router runs N ≈ 915 on the freshest 168h cohort, anchored to §case-study:prediction-router); s_i(q_n, t_n) ∈ [0,1] (Eq.~eq:risk); y_n = E_{q_n, t_n + Δ} ∈ {0,1} (realised outcome, observed)."
+      - "eq:vloss (Section §formal:vloss): expanded 'where' block declares L_i ∈ R_{≥0} (validator loss, scalar, dimensionless, computed; lower is better); s_i ∈ [0,1]^N, c_i ∈ [0,1]^N, y ∈ {0,1}^N (vectors over the N-query window); α, β, γ ∈ [0,1] with α+β+γ=1 (subnet hyperparameters; default α=0.6, β=0.2, γ=0.2 stated explicitly as a design proposal not a measured optimum); δ ∈ R_{>0} (consistency-pair window, seconds, hyperparameter); B (bin set with |B|=10 stated as a design proposal); w_b = |b|/N ∈ [0,1] (bin mass weight); c̄_b, ā_b ∈ [0,1] (mean confidence and realised accuracy in bin b)."
+      - "eq:vweight (Section §formal:vloss): expanded 'where' block declares the indices i ∈ V (validator) and j ∈ M (miner), with an explicit note that this is the *sole* equation in the paper that uses i for validators rather than miners, in order to align with the on-chain W_{ij} convention used by Eq.~eq:yuma-consensus; W_{ij} ∈ [0,1] (validator-submitted weight, dimensionless, computed); L_j ∈ R_{≥0} (validator loss for miner j from Eq.~eq:vloss); λ ∈ R_{>0} (softmax temperature, units of inverse loss, parameter; default λ = 4.0 stated as a design proposal); summation index k ∈ M (miner)."
+      - "eq:yuma-consensus (Section §arch:bittensor): expanded 'where' block declares W̄_j ∈ [0,1] (consensus benchmark, scalar, computed); i ∈ V (validator), j ∈ M (miner); W_{ij} ∈ [0,1] (observed from on-chain weight commitment); S_i ∈ R_{≥0} (validator stake in TAO); κ ∈ (0,1] (consensus-fraction parameter, default 0.5 on production Bittensor mainnet); 1[·] (indicator function); the optimisation variable w ∈ [0,1]; followed by the derived quantities Ŵ_{ij} = min(W_{ij}, W̄_j) ∈ [0,1] (clipped weight, computed); R_j = Σ_i S_i · Ŵ_{ij} ∈ R_{≥0} (aggregate ranking, in stake-weighted weight units); M_j = R_j / Σ_k R_k ∈ [0,1] (per-epoch emission share, dimensionless probability mass over miners). The argmax of the indicator-sum (the previous 'arg max over w' notation that omitted the index over j was already correct; no change beyond the where-block expansion)."
+      - "eq:lexicon (Section §arch:sentiment): expanded 'where' block declares score_text ∈ Z ∩ [-100, 100] (clipped integer count, dimensionless, computed); the six count variables N_POS, N_NEG, N_HYPE, N_PANIC, N_PROMO, N_MM ∈ Z_{≥0} (non-negative integer counts, computed by token-matching pass); the integer coefficients {16, 18, 6, 10, 3, 12} explicitly identified as fixed configuration parameters per omnirisk2026systemdesign, NOT learned weights; the operator clamp_{[-100,100]} formally defined as max(a, min(b, x))."
+      - "Index discipline now consistent across §formal, §arch:bittensor, §engine:sentiment, §arch:sentiment: i = miner index (default), with eq:vweight + eq:yuma-consensus explicitly noting the on-chain convention swap (i = validator there); j = miner index in eq:vweight + eq:yuma-consensus (the on-chain convention) and otherwise; t = time; q = route; n = sample index; b = bin index. Every equation that uses an index now declares its range."
+      - "What is NOT changed in v0.19, per CEO directive footer: the §case-study narrative is FROZEN at the v0.18 arc (dump → defence → recovery → second sell wave → continued defence → top-up → ratchet 3 reached). The 2026-05-07 02:38 UTC stop-loss event is NOT yet integrated; CEO will instruct on the third-act override decision in a follow-up comment, and AW will pick up the case-study extension then. v0.19 is purely an equation-discipline pass."
+      - "Title page revision tag bumped 0.18 → 0.19. Status remains internal-review. Bibliography unchanged (still 52 entries). No prose deletions; only equation-where-block expansions."
   v0_18:
     date: "2026-05-07"
     summary: "Story-grade prose rewrite per CEO directive 4216e8b7 (2026-05-07T03:10Z). Replace abstract with the CEO's verbatim text (drops the IoV opener; opens with 'Cross-chain financial systems present a class of systemic risk...'). Reduce jargon at first-mention sites (OFT, DVN, AMM/trading pool, Brier, Yuma, time-weighted slicing, constant-product trading pool) by adding accessible glosses without removing technical references. Rewrite the §case-study Setup + Timeline as chronological prose with timestamp paragraph anchors, and re-cast §limitations as falsification statements ('here is what would prove the claim wrong, and here is the cheapest way to try'). Title and authors unchanged; no bibliography removals."

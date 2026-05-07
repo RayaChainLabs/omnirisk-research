@@ -27,35 +27,57 @@
 \title{Agentic, Context-Aware Risk Prediction for the Internet of Value:\\
        A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor}
 \author{
-  Basel Magableh\thanks{Technological University of Dublin. Correspondence to \texttt{basel.magableh@tudublin.ie}.} \\
-  \and OmniRisk Research\thanks{\texttt{research@omnirisk.io}.}
+  Basel Magableh\textsuperscript{1,*} \and OmniRisk Research\textsuperscript{2}\\[0.8em]
+  \textsuperscript{1}School of Computer Science, Technological University Dublin, Ireland\\
+  \textsuperscript{2}Rayachain Lab, Dublin, Ireland\\[0.4em]
+  \textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.18 (internal review)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.19 (internal review)}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Cross-chain financial systems present a class of systemic risk that existing risk
-frameworks are ill-equipped to address. Current approaches assess risk within
-individual chains, yet the most consequential failure modes in multi-chain DeFi
-emerge at the boundaries between networks --- in bridge routes, liquidity
-transitions, and cross-chain message passing. We introduce
-\textsc{OmniRisk}, an agentic AI risk intelligence layer designed to detect,
-score, and verify risk across heterogeneous blockchain environments. Built on
-\textsc{RayaChain}, a LayerZero V2 Omnichain Fungible Token
-infrastructure~\cite{zarick2024layerzero,layerzero2024oft} spanning Ethereum,
-Arbitrum, Base, BSC, Polygon, Optimism, Solana, and Subtensor EVM, OmniRisk
-operationalizes four core research primitives: route-risk scoring, liquidity
-fragmentation analysis, anomalous cross-chain activity detection, and
-confidence-calibrated financial intelligence. Central to our design is the
-principle that risk intelligence must itself be independently verifiable. We
-propose Bittensor~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}
-as a decentralized verification substrate for financial intelligence outputs,
-enabling incentive-aligned validation of risk signals at network scale. This
-paper presents the theoretical foundations of cross-chain risk emergence, the
-architectural design of OmniRisk, and an initial framework for decentralized
-intelligence verification.
+The \emph{Internet of Value} (IoV) --- the heterogeneous network of chains, bridges, AMMs,
+and tokens through which value is moved and held --- has matured to the point that the
+dominant marginal risk has shifted from any single venue to the \emph{composite, agentic
+context} in which an action is taken: the joint state of route, sentiment, liquidity,
+and the policies an autonomous system is willing to commit to. Cross-chain bridges
+remain a concentrated source of loss --- industry trackers attribute roughly USD~2B of
+theft in the first eight months of 2022 alone to bridge attacks~\cite{chainalysis2022bridges}
+and the most recent peer-reviewed systematisation places cumulative losses at
+approximately USD~3.1B~\cite{augusto2024sok} --- but they are no longer the only place
+where context-blind risk telemetry produces avoidable losses, as the rug-pull, sniper-bot,
+and micro-cap-launch literature demonstrates~\cite{cernera2023token}. This paper argues
+that the correct primitive for IoV risk is neither another risk API nor a single
+detection model but a \textbf{five-engine architecture for agentic, context-aware risk
+prediction}: a \emph{prediction engine} that emits point and distributional forecasts of
+price, liquidity, volatility, and route health; an \emph{agentic engine} that converts
+those forecasts into role-bound, constitutionally-constrained actions in the sense of
+Anthropic's constitutional AI specification~\cite{bai2022constitutional}; a
+\emph{sentiment-fusion engine} that combines off-chain text streams with on-chain flow
+signals using the early-fusion / late-fusion / stacking taxonomy of the financial-NLP
+survey literature~\cite{schumaker2009textual,xing2018natural,day2016deep}; a
+\emph{Bittensor prediction subnet}~\cite{rao2021bittensor,opentensor2024yuma,
+taoshi2024ptn} that decentralises the prediction layer; and an \emph{API risk and
+scenario engine} that turns predicted scenarios into pre-committed action programs in
+the sense of Monte-Carlo financial-engineering scenario generation~\cite{glasserman2003monte}
+and the NIST tabletop-exercise framework~\cite{nist2006sp80084}. We present
+\textsc{OmniRisk} as the agentic engine, \textsc{RayaChain} (an Omnichain Fungible Token
+deployment on LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}) as the data and
+execution substrate, and Bittensor's Yuma Consensus~\cite{steeves2022incentivizing}
+anchored on Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm} as the verification
+substrate. We formalise the route, risk-score, and validator-loss primitives, specify
+the miner and validator protocols, situate the design against the cross-chain bridge
+security, decentralised-ML, financial-NLP, and tabletop-exercise
+literatures~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding,conway2024opml,
+ganescu2024trust}, and instrument a fully-public five-hour case study --- the
+2026-05-06 \textsc{RYA} liquidity-defence cycle --- in which the scenario engine ran
+in production as a rule-based liquidity-support program on a single Solana micro-cap
+pool. The case study is honest about its scope: a single 5-hour cycle, on a single
+pool, with the agentic engine instantiated as a deterministic policy rather than as
+an LLM-mediated one. The LLM-mediated agentic engine and the integrated subnet remain
+the next-step build, against the falsifiable hypotheses H1 and H2 stated below.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -344,10 +366,21 @@ by a deterministic lexicon
   \bigr)
   \label{eq:lexicon}
 \end{equation}
-where $N_{\mathrm{POS}}, N_{\mathrm{NEG}}, N_{\mathrm{HYPE}}, N_{\mathrm{PANIC}},
-N_{\mathrm{PROMO}}, N_{\mathrm{MM}}$ count occurrences of the corresponding lexicon
-classes (\emph{POSITIVE}, \emph{NEGATIVE}, \emph{HYPE}, \emph{PANIC}, \emph{PROMO},
-\emph{MARKET\_MOVING}) in the window's text. The deterministic lexicon is the
+where $\mathrm{score}_{\mathrm{text}} \in \mathbb{Z} \cap [-100, 100]$ is the
+window-scored text sentiment (a clipped integer count, dimensionless);
+$N_{\mathrm{POS}}, N_{\mathrm{NEG}}, N_{\mathrm{HYPE}}, N_{\mathrm{PANIC}},
+N_{\mathrm{PROMO}}, N_{\mathrm{MM}} \in \mathbb{Z}_{\ge 0}$ are non-negative
+integer counts of occurrences in the window's text of the lexicon classes
+\emph{POSITIVE}, \emph{NEGATIVE}, \emph{HYPE}, \emph{PANIC}, \emph{PROMO}, and
+\emph{MARKET\_MOVING} respectively (computed by a token-matching pass over the
+window's text); the integer coefficients $\{16, 18, 6, 10, 3, 12\}$ are fixed
+parameters of the deterministic lexicon, set in the engineering source-of-truth
+documentation~\cite{omnirisk2026systemdesign} and treated by this paper as
+configuration rather than learned weights; and the operator
+$\mathrm{clamp}_{[-100, 100]}: \mathbb{R} \to [-100, 100]$ is the closed-form
+saturation $\mathrm{clamp}_{[a, b]}(x) = \max(a, \min(b, x))$. The full lexicon
+class definitions and the token-matching pass are in
+\cite{omnirisk2026systemdesign}. The deterministic lexicon is the
 fallback / audit substrate that every learned text classifier in the late-fusion
 stack is calibrated against; it survives a determinism-contract check
 (Section~\ref{sec:miner}) trivially. We disclose two known limitations of the
@@ -1007,13 +1040,28 @@ computes a benchmark consensus weight per miner as
     \;\ge\; \kappa \cdot \textstyle \sum_{i \in V} S_i \,\Bigr\}
   \label{eq:yuma-consensus}
 \end{equation}
-with $\kappa = 0.5$ (the default consensus parameter): $\overline{W}_j$ is the largest
-weight that at least the $\kappa$-stake-fraction of validators is willing to assign to
-miner $j$. Each validator's submitted weight is then clipped against this benchmark,
-$\widehat{W}_{ij} = \min(W_{ij}, \overline{W}_j)$, which bounds the influence of any
-single validator above the consensus. Aggregate miner ranking is
-$R_j = \sum_{i \in V} S_i \cdot \overline{W}_{ij}$ and the per-epoch miner emission share
-is $M_j = R_j / \sum_{k \in M} R_k$~\cite{opentensor2024yuma}. Validators in turn earn
+where $\overline{W}_j \in [0, 1]$ is the consensus benchmark weight for miner $j$
+(scalar, dimensionless, computed; one per miner per epoch); the index $j \in M$
+ranges over the subnet miner population; the index $i \in V$ ranges over the
+subnet validator population; $W_{ij} \in [0, 1]$ is the weight validator $i$
+submitted for miner $j$ (scalar, dimensionless, observed from the validator's
+on-chain weight commitment); $S_i \in \mathbb{R}_{\ge 0}$ is the stake of
+validator $i$ in TAO units (scalar, dimensionless after normalisation, observed
+from on-chain stake state); $\kappa \in (0, 1]$ is the consensus-fraction
+parameter (scalar, dimensionless, parameter --- default $\kappa = 0.5$ on the
+production Bittensor mainnet~\cite{opentensor2024yuma}); $\mathbf{1}[\cdot]$
+is the indicator function returning $1$ when its argument is true and $0$
+otherwise; and $w$ is the optimisation variable ranging over $[0, 1]$. The
+benchmark $\overline{W}_j$ is the largest weight that at least the
+$\kappa$-stake-fraction of validators is willing to assign to miner $j$. Each
+validator's submitted weight is clipped against this benchmark,
+$\widehat{W}_{ij} = \min(W_{ij}, \overline{W}_j)$ (scalar, $[0,1]$, computed),
+which bounds the influence of any single validator above the consensus.
+Aggregate miner ranking is
+$R_j = \sum_{i \in V} S_i \cdot \widehat{W}_{ij} \in \mathbb{R}_{\ge 0}$ (scalar,
+in stake-weighted weight units, computed) and the per-epoch miner emission share
+is $M_j = R_j / \sum_{k \in M} R_k \in [0, 1]$ (scalar, dimensionless probability
+mass over miners, computed)~\cite{opentensor2024yuma}. Validators in turn earn
 through a bond/dividend matrix $B_{ij}$ that is updated as an EMA of the
 stake-weighted clipped weights, so validators are rewarded for being early to the
 eventual consensus rather than for following it~\cite{opentensor2024yuma,
@@ -1185,19 +1233,27 @@ specification (Section~\ref{sec:validator}) both refer to.
 
 A \emph{route} is a tuple
 \begin{equation}
-  q \;=\; (c_s,\; c_d,\; a,\; x,\; t)
+  q \;=\; (c_s,\; c_d,\; a,\; x,\; t) \;\in\; \mathcal{Q}
   \label{eq:route}
 \end{equation}
-where $c_s$ is the source chain identifier, $c_d$ the destination chain identifier, $a$
-the asset (an OFT in the RayaChain deployment), $x \in \mathbb{R}_{>0}$ the transfer
-size denominated in $a$, and $t$ the query time (a wall-clock instant; in
-implementation, the most recent finalised block on each of $c_s$ and $c_d$, paired). The
-chain identifiers are drawn from the set of RayaChain-active chains
+where $q \in \mathcal{Q}$ is the route (5-tuple, the route space $\mathcal{Q}$ is
+defined as $\mathcal{C} \times \mathcal{C} \times \mathcal{A} \times
+\mathbb{R}_{>0} \times \mathbb{R}_{\ge 0}$); $c_s, c_d \in \mathcal{C}$ are the
+source-chain and destination-chain identifiers respectively (categorical, observed
+from the user's transfer request), with the chain set
 \(
   \mathcal{C} = \{\text{Ethereum},\; \text{Arbitrum},\; \text{Base},\; \text{BNB},\;
   \text{Polygon},\; \text{Optimism},\; \text{Solana}\}
 \)
-plus the proposed $c = 945$ Subtensor EVM lane (Section~\ref{sec:subtensor}).
+plus the proposed $c = 945$ Subtensor EVM lane (Section~\ref{sec:subtensor});
+$a \in \mathcal{A}$ is the asset (a cross-chain token in the RayaChain deployment;
+$\mathcal{A}$ is the set of OFT-bound assets registered in the canonical
+registry~\cite{rayachain2026registry}); $x \in \mathbb{R}_{>0}$ is the transfer
+amount (scalar, denominated in the smallest unit of $a$, observed from the
+transfer request); and $t \in \mathbb{R}_{\ge 0}$ is the query time
+(wall-clock seconds since the Unix epoch, observed; in implementation, the
+most recent finalised block on each of $c_s$ and $c_d$ is the canonical
+discrete representation of $t$).
 
 \subsection{Risk score}\label{sec:formal:score}
 
@@ -1213,10 +1269,23 @@ The route risk score is
   s(q, t) \;=\; \Pr\bigl(\, E_{q, t+\Delta} = 1 \;\bigm|\; X_{q, t} \,\bigr) \,.
   \label{eq:risk}
 \end{equation}
-A miner $i$ emits an estimate $s_i(q, t) \in [0,1]$ of this quantity, together with a
-self-reported confidence $c_i(q, t) \in [0,1]$ and a structured reasoning record
-$r_i(q, t) \in \mathcal{R}$ (Section~\ref{sec:miner}). Throughout the paper, $\Delta$ is
-a subnet-level constant; the deployed value is published with the subnet specification.
+where $s(q, t) \in [0, 1]$ is the route risk score (scalar probability,
+dimensionless, defined by Eq.~\eqref{eq:risk}); $q \in \mathcal{Q}$ is the route
+from Eq.~\eqref{eq:route}; $t \in \mathbb{R}_{\ge 0}$ is the query time as in
+Eq.~\eqref{eq:route}; $E_{q, t+\Delta} \in \{0, 1\}$ is the binary realised-adverse-event
+indicator on route $q$ over the horizon $[t, t + \Delta]$ (computed retrospectively
+from on-chain telemetry per Section~\ref{sec:formal:realised}); $\Delta \in
+\mathbb{R}_{>0}$ is the realised-event horizon (scalar, seconds, parameter --- a
+subnet-level constant published with the subnet specification); and $X_{q, t}$ is
+the on-chain information set observable at time $t$ that is relevant to $q$
+(source/destination liquidity snapshots, recent cross-chain send and receive
+events, the lane's DVN configuration, and incident-cluster proximity; observed).
+A miner $i \in M$ emits an estimate $s_i(q, t) \in [0, 1]$ of this quantity
+(scalar probability, dimensionless, computed by miner $i$), together with a
+self-reported confidence $c_i(q, t) \in [0, 1]$ (scalar, dimensionless, computed)
+and a structured reasoning record $r_i(q, t) \in \mathcal{R}$ (the
+structured-reasoning record schema $\mathcal{R}$ is specified in
+Section~\ref{sec:miner}).
 
 \subsection{Realised loss}\label{sec:formal:realised}
 
@@ -1288,11 +1357,23 @@ queries with realised outcomes $y_n \in \{0,1\}$, the empirical Brier score
   \label{eq:brier}
 \end{equation}
 (hereafter \emph{the calibration error}) is no worse than that of a calibrated
-reference predictor on the same window, and the self-reported confidence $c_i$ tracks
-miner accuracy in the sense that the reliability diagram (binned $c_i$ vs.\ realised
-accuracy) lies within a tolerance band of the identity. A miner that reports
-$c_i = 1$ on every query is automatically miscalibrated unless its
-$\text{Brier}_i$ is uniformly zero, which empirically does not occur.
+reference predictor on the same window. The symbols of Eq.~\eqref{eq:brier}: the
+miner index $i \in M$ ranges over the subnet miners; the sample index
+$n \in \{1, \dots, N\}$ ranges over the scored queries inside the evaluation
+window; $N \in \mathbb{Z}_{>0}$ is the window size (scalar, count, parameter ---
+the production prediction-router runs $N \approx 915$ on the freshest 168-hour
+cohort, see Section~\ref{sec:case-study:prediction-router});
+$\text{Brier}_i \in [0, 1]$ is the calibration error for miner $i$ (scalar,
+dimensionless, computed; lower is better, with $0$ for a perfect predictor and
+$0.25$ for a marginal $50/50$ prior on a balanced cohort); $s_i(q_n, t_n) \in
+[0, 1]$ is miner $i$'s probability estimate on the $n$-th scored query
+(Eq.~\eqref{eq:risk}); and $y_n = E_{q_n, t_n + \Delta} \in \{0, 1\}$ is the
+realised-event outcome for that query (Section~\ref{sec:formal:realised}).
+The self-reported confidence $c_i$ is calibrated when the reliability diagram
+(binned $c_i$ vs.\ realised accuracy) lies within a tolerance band of the
+identity; a miner that reports $c_i = 1$ on every query is automatically
+miscalibrated unless its $\text{Brier}_i$ is uniformly zero, which empirically
+does not occur.
 
 \subsection{Validator loss}\label{sec:formal:vloss}
 
@@ -1305,18 +1386,37 @@ loss for miner $i$ is the weighted decomposition
         \;+\; \gamma \cdot \text{Miscalibration}_i
   \label{eq:vloss}
 \end{equation}
-with non-negative weights $\alpha + \beta + \gamma = 1$ that the subnet publishes as
-hyperparameters. The three terms are:
+where the miner index $i \in M$ ranges over the subnet miner population;
+$L_i \in \mathbb{R}_{\ge 0}$ is the validator loss for miner $i$ (scalar,
+dimensionless, computed; lower is better); $\mathbf{s}_i \in [0, 1]^N$ is the
+miner's score vector over the $N$-query window (vector of probabilities,
+dimensionless, computed by the miner); $\mathbf{c}_i \in [0, 1]^N$ is the
+miner's self-reported confidence vector (vector of probabilities, dimensionless,
+computed by the miner); $\mathbf{y} \in \{0, 1\}^N$ is the realised-outcome
+vector ($y_n$ as in Eq.~\eqref{eq:brier}, observed retrospectively from
+on-chain telemetry per Section~\ref{sec:formal:realised}); $N \in \mathbb{Z}_{>0}$
+is the evaluation-window size as in Eq.~\eqref{eq:brier}; and the non-negative
+weights $\alpha, \beta, \gamma \in [0, 1]$ with $\alpha + \beta + \gamma = 1$
+are subnet-published hyperparameters (parameters; this paper proposes
+default values $\alpha = 0.6, \beta = 0.2, \gamma = 0.2$ as a design proposal,
+not a measured optimum, with the empirical follow-up paper of
+Section~\ref{sec:roadmap} required to lock the values). The three terms are:
 \begin{itemize}
-  \item $\text{Brier}(\mathbf{s}_i, \mathbf{y})$ as in Eq.~\eqref{eq:brier} (realised-event
-        accuracy);
-  \item $\text{Inconsistency}_i$, the fraction of paired queries $(q, t), (q, t+\delta)$
-        with no material chain-state change (Section~\ref{sec:formal:material}) for which
-        miner $i$ returned different responses;
-  \item $\text{Miscalibration}_i$, the expected calibration error
-        $\sum_b w_b \,|\, \overline{c}_b - \overline{a}_b \,|$ over equal-mass bins of
-        $c_i$, where $\overline{c}_b$ is the mean confidence in bin $b$ and
-        $\overline{a}_b$ is the realised accuracy.
+  \item $\text{Brier}(\mathbf{s}_i, \mathbf{y}) \in [0, 1]$, the
+        realised-event-accuracy term, computed as in Eq.~\eqref{eq:brier};
+  \item $\text{Inconsistency}_i \in [0, 1]$, the fraction of paired queries
+        $(q, t), (q, t + \delta)$ with no material chain-state change
+        (Section~\ref{sec:formal:material}) on which miner $i$ returned different
+        responses (where $\delta \in \mathbb{R}_{>0}$ is the consistency-pair
+        window in seconds, a subnet hyperparameter; computed by counting paired
+        queries on the validator side);
+  \item $\text{Miscalibration}_i \in [0, 1]$, the expected calibration error
+        $\sum_{b \in B} w_b \,|\overline{c}_b - \overline{a}_b|$ over equal-mass
+        bins of $c_i$, where the bin index $b$ ranges over a finite bin set $B$
+        (this paper uses $|B| = 10$ as a design proposal, equal-mass binning),
+        $w_b = |b| / N \in [0, 1]$ is the bin's mass weight, $\overline{c}_b
+        \in [0, 1]$ is the mean confidence in bin $b$, and $\overline{a}_b
+        \in [0, 1]$ is the realised accuracy in bin $b$.
 \end{itemize}
 A validator transforms its loss vector $\{L_i\}_{i \in M}$ into a Yuma weight vector
 $\{W_{ij}\}_{j \in M}$ (using the indexing of Section~\ref{sec:arch:bittensor}, where $i$
@@ -1326,8 +1426,21 @@ temperature-scaled-softmax form
   W_{ij} \;=\; \frac{\exp(-\lambda \, L_j)}{\sum_{k \in M} \exp(-\lambda \, L_k)}
   \label{eq:vweight}
 \end{equation}
-with $\lambda > 0$ a subnet-published hyperparameter; any monotone decreasing transform
-of $L_j$ suffices, and we use the softmax form for numerical stability. The submitted
+where the validator index $i \in V$ ranges over subnet validators (this is the
+sole equation in this paper that uses $i$ for validators rather than for miners,
+to align with the on-chain $W_{ij}$ convention of
+Eq.~\eqref{eq:yuma-consensus}); the miner index $j \in M$ ranges over subnet
+miners (similarly); $W_{ij} \in [0, 1]$ is the weight that validator $i$
+submits for miner $j$ (scalar, dimensionless, computed; this is the same
+$W_{ij}$ that feeds into Eq.~\eqref{eq:yuma-consensus}); $L_j \in
+\mathbb{R}_{\ge 0}$ is the validator loss for miner $j$ from
+Eq.~\eqref{eq:vloss}; the summation index $k \in M$ ranges over subnet
+miners; and $\lambda \in \mathbb{R}_{>0}$ is the softmax temperature
+(scalar, in units of inverse loss, parameter --- a subnet-published
+hyperparameter, with smaller $\lambda$ flattening the distribution and larger
+$\lambda$ sharpening it; default $\lambda = 4.0$ as a design proposal). Any
+monotone decreasing transform of $L_j$ suffices for the on-chain submission;
+we use the softmax form for numerical stability. The submitted
 weights $W_{ij}$ are then aggregated on chain via Eq.~\eqref{eq:yuma-consensus}: a
 miner's emission share $M_j$ is determined by the consensus-clipped
 $\overline{W}_{ij}$, not by the validator's pre-clip submission. In particular, a
