@@ -691,3 +691,13 @@
   urldate      = {2026-05-07},
   note         = {Definitive registry of RayaChain chain IDs, LayerZero V2 endpoint IDs (EIDs), OFT contract addresses, and last-validated route status across the six testnet integrations (Solana devnet canonical; Ethereum, Arbitrum, Base Sepolia; BSC testnet; Polygon Amoy). Six testnets validated 2026-03-14; reverse-route status for Arbitrum and Base recorded as ``unknown'' since that date.}
 }
+
+@misc{omnirisk2026predmetrics,
+  author       = {{OmniRisk Engineering}},
+  title        = {{Prediction-router scheduled-evaluation metrics, 2026-04-19 to 2026-05-07 (Blue \texttt{us-east-1} \texttt{RiskIntelPredictionMetrics} {DynamoDB})}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{omnirisk-papers} repository},
+  year         = {2026},
+  url          = {papers/2026/omnirisk-rayachain-bittensor/sources/prediction-router-metrics-2026-05-07.csv},
+  urldate      = {2026-05-07},
+  note         = {Thirty-one metric rows scanned from the production \texttt{RiskIntelPredictionMetrics} DynamoDB table in the Blue \texttt{us-east-1} region (PK \texttt{REPORT\#YYYY-MM-DD}, SK \texttt{RUN\#timestamp\#hash}). Producer: Lambda \texttt{RiskIntelBlueJobs-Predict\-ionRouterJobHandler667809-9O8cpekSNzqz} on EventBridge schedule. Consumer: Lambda \texttt{RiskIntelBlueApi-Predict\-ionRouterReportJsonHandler}. Spans 24-hour and 168-hour evaluation cohorts before and after the 2026-04-21 horizon-aware crash-probability calibration fix. The freshest 168-hour cohort (run 2026-05-07 01:41:09~UTC, 915 samples) reports \texttt{didCrashAccuracy} 99.34\% and crash-probability Brier 0.1335; the headline arc must be read in the context of the class-imbalance and cohort-size caveats discussed in Section~\ref{sec:case-study:prediction-router}. Committed in \texttt{omnirisk-papers} as \texttt{b419338}.}
+}

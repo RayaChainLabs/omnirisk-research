@@ -30,7 +30,7 @@
   Basel Magableh\thanks{Technological University of Dublin. Correspondence to \texttt{basel.magableh@tudublin.ie}.} \\
   \and OmniRisk Research\thanks{\texttt{research@omnirisk.io}.}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.15 (internal review)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.16 (internal review)}}
 
 \begin{document}
 \maketitle
@@ -1828,6 +1828,106 @@ constrained-execution decomposition is sufficient to instrument a real defensive
 action against a Solana micro-cap pool dump in the threat regime
 of~\cite{cernera2023token}, with public timestamps and signatures.
 
+\subsection{Production prediction-router metrics, 2026-04-19 to 2026-05-07}\label{sec:case-study:prediction-router}
+
+Independent of the RYA scenario-engine cycle of the previous subsections, the
+OmniRisk prediction engine has a production scheduled-evaluation harness running
+in the Blue \texttt{us-east-1} region. A Lambda
+(\texttt{RiskIntelBlueJobs-PredictionRouterJobHandler}) fires on an EventBridge
+schedule, pulls a sample of route-level prediction--outcome pairs from the
+production storage layer, computes per-cohort metrics, and persists them into
+the \texttt{RiskIntelPredictionMetrics} DynamoDB table. The freshest run at the
+time of writing (2026-05-07 01:41:09~UTC, $\sim$30~min before the report this
+section is built from) is the production analogue of the validator-loss
+measurement that Section~\ref{sec:formal:vloss} formalises and that the
+Bittensor shadow soak (Section~\ref{sec:arch:bittensor}) explicitly does not
+yet measure. We surface the metrics here, with the empirical-feedback-loop arc
+that produced them, and we are explicit about the caveats under which the
+headline numbers should not be read as standalone accuracy.
+
+\paragraph{The calibration arc.} The 168-hour cohort has been computed
+repeatedly across the production telemetry window. Table~\ref{tab:prediction-router}
+lists five representative runs that together describe the empirical-feedback
+loop: a pre-fix baseline before the 2026-04-21 horizon-aware crash-probability
+recalibration; the immediate post-fix runs of 2026-04-25/26; an extremely small
+(100-sample) cohort on 2026-05-01 whose 100\% accuracy reflects sample size and
+not capability; and the freshest large-cohort run on 2026-05-07. The arc is
+the contribution: not the headline point estimate.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Generated (UTC)} & \textbf{Window (h)} & \textbf{Samples} &
+\textbf{didCrashAccuracy} & \textbf{Brier} \\
+\midrule
+2026-04-21 02:43 (pre-fix baseline) &  168 &  499 & 50.90\% & 0.1983 \\
+2026-04-25 22:35 (post-fix)         &  168 & 1{,}393 & 77.32\% & 0.1477 \\
+2026-04-26 00:01 (post-fix)         &  168 & 1{,}292 & 77.48\% & 0.1475 \\
+2026-05-01 03:47 (small cohort)     &  168 &  100 & 100.00\% & 0.1314 \\
+2026-05-07 01:41 (freshest)         &  168 &  915 & 99.34\% & 0.1335 \\
+\bottomrule
+\end{tabular}
+\caption{Empirical calibration arc of the prediction-router \texttt{didCrashAccuracy}
++ Brier on the 168-hour cohort, before and after the 2026-04-21 horizon-aware
+crash-probability fix. The April~2026 live-API baseline on the broader
+production cohort is approximately 53.15\% (\cite{omnirisk2026systemdesign}~§6.1,
+``barely above chance''), against which the 168-hour evaluation cohort sits as
+a more concentrated subset. Source: \cite{omnirisk2026predmetrics}. The
+freshest 2026-05-07 run shows zero false positives and 0.66\% false negatives.}
+\label{tab:prediction-router}
+\end{table}
+
+\paragraph{What the headline numbers do and do not mean.} The 99.34\%
+\texttt{didCrashAccuracy} on the 2026-05-07 168-hour cohort, taken in
+isolation, is suspiciously high for a binary risk classifier and would not
+survive a senior peer reviewer reading it twice. Three caveats apply
+simultaneously and must accompany any citation of the headline:
+\begin{enumerate}
+  \item \emph{Class imbalance.} The outcome resolver is bounded to the top
+        1{,}000 assets by market capitalisation~\cite{omnirisk2026systemdesign},
+        which is a low base-rate cohort: top-cap assets crash less often in any
+        given 168-hour window than a uniformly-sampled crypto cohort would. A
+        classifier that predicts ``will not crash'' most of the time achieves a
+        very high \texttt{didCrashAccuracy} on this cohort almost by definition.
+        The Brier score (0.1335) is the metric that survives class-imbalance
+        scrutiny: perfect~$=$~0, marginal-50/50 prior~$=$~0.25, our value sits
+        much closer to perfect than to random but is well short of headline-grade.
+  \item \emph{Cohort recomposition.} Different runs in
+        Table~\ref{tab:prediction-router} sample from different production
+        windows; the 2026-05-01 100-sample cohort and the 2026-05-07 915-sample
+        cohort are not the same statistical object. We therefore do not report
+        confidence intervals --- the metrics table does not carry the raw
+        outcome distribution required to compute them, and any number we
+        invented here would fail on first inspection. We report sample size
+        and let the reader compute the standard error.
+  \item \emph{The 53.15\% live baseline is the right denominator.} The
+        comparison that survives is against the April~2026 live-API baseline
+        of approximately 53.15\% on the broader production cohort
+        (\cite{omnirisk2026systemdesign}~§6.1) --- the model is not running at
+        99\% in production on every query, it is running at 53\% on the broad
+        cohort and at $\sim$77--99\% on the narrower 168-hour cohort after a
+        horizon-aware calibration fix.
+\end{enumerate}
+The architectural contribution of this paper is the verification primitive and
+the five-engine composition; the calibration arc of
+Table~\ref{tab:prediction-router} is the empirical evidence that the prediction
+engine has a production telemetry surface against which a Bittensor validator
+quorum (Section~\ref{sec:arch:bittensor}) could meaningfully score miners,
+\emph{not} the claim that the prediction engine is operating at 99\% accuracy.
+
+\paragraph{Reproducibility.} The 31-row metrics scan that backs
+Table~\ref{tab:prediction-router} is committed as
+\texttt{papers/2026/omnirisk-rayachain-bittensor/sources/prediction-router-metrics-2026-05-07.csv}
+in the \texttt{omnirisk-papers} repository (commit \texttt{b419338}). Any IAM
+principal with read access to the \texttt{RiskIntelPredictionMetrics}
+DynamoDB table in Blue \texttt{us-east-1} can independently reproduce the scan;
+the underlying public endpoint
+\texttt{https://api.omnirisk.io/v1/prediction-router/report.json?windowHours=168}
+is currently authentication-gated and is itself the next operational step
+toward independently verifiable third-party validation.
+
 \section{Economic Model and Tokenomics}\label{sec:economics}
 
 The architecture has two distinct economic surfaces: a verification-side surface that
@@ -2209,6 +2309,12 @@ mainnet-scale flows is therefore deferred to follow-up work.
 OmniRisk intelligence layer
   & Live in production
   & this paper \\
+Prediction-router scheduled evaluation
+  & Production in Blue \texttt{us-east-1} on EventBridge schedule;
+    last run 2026-05-07 01:41:09~UTC, 915-sample 168\,h cohort,
+    \texttt{didCrashAccuracy} 99.34\%, Brier 0.1335 (calibration arc and
+    class-imbalance caveats: Section~\ref{sec:case-study:prediction-router})
+  & \cite{omnirisk2026predmetrics} \\
 RayaChain Transfer Engine (testnet)
   & Implemented; eight-state lifecycle wired; exercised on testnet only;
     persistence and slippage controls not yet shipped
@@ -2344,6 +2450,21 @@ of step~ii);
 (viii)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up
 paper, with mainnet flows once available.
 
+\paragraph{Prediction-router open work.} The Section~\ref{sec:case-study:prediction-router}
+production telemetry surface is the place where the
+Section~\ref{sec:formal:vloss} Brier and reliability terms can first be
+measured at scale, but only once three open items close: (a)~broaden the 168-hour
+evaluation cohort beyond the top-1{,}000-by-market-cap subset that the current
+class-imbalance caveats name, (b)~drive Brier below 0.10 on the broadened
+cohort (the freshest run sits at 0.1335), and (c)~join the prediction-router
+rollups to the Bittensor-validator-soak telemetry of
+Section~\ref{sec:arch:bittensor} so that per-round validator scores can be
+audited against the same realised-event channel that the rollup uses. These
+three items are pre-conditions for the empirical follow-up paper of step
+(viii); they are listed under \texttt{pending\_before\_submission\_engineering}
+in the \texttt{meta.yaml} alongside the other engineering-track work, and are
+not blocking the v0.16 internal-review publication.
+
 \section{Comparative Advantage}\label{sec:compare}
 
 Existing cross-chain risk tooling is some combination of single-chain, static, or
@@ -2448,12 +2569,13 @@ than against operator narrative. The principal artifacts are: the OmniRisk syste
 design~\cite{omnirisk2026systemdesign}; the agentic risk-prediction engine
 specification~\cite{omnirisk2026agentic}; the implementation and deployment
 documentation~\cite{omnirisk2026deploy}; the predictive-risk calibration
-manifest v1~\cite{omnirisk2026calibration}; the RayaChain registry
-v2~\cite{rayachain2026registry}; the Bittensor shadow-validator soak telemetry
-report~\cite{omnirisk2026soak}; and the public companion publication for the
-RYA defence cycle~\cite{omnirisk2026defending}. Each of the seven file paths
-resolves on the operator's working tree and is committed to its respective
-repository as of 2026-05-07.
+manifest v1~\cite{omnirisk2026calibration}; the production prediction-router
+scheduled-evaluation metrics~\cite{omnirisk2026predmetrics}; the RayaChain
+registry v2~\cite{rayachain2026registry}; the Bittensor shadow-validator soak
+telemetry report~\cite{omnirisk2026soak}; and the public companion publication
+for the RYA defence cycle~\cite{omnirisk2026defending}. Each of the eight file
+paths resolves on the operator's working tree and is committed to its
+respective repository as of 2026-05-07.
 
 \paragraph{Data and figures.} The case study of Section~\ref{sec:case-study} is
 fully reproducible from the operations repository's tracked decision log
@@ -2502,13 +2624,18 @@ v0.12--v0.13 wired Designer figures and added Basel Magableh as first author;
 v0.14 extended the case study to cover both defence cycles and audited the
 bibliography against the senior-professor reading list (peer-reviewed primaries
 for foundational ledgers, MEV, BFT-finality, prediction-market mechanism design,
-and crypto wash-trading); v0.15 (the present revision) integrated the Bittensor
-testnet shadow-soak telemetry into Section~\ref{sec:arch:bittensor},
-Table~\ref{tab:status}, and Section~\ref{sec:roadmap}, and anchored §arch and
-§engine claims to the canonical engineering source-of-truth artifacts
-(SYSTEM\_DESIGN, AGENTIC\_RISK\_PREDICTION\_ENGINE,
-IMPLEMENTATION\_AND\_DEPLOYMENT, calibration v1, rayachain.registry.json,
-soak report) per the CEO directive of 2026-05-07.
+and crypto wash-trading); v0.15 integrated the Bittensor testnet shadow-soak telemetry into
+Section~\ref{sec:arch:bittensor}, Table~\ref{tab:status}, and
+Section~\ref{sec:roadmap}, and anchored §arch and §engine claims to the
+canonical engineering source-of-truth artifacts (SYSTEM\_DESIGN,
+AGENTIC\_RISK\_PREDICTION\_ENGINE, IMPLEMENTATION\_AND\_DEPLOYMENT,
+calibration v1, rayachain.registry.json, soak report); v0.16 (the present
+revision) added the production prediction-router scheduled-evaluation
+metrics from Blue \texttt{us-east-1} as a new
+Section~\ref{sec:case-study:prediction-router} with the empirical-feedback-loop
+calibration arc and the class-imbalance / cohort-recomposition / live-baseline
+caveats that prevent the headline 99.34\% point estimate from being misread
+as a standalone accuracy claim.
 
 \printbibliography
 

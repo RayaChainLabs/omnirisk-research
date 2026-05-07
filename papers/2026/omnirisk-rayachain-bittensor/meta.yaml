@@ -12,7 +12,7 @@ authors:
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
 status: "internal-review"    # draft | internal-review | submitted | published | archived
-revision: "0.15"
+revision: "0.16"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -25,9 +25,9 @@ tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence"
 bibliography_audit:
   verified_at: "2026-05-07"
   verified_by: "Academic Writer (OMN-152, internal-review cohort per CEO directives 2026-05-07)"
-  total_entries: 51
+  total_entries: 52
   entries_with_doi: 32
-  entries_url_only: 19  # protocol whitepapers + canonical docs + industry blog post + grey-lit feeds + paragraph + 6 source-of-truth artefacts in sibling repos
+  entries_url_only: 20  # protocol whitepapers + canonical docs + industry blog post + grey-lit feeds + paragraph + 7 source-of-truth artefacts in sibling/this repo
   every_cite_key_resolves_at_2026_05_07: true
   cohorts:
     - audited_at: "2026-05-03"
@@ -42,6 +42,9 @@ bibliography_audit:
     - audited_at: "2026-05-07"
       count: 6
       cohort: "v0.15 source-of-truth artefacts (Bittensor shadow-validator soak telemetry omnirisk2026soak; Risk-Intel SYSTEM_DESIGN, AGENTIC_RISK_PREDICTION_ENGINE, IMPLEMENTATION_AND_DEPLOYMENT golden documentation v1.0; predictive-risk calibration v1 manifest; rayachain-oft canonical registry v2). All six are tracked engineering artefacts in sibling repositories under /Users/bazmini/, cited by file path so a reviewer can audit each load-bearing fact against its source rather than against operator narrative."
+    - audited_at: "2026-05-07"
+      count: 1
+      cohort: "v0.16 production telemetry (prediction-router-metrics-2026-05-07.csv = omnirisk2026predmetrics; 31-row scan of the RiskIntelPredictionMetrics DynamoDB table in Blue us-east-1; spans 2026-04-19 → 2026-05-07 across 24h and 168h evaluation cohorts; freshest 168h run at 2026-05-07T01:41:09Z reports 915 samples / didCrashAccuracy 99.34% / Brier 0.1335 with explicit class-imbalance caveats from §case-study:prediction-router)."
   added_in_v0_4:
     - cite_key: "ganescu2024trust"
       reason: "fills the zero-knowledge ML verification gap flagged in academic review (related work §4.4); verified against arXiv 2402.06414 abstract page on 2026-05-03"
@@ -54,6 +57,20 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_16:
+    date: "2026-05-07"
+    summary: "Integrate the production prediction-router scheduled-evaluation metrics into the case study (CEO directive 8780528b, 2026-05-07T01:52Z). The freshest 168h run on Blue us-east-1 reports 99.34% didCrashAccuracy on a 915-sample cohort with Brier 0.1335; surface the calibration arc and the class-imbalance / cohort-recomposition / live-baseline caveats so the headline cannot be misread as standalone accuracy."
+    changes:
+      - "New §case-study:prediction-router 'Production prediction-router metrics, 2026-04-19 to 2026-05-07' subsection inserted between §case-study:engines and §economics. Anchored to the production EventBridge harness running in Blue us-east-1 (Lambda RiskIntelBlueJobs-PredictionRouterJobHandler... → RiskIntelPredictionMetrics DDB table → consumer Lambda RiskIntelBlueApi-PredictionRouterReportJsonHandler)."
+      - "New Table tab:prediction-router with five representative 168h-cohort runs forming the empirical-feedback-loop calibration arc: pre-fix baseline 2026-04-21 02:43 (499 samples, 50.90% didCrashAcc, Brier 0.1983) → post-fix 2026-04-25 22:35 (1,393 samples, 77.32%, 0.1477) → 2026-04-26 00:01 (1,292 samples, 77.48%, 0.1475) → small cohort 2026-05-01 03:47 (100 samples, 100.00%, 0.1314) → freshest 2026-05-07 01:41 (915 samples, 99.34%, 0.1335)."
+      - "New 'What the headline numbers do and do not mean' paragraph with three explicit caveats: (i) class imbalance — the outcome resolver is bounded to top-1,000 by market cap, a low base-rate cohort; (ii) cohort recomposition — different runs sample different production windows, no confidence intervals computed because the metrics table does not carry the raw outcome distribution required to compute them, sample size is reported and the reader can compute the standard error; (iii) the 53.15% live baseline from SYSTEM_DESIGN.md §6.1 is the right denominator for a fair comparison. The architectural contribution is the verification primitive, not the predictive performance."
+      - "New 'Reproducibility' paragraph documents the DDB scan path (PK REPORT#YYYY-MM-DD, SK RUN#timestamp#hash, region us-east-1) and the auth-gated public endpoint /v1/prediction-router/report.json that is the next operational step toward independently verifiable third-party validation."
+      - "§status Table 9: new row 'Prediction-router scheduled evaluation' with status 'Production in Blue us-east-1 on EventBridge schedule; last run 2026-05-07 01:41:09 UTC, 915-sample 168h cohort, didCrashAccuracy 99.34%, Brier 0.1335 (calibration arc and class-imbalance caveats: §case-study:prediction-router)'; reference column → omnirisk2026predmetrics."
+      - "§roadmap: new 'Prediction-router open work' paragraph after the eight-step list specifying three pre-conditions to the §formal:vloss Brier measurement at scale: (a) broaden the 168h cohort beyond the top-1,000-by-mcap subset, (b) drive Brier below 0.10, (c) join the prediction-router rollups to the Bittensor-validator-soak telemetry. These items are listed under pending_before_submission_engineering and are not blocking publication."
+      - "Bibliography: +1 verified source-of-truth artefact (omnirisk2026predmetrics, the prediction-router-metrics CSV at commit b419338); total bibliography 51 → 52 entries; pre-existing 51 unchanged."
+      - "Reproducibility Note source-of-truth list: 7 → 8 artefacts (added omnirisk2026predmetrics)."
+      - "Title page revision tag bumped 0.15 → 0.16; meta.yaml revision_log v0_16 entry added; bibliography_audit.cohorts list +1 (v0.16 production-telemetry cohort)."
+      - "What is NOT done in v0.16, per CEO directive: the 99.34% number is NOT presented in isolation as accuracy (it is presented as part of the empirical-feedback-loop calibration arc with the class-imbalance / cohort-recomposition / 53% live-baseline caveats); the 53.15% live baseline from SYSTEM_DESIGN.md §6.1 is NOT dropped (it is named as the right comparison denominator); confidence intervals are NOT fabricated (the metrics table does not carry the raw outcome distribution; the manuscript reports sample size and lets the reader compute the standard error)."
   v0_15:
     date: "2026-05-07"
     summary: "Integrate two CEO directives that landed during the v0.14 internal-review cycle (comments 09dcfcae 2026-05-07T01:33Z and 0d7bfcde 2026-05-07T01:37Z). Anchor §arch and §engine claims to canonical engineering source-of-truth artefacts; surface the Bittensor testnet shadow-soak deployment in §arch:bittensor and §status without over-claiming."
@@ -209,7 +226,7 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: "2026-05-07T02:49Z (v0.15, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 46 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
+last_local_compile: "2026-05-07T02:56Z (v0.16, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 49 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
 
 # pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
 # engineering-side (delegated, separate track from publication).
