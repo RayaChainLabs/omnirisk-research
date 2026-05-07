@@ -239,16 +239,39 @@ verification layer for the scores themselves.
 
 \section{A Five-Engine Architecture for Agentic IoV Risk}\label{sec:five-engine}
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/omnirisk-architecture.png}
+\caption{The OmniRisk architecture: five engines composed over a single shared
+intelligence fabric. Multi-source ingestion (on-chain, off-chain, market, news,
+community) and observability telemetry feed a canonical, time-aligned, queryable,
+and replayable Shared Fabric (ingestion bus, signal schema, evidence store,
+feature/entity store, and observability store), exposed through a unified access
+layer (gRPC, REST, GraphQL, language SDKs, and a subnet SDK). The five engines
+(API-risk + scenario, prediction, sentiment fusion, intelligence-agentic, and
+governance gate) sit above the fabric and emit risk surfaces, probabilistic
+forecasts, narrative-grounded sentiment, automated playbooks, and gated approvals
+respectively. The Bittensor prediction subnet provides a verifiable, incentivised
+research surface beneath the prediction engine, and value capture (RYA economics)
+routes 40\% of fees to the subnet. Cross-cutting foundations (security,
+identity-and-access, privacy, reliability, cost-and-performance) span every
+layer. Dashed amber arrows mark optional uplifts; dashed black arrows mark
+control / constraint flow; dashed incentive flow connects the value-capture
+surface to the subnet.}
+\label{fig:omnirisk-architecture}
+\end{figure}
+
 The IoV reframe of Section~\ref{sec:intro} forces a corresponding reframe of the risk
 primitive. A point risk score on a single route, in isolation, is no longer the right
 output: a participant has to decide \emph{what to do} given (i)~a forecast over a set
 of correlated quantities, (ii)~a constrained action policy, (iii)~the off-chain text
 context that drives short-horizon flows, (iv)~an opinion about the credibility of the
 forecast, and (v)~a pre-committed program from scenario to action. We name these five
-sub-tasks as engines and require that they compose. Figure~\ref{fig:five-engine}
-gives the block diagram; the rest of this section defines each engine's inputs,
-outputs, and external citation, and the existing system in Section~\ref{sec:arch}
-identifies which engine each existing component implements.
+sub-tasks as engines and require that they compose. Figure~\ref{fig:omnirisk-architecture}
+gives the deployed-system view; Figure~\ref{fig:five-engine} gives the abstract block
+diagram. The rest of this section defines each engine's inputs, outputs, and external
+citation, and the existing system in Section~\ref{sec:arch} identifies which engine each
+existing component implements.
 
 \begin{figure}[h]
 \centering

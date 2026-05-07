@@ -170,14 +170,38 @@ Section~\ref{sec:conclusion} closes.
 
 \begin{figure}[ht]
 \centering
+\includegraphics[width=\linewidth]{figures/omnirisk-architecture.png}
+\caption{The OmniRisk architecture: five engines composed over a single
+shared intelligence fabric. Multi-source ingestion (on-chain, off-chain,
+market, news, and community) and observability telemetry feed a canonical,
+time-aligned, queryable, and replayable Shared Fabric (the ingestion bus,
+signal schema, evidence store, feature/entity store, and observability
+store), exposed through a unified access layer (gRPC, REST, GraphQL,
+language SDKs, and a subnet SDK). The five engines (API-risk + scenario,
+prediction, sentiment fusion, intelligence-agentic, and governance gate)
+sit above the fabric and emit risk surfaces, probabilistic forecasts,
+narrative-grounded sentiment, automated playbooks, and gated approvals
+respectively. The Bittensor prediction subnet provides a verifiable,
+incentivised research surface beneath the prediction engine, and value
+capture (RYA economics) routes 40\% of fees to the subnet. Cross-cutting
+foundations (security, identity-and-access, privacy, reliability, and
+cost-and-performance) span every layer. Dashed amber arrows mark optional
+uplifts; dashed black arrows mark control / constraint flow; dashed
+incentive flow connects the value-capture surface to the subnet.}
+\label{fig:omnirisk-architecture}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
 \includegraphics[width=0.92\linewidth]{../omnirisk-rayachain-bittensor/figures/five-engine-dependency-graph.pdf}
-\caption{Dependency graph for the five-engine composition. The shared
-substrate (ingestion + signal schema + observability) feeds the API-risk
-+ scenario engine, the prediction engine, and the sentiment-fusion engine
-in parallel. The Bittensor prediction subnet is a killable uplift to the
-prediction engine. The agentic engine is the only true integrator and
-ships last; it consumes the other three as evidence and is wrapped by a
-governance gate (paused-by-default + board approval).}
+\caption{Dependency graph for the five-engine composition (companion to
+Figure~\ref{fig:omnirisk-architecture}). The shared substrate (ingestion
++ signal schema + observability) feeds the API-risk + scenario engine,
+the prediction engine, and the sentiment-fusion engine in parallel. The
+Bittensor prediction subnet is a killable uplift to the prediction
+engine. The agentic engine is the only true integrator and ships last;
+it consumes the other three as evidence and is wrapped by a governance
+gate (paused-by-default + board approval).}
 \label{fig:five-engine-dependency}
 \end{figure}
 
