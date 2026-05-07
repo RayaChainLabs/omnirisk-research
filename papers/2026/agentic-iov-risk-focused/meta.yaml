@@ -14,7 +14,7 @@ authors:
     order: 2
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list — same as long paper
 status: "draft"              # scaffold | draft | internal-review | submitted | published
-revision: "0.5"
+revision: "0.6"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
@@ -45,9 +45,20 @@ provenance:
     paper that are not also in the long paper, with the same primary-source anchors.
   bibliography: "../../../_bib/references.bib (shared, 52 entries; focused paper cites a subset of ~20-25)"
 
-last_local_compile: "2026-05-07T05:15Z (v0.5, latexmk + biber, papers/2026/agentic-iov-risk-focused; ≤15 pages target)"
+last_local_compile: "2026-05-07T06:08Z (v0.6, latexmk + biber, papers/2026/agentic-iov-risk-focused; 11 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
 
 revision_log:
+  v0_6:
+    date: "2026-05-07"
+    summary: "Tighten §langgraph (orchestration) per CEO directive 51c23c5c (2026-05-07T05:06Z): drop deployment-plumbing detail (port numbers, header names, config flag names, Dockerfile paths, test counts, Phase-N gates, Redis TTL specifics, graph step counts, LocalAI route names) in favour of three research-grade conceptual claims: (i) the agent-task-management vs runtime-orchestration separation as the architectural primitive, NOT either implementation; (ii) the constitutional gate (the runtime cannot bypass the agentic engine's policy boundary) plus the strict-JSON-schema emission contract with validationStatus ∈ {valid, degraded, fallback}; (iii) the three-tier fallback ladder and the Phase-13 Strategy-Alpha synthesis layer as the agentic engine of §arch. Section retitled 'Orchestration: Two Layers' (was 'Orchestration: LangGraph and Paperclip')."
+    changes:
+      - "§langgraph rewritten from one long paragraph (~24 lines, deployment-heavy) to three research-grade paragraphs (~30 lines, no port numbers, no flag names, no test counts, no Dockerfile paths). Section title generalised: 'LangGraph and Paperclip' → 'Two Layers' so the architectural claim leads and the implementation choice is a citation, not the headline."
+      - "Paragraph 1 (the architectural claim): names the two-layer separation — agent-task management vs runtime orchestration — and frames it as the architectural primitive of the section, with LangGraph and Paperclip cited as the deployed instantiations rather than as the contribution."
+      - "Paragraph 2 (the constitutional gate + output contract): the single hard rule is that the runtime cannot bypass the agentic engine's policy boundary. In our deployment that surfaces as the AiRouter prohibition (no direct LLM HTTP from runtime nodes) but the *claim* is constitutional, not configuration. Adds the strict-JSON-schema emission contract with the three-state validationStatus and the append-only audit log — also a constitutional-AI claim."
+      - "Paragraph 3 (the fallback property + synthesis layer): three-tier fallback (remote → in-process → legacy non-agentic) framed as the resilience claim. Strategy-Alpha named as the synthesis layer that exposes the §arch agentic engine through the runtime's terminal node. The long-form report is named as the place that carries the deployment-level configuration and test surface this section deliberately omits."
+      - "Numbers in the section: only 'three' (fallback tiers) and 'five' (engines composed beneath the orchestrator), per directive."
+      - "Title-page revision tag bumped 0.5 → 0.6. Status remains 'draft'."
+      - "What is NOT changed: IoV-opener abstract; author block (commit eb0ad87 layout-fix); §case-study three-act narrative; §metrics calibration arc; §limits falsification statements; §conclusion; bibliography (53 entries unchanged); page count target ≤15. The deployment plumbing dropped from §langgraph remains in the long technical report at papers/2026/omnirisk-rayachain-bittensor/manuscript.tex §arch:scenario v0.22."
   v0_5:
     date: "2026-05-07"
     summary: "First populated draft of the focused arXiv submission per CEO directive 4b2a8788 (2026-05-07T04:08Z): polished, easy-to-read, ≤15 pages, ready to publish 2026-05-08 UTC. Long paper at papers/2026/omnirisk-rayachain-bittensor/ goes on hold at v0.22 as the technical-report companion."

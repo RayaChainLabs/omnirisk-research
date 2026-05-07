@@ -37,7 +37,7 @@
   \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
   \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.5 (draft)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.6 (draft)}}
 
 \begin{document}
 \maketitle
@@ -403,35 +403,47 @@ primitive --- the calibration arc is the empirical evidence that there
 is a production telemetry surface against which a verification subnet
 \emph{could} meaningfully score miners.
 
-\section{Orchestration: LangGraph and Paperclip}\label{sec:langgraph}
+\section{Orchestration: Two Layers}\label{sec:langgraph}
 
-The engines of Section~\ref{sec:arch} are orchestrated at runtime by a
-\emph{LangGraph} runtime (\texttt{apps/api/Dockerfile.langgraph}, port
-\texttt{:8787}), run either in-process inside the API
-Lambda/Express process (default) or as a remote ECS/Fargate task switched
-on by \texttt{AGENT\_LANGGRAPH\_REMOTE\_ENABLED}~\cite{omnirisk2026agentic}.
-Three production graphs are wired today: \texttt{token\_risk} (six
-steps), \texttt{wallet\_risk} (three steps), and
-\texttt{monitoring}\,/\,\texttt{alert}; per-graph state is checkpointed
-fire-and-forget to Redis under
-\texttt{langgraph:checkpoint:\{agentRunId\}} with a 24-hour TTL. We are
-explicit about the production state of the rollout: both
-\texttt{AGENT\_LANGGRAPH\_ENABLED} and
-\texttt{AGENT\_LANGGRAPH\_REMOTE\_ENABLED} default to \texttt{false},
-so this paper's references to LangGraph as the orchestration backbone
-are \emph{architectural}, not \emph{currently-on-the-default-path}; the
-rollout is gated by a Phase~6 staging cut covered by 145 LangGraph
-tests. One hard architectural rule is enforced at the runtime
-boundary and is exactly the kind of constitutional-action constraint
-the agentic engine of Section~\ref{sec:arch} argues for: \emph{a direct
-LangGraph$\to$LocalAI HTTP path is prohibited; LangGraph nodes must
-call the OmniRisk \texttt{AiRouter} in-process so model selection,
-fallback, daily-cost limits, and audit logs are
-respected}~\cite{omnirisk2026agentic}. Upstream of the engines, a
-separate Paperclip server serves as the agent-task management layer
-(role contracts, threaded issue comments, hand-offs between agents,
-heartbeat invocation): \emph{LangGraph orchestrates the engines;
-Paperclip orchestrates the agents that operate the engines}.
+A verifiable agentic system needs two distinct orchestration layers,
+and this paper's contribution depends on keeping them separate. The
+first is \emph{agent-task management}: the surface that scopes
+\textbf{who} is allowed to act and \textbf{on what terms} --- role
+contracts, paused-by-default policy, and the requirement of an
+out-of-band human approval recorded on the same audit trail that
+authorises every action. The second is \emph{runtime orchestration}: a
+state machine that walks each agent run through prediction, sentiment
+fusion, tool invocation, and emission. The deployed instantiation uses
+LangGraph for the runtime layer and a Paperclip-style task-management
+service for the contract layer~\cite{omnirisk2026agentic}; the
+architectural claim of this section, however, is the separation itself
+and not either implementation, because conflating the two layers (one
+service handling both) collapses the audit trail that makes the agentic
+engine verifiable.
+
+A single hard rule binds the runtime to the contract layer: \emph{the
+runtime cannot bypass the agentic engine's policy boundary.} In our
+deployment, that surfaces as a prohibition on direct LLM HTTP paths
+from runtime nodes; every model invocation routes through an in-process
+\texttt{AiRouter} so that model selection, fallback, daily-cost limits,
+and audit logs are respected~\cite{omnirisk2026agentic}. Every emission
+the runtime produces conforms to a strict JSON schema with a
+\texttt{validationStatus} field in $\{\textsc{valid}, \textsc{degraded},
+\textsc{fallback}\}$, written append-only to an audit log; downstream
+consumers refuse any record that fails schema validation. This is a
+constitutional-AI claim, not a deployment detail: a runtime that can
+emit unstructured output cannot be verified against a role contract.
+
+The runtime ships with a three-tier fallback ladder (remote orchestrator
+$\to$ in-process orchestrator $\to$ legacy non-agentic path), so an
+agent-infrastructure outage degrades the system to a strictly less
+capable but still-correct mode rather than to a 5xx
+error~\cite{omnirisk2026agentic}. The synthesis layer that composes the
+five engines into a single agent decision (\emph{Strategy Alpha}, in
+the engineering documentation) is the same agentic engine of
+Section~\ref{sec:arch}, exposed through the runtime's terminal node;
+the long-form report carries the deployment-level configuration and
+test surface that this section deliberately omits.
 
 \section{Limitations as Falsification}\label{sec:limits}\label{sec:formal:vloss}
 
