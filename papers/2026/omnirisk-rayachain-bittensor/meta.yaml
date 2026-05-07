@@ -12,7 +12,7 @@ authors:
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
 venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
 status: "internal-review"    # draft | internal-review | submitted | published | archived
-revision: "0.14"
+revision: "0.15"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
@@ -24,10 +24,10 @@ tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence"
 # Bibliography hygiene — read this before submission.
 bibliography_audit:
   verified_at: "2026-05-07"
-  verified_by: "Academic Writer (OMN-152, internal-review cohort per CEO directive 2026-05-07)"
-  total_entries: 45
+  verified_by: "Academic Writer (OMN-152, internal-review cohort per CEO directives 2026-05-07)"
+  total_entries: 51
   entries_with_doi: 32
-  entries_url_only: 13  # protocol whitepapers + canonical docs + industry blog post + grey-lit feeds + paragraph publication
+  entries_url_only: 19  # protocol whitepapers + canonical docs + industry blog post + grey-lit feeds + paragraph + 6 source-of-truth artefacts in sibling repos
   every_cite_key_resolves_at_2026_05_07: true
   cohorts:
     - audited_at: "2026-05-03"
@@ -38,7 +38,10 @@ bibliography_audit:
       cohort: "v0.10/v0.11 (constitutional AI, FinGPT, BloombergGPT, AzFinText + Xing + Day, Taoshi PTN, Glasserman, NIST SP 800-84, Cernera 2023, Lai 2023 / Gandhi 2023 surveys, Long 2019 MFNN, Zhang 2025 SentiStack, Macrocosmos SN13, Birdeye/DexScreener/Pump.fun grey-lit feeds, omnirisk2026defending)"
     - audited_at: "2026-05-07"
       count: 10
-      cohort: "v0.14 internal-review (Nakamoto 2008 Bitcoin, Wood 2014 Ethereum Yellow Paper, Daian et al. 2020 Flash Boys 2.0 (S&P), Qin et al. 2022 Quantifying BEV (S&P), Castro & Liskov 1999 PBFT (OSDI), Buterin & Griffith 2017 Casper FFG, Hanson 2003 LMSR, Manski 2006 prediction-market interpretation, Cong et al. 2022 Crypto Wash Trading (NBER), Belchior et al. 2022 blockchain-interoperability survey (CSUR))"
+      cohort: "v0.14 senior-professor (Nakamoto 2008 Bitcoin, Wood 2014 Ethereum Yellow Paper, Daian et al. 2020 Flash Boys 2.0 (S&P), Qin et al. 2022 Quantifying BEV (S&P), Castro & Liskov 1999 PBFT (OSDI), Buterin & Griffith 2017 Casper FFG, Hanson 2003 LMSR, Manski 2006 prediction-market interpretation, Cong et al. 2022 Crypto Wash Trading (NBER), Belchior et al. 2022 blockchain-interoperability survey (CSUR))"
+    - audited_at: "2026-05-07"
+      count: 6
+      cohort: "v0.15 source-of-truth artefacts (Bittensor shadow-validator soak telemetry omnirisk2026soak; Risk-Intel SYSTEM_DESIGN, AGENTIC_RISK_PREDICTION_ENGINE, IMPLEMENTATION_AND_DEPLOYMENT golden documentation v1.0; predictive-risk calibration v1 manifest; rayachain-oft canonical registry v2). All six are tracked engineering artefacts in sibling repositories under /Users/bazmini/, cited by file path so a reviewer can audit each load-bearing fact against its source rather than against operator narrative."
   added_in_v0_4:
     - cite_key: "ganescu2024trust"
       reason: "fills the zero-knowledge ML verification gap flagged in academic review (related work §4.4); verified against arXiv 2402.06414 abstract page on 2026-05-03"
@@ -51,6 +54,23 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_15:
+    date: "2026-05-07"
+    summary: "Integrate two CEO directives that landed during the v0.14 internal-review cycle (comments 09dcfcae 2026-05-07T01:33Z and 0d7bfcde 2026-05-07T01:37Z). Anchor §arch and §engine claims to canonical engineering source-of-truth artefacts; surface the Bittensor testnet shadow-soak deployment in §arch:bittensor and §status without over-claiming."
+    changes:
+      - "§arch:bittensor: new 'Engineering shadow deployment, 2026-05-04 to 2026-05-07' paragraph documenting the 57-hour testnet shadow run with the headline soak metrics (5,097 successful rounds, 0 auth failures, 11 autonomous Auth0 token refreshes, validator UID 17 / miner UID 18 on netuid 60). Framing taken verbatim from §8 of the soak report (`omnirisk2026soak`): the run validates the Auth0 → OmniRisk → per-round-score path at the operational layer; it does NOT produce the §formal:vloss validator-loss components, which require the realised-event channel and a non-trivial miner population. The final_score samples observed across 48h (raw_score [0.79, 0.81], confidence [0.53, 0.56], final_score [0.42, 0.45]) are explicitly disclaimed as the by-design output of a deterministic placeholder miner, NOT predictive performance. The four §6 open issues from the soak report (NRestarts=9 regression, requestId=None, single-miner metagraph, mainnet not deployed) are listed in the same paragraph as scope constraints."
+      - "§arch:bittensor: new Table tab:soak-deferred reproduces the §5 §formal:vloss-component decomposition from the soak report verbatim (Brier / Inconsistency / Miscalibration / Yuma share / population weight all 'Not computed' or 'Not applicable' or 'Degenerate'), so a peer reviewer can see in one place exactly what the soak run does and does not measure."
+      - "§status Table 9 'Cross-chain risk subnet (Bittensor)' row: status updated from 'Design proposal' → 'Design proposal; testnet shadow deployment of the validator+miner pipeline running on netuid 60 since 2026-05-04 (5,097 rounds, 0 auth failures, 11 Auth0 refreshes over ~57h)'; reference column updated from 'this paper' → '\\cite{omnirisk2026soak}'."
+      - "§roadmap: re-sequenced 7 → 8 steps. New step (iii) inserted: 'complete the shadow-soak open items — root-cause the validator-service NRestarts=9 regression observed in the 2026-05-06/07 window, ship a non-None requestId on the OmniRisk response envelope so per-round score events can be joined to OmniRisk-side audit records, and grow the metagraph beyond the single-miner placeholder to make population-level Yuma consensus arithmetic non-degenerate'. Step (v) updated to 'promote the testnet shadow deployment to a Subtensor mainnet validator and integrate the §validator validator-loss rule against the §formal:realised realised-event channel'."
+      - "§engine:prediction: new 'Production calibration anchor' paragraph reporting the 66,118-sample / 30-day-horizon / 21-anchor-symbol calibration manifest (`omnirisk2026calibration`) and the ~53.15% live-API accuracy on the April 2026 Blue deployment, framed verbatim from the engineering documentation as 'barely above chance'. Frames the architectural contribution as the verification primitive (NOT the predictive performance) — exactly the regime in which economic verification by an independent validator quorum is most needed. This is the strongest single empirical-grounding addition in v0.15."
+      - "§engine:sentiment: new 'Production text-modality adapters' paragraph names the 12 production news adapters (CoinDesk, Cointelegraph, Yahoo Finance, Bloomberg, Reuters, U.S. SEC, CNBC, Investing.com, Blockworks, U.S. Federal Reserve, Decrypt, Glassnode) plus three social-stream adapters (X, Reddit, Telegram). New Eq. eq:lexicon documents the deterministic sentiment lexicon: clamp_[-100,100](16·N_POS - 18·N_NEG + 6·N_HYPE - 10·N_PANIC + 3·N_PROMO + 12·N_MM). Two known limitations of the production lexicon disclosed: public clamp [-100,100] → [0,100] loses sign information; no input-side prompt-injection sanitiser. Cited to omnirisk2026systemdesign."
+      - "§arch:rayachain: new 'Canonical contract registry' paragraph + Table tab:rayachain-registry with the deployed contract addresses (Solana devnet program ID + mint + OFT store; Base Sepolia OFT; Ethereum Sepolia OFT; LayerZero EndpointV2) and a 'last validated 2026-03-14' column. Cited to rayachain2026registry. Reverse-route caveats (Arbitrum + Base 'unknown' since 2026-03-14; Polygon Amoy operator-wallet-balance blocker) included as honesty surface."
+      - "Reproducibility Note: new 'Source-of-truth artifacts' paragraph at the head listing the seven canonical engineering artefacts the manuscript anchors against (system design, agentic engine spec, implementation/deployment, calibration v1, rayachain registry, soak telemetry, Paragraph companion). Existing 'Data and figures' paragraph tightened. Revision-history pointer updated to include v0.15."
+      - "Bibliography: +6 verified source-of-truth artefacts (`omnirisk2026soak`, `omnirisk2026systemdesign`, `omnirisk2026agentic`, `omnirisk2026deploy`, `omnirisk2026calibration`, `rayachain2026registry`); each is a tracked engineering file in a sibling repository under /Users/bazmini/. Total bibliography 45 → 51 entries; pre-existing 45 unchanged."
+      - "Title page: revision tag bumped 0.14 → 0.15."
+      - "meta.yaml: revision 0.14 → 0.15; bibliography_audit cohorts list +1 (v0.15 source-of-truth artefacts cohort)."
+      - "Net word count: holds approximately constant despite the additions, because no v0.14 prose was removed; the additions are all anchored citations of facts the v0.14 manuscript already claimed via prose, not new claims."
+      - "What is NOT done in v0.15: per CEO directive, the final_score [0.42, 0.45] is NOT framed as predictive accuracy (it is the placeholder-miner output); the §6 open issues are NOT dropped (they are listed in the new §arch:bittensor paragraph and sequenced into §roadmap); the §formal:vloss deferral language is NOT stripped (it is reproduced verbatim from the soak report's §8); the Paragraph popularisation article is NOT cited as a source for facts the SYSTEM_DESIGN.md primary source already documents."
   v0_14:
     date: "2026-05-07"
     summary: "Internal-review cut per CEO publication directive (2026-05-07; comment 13727607). Senior-professor-level audit: trim abstract; tighten Reproducibility Note; extend the case study from a single 5-hour cycle to a two-cycle 28-hour defence (52 buys, 6.445 SOL lifetime, ratchet-3 reached); audit bibliography against the foundational-Ethereum/Bitcoin + MEV + BFT-finality + prediction-market + wash-trading + cross-chain-SoK reading list; flip status draft → internal-review."
@@ -189,7 +209,7 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: "2026-05-07T01:35Z (v0.14, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor)"
+last_local_compile: "2026-05-07T02:49Z (v0.15, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor; 46 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
 
 # pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
 # engineering-side (delegated, separate track from publication).

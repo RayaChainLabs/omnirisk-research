@@ -618,3 +618,76 @@
   doi          = {10.1145/3471140},
   note         = {Canonical pre-S\&P-2024 systematisation of blockchain interoperability mechanisms (notary schemes, sidechains/relays, hashed time-locked contracts); cited alongside~\cite{augusto2024sok} as the broader interoperability-mechanism context for the OFT-on-LayerZero-V2 substrate.}
 }
+
+% =============================================================================
+% Added in v0.15 (2026-05-07) per CEO directives 09dcfcae and 0d7bfcde on
+% OMN-152: anchor load-bearing claims to primary-source artifacts in the
+% sibling repos so a hostile reviewer can audit each fact. Each entry is the
+% canonical artifact path (file or git tree).
+% =============================================================================
+
+% --- Bittensor shadow-validator soak telemetry (committed in this paper repo) -
+
+@misc{omnirisk2026soak,
+  author       = {{OmniRisk Engineering}},
+  title        = {{Bittensor shadow-validator soak telemetry, 2026-05-04 to 2026-05-07}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{omnirisk-papers} repository},
+  year         = {2026},
+  url          = {papers/2026/omnirisk-rayachain-bittensor/sources/bittensor-shadow-soak-2026-05-07.md},
+  urldate      = {2026-05-07},
+  note         = {57-hour continuous-runtime shadow deployment of the OmniRisk validator + miner on Bittensor testnet (\texttt{--subtensor.network test}, netuid 60). Headline soak metrics: 5{,}097 successful rounds, 0 auth failures, 11 autonomous Auth0 token refreshes. The artifact is deliberately framed as engineering soak validation of the Auth0 → OmniRisk → score path, not as a measurement of the Section~\ref{sec:formal:vloss} validator-loss decomposition. Committed in \texttt{omnirisk-papers} as commit \texttt{e726153}.}
+}
+
+% --- Risk-Intel canonical engineering documentation --------------------------
+
+@misc{omnirisk2026systemdesign,
+  author       = {{OmniRisk Engineering}},
+  title        = {{OmniRisk System Design (golden documentation, v1.0)}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{risk-intel} repository},
+  year         = {2026},
+  url          = {risk-intel/golden-docs/SYSTEM_DESIGN.md},
+  urldate      = {2026-05-07},
+  note         = {Canonical engineering reference for the OmniRisk eight-chain coverage (Ethereum, BNB, Arbitrum, Optimism, Solana, Base, Polygon, Bittensor), the Blue/Green region topology (us-east-1 / eu-west-1 via Route 53 weighted records), and the five-engine stack architecture. v1.0 dated 2026-05-03.}
+}
+
+@misc{omnirisk2026agentic,
+  author       = {{OmniRisk Engineering}},
+  title        = {{Agentic Risk Prediction Engine (golden documentation, v1.0)}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{risk-intel} repository},
+  year         = {2026},
+  url          = {risk-intel/golden-docs/AGENTIC_RISK_PREDICTION_ENGINE.md},
+  urldate      = {2026-05-07},
+  note         = {Specifies the 13-phase closed-loop framework, the LangGraph runtime topology, the five-tool registry (\texttt{market\_context}, \texttt{analyze\_full}, \texttt{wallet\_profile}, \texttt{agent\_session}, \texttt{token\_risk\_trend}), and the Strategy~Alpha guard that bars the engine from emitting \texttt{buy}/\texttt{sell}/\texttt{invest}/\texttt{profit} action verbs. v1.0 dated 2026-05-03.}
+}
+
+@misc{omnirisk2026deploy,
+  author       = {{OmniRisk Engineering}},
+  title        = {{OmniRisk Implementation and Deployment (golden documentation, v1.0)}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{risk-intel} repository},
+  year         = {2026},
+  url          = {risk-intel/golden-docs/IMPLEMENTATION_AND_DEPLOYMENT.md},
+  urldate      = {2026-05-07},
+  note         = {Per-handler deployment topology: 31 DynamoDB tables; 155 Express routes mapped to approximately 138 production Lambda handlers via the AWS CDK nested-stack 500-resource workaround; the colour-aware (Blue/Green) secrets matrix. v1.0 dated 2026-05-03.}
+}
+
+@misc{omnirisk2026calibration,
+  author       = {{OmniRisk Engineering}},
+  title        = {{Predictive-risk calibration v1 (66{,}118 samples, 21 anchor symbols, 30-day horizon)}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{risk-intel} repository},
+  year         = {2026},
+  url          = {risk-intel/packages/predictive-risk/calibration/v1.json},
+  urldate      = {2026-05-07},
+  note         = {Frozen calibration manifest for the OmniRisk predictive-risk pipeline: 66{,}118 evaluation samples, 30-day prediction horizon, 21 anchor symbols. The headline live-API accuracy reported in the manifest's accompanying log is approximately 53.15\% on the April~2026 Blue API --- ``barely above chance'' in the source's own honest framing, which the manuscript reports verbatim.}
+}
+
+% --- RayaChain registry (canonical contract-address source of truth) ---------
+
+@misc{rayachain2026registry,
+  author       = {{RayaChain Engineering}},
+  title        = {{RayaChain testnet registry v2 (chain IDs, EIDs, contract addresses)}},
+  howpublished = {Engineering source-of-truth artifact, \texttt{rayachain-oft} repository},
+  year         = {2026},
+  url          = {rayachain-oft/packages/config/rayachain.registry.json},
+  urldate      = {2026-05-07},
+  note         = {Definitive registry of RayaChain chain IDs, LayerZero V2 endpoint IDs (EIDs), OFT contract addresses, and last-validated route status across the six testnet integrations (Solana devnet canonical; Ethereum, Arbitrum, Base Sepolia; BSC testnet; Polygon Amoy). Six testnets validated 2026-03-14; reverse-route status for Arbitrum and Base recorded as ``unknown'' since that date.}
+}

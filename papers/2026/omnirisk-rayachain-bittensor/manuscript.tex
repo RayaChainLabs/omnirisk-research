@@ -30,7 +30,7 @@
   Basel Magableh\thanks{Technological University of Dublin. Correspondence to \texttt{basel.magableh@tudublin.ie}.} \\
   \and OmniRisk Research\thanks{\texttt{research@omnirisk.io}.}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.14 (internal review)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.15 (internal review)}}
 
 \begin{document}
 \maketitle
@@ -250,6 +250,20 @@ as FinGPT~\cite{yang2023fingpt} and BloombergGPT~\cite{wu2023bloomberggpt} are
 reference instantiations for the text-conditioned components of the prediction
 engine; the engine itself is model-agnostic.
 
+\paragraph{Production calibration anchor.} The OmniRisk prediction engine ships a
+frozen calibration manifest~\cite{omnirisk2026calibration} of \textbf{66{,}118
+evaluation samples} over a \textbf{30-day prediction horizon} across
+\textbf{21 anchor symbols}. The headline live-API accuracy on the production Blue
+deployment in April~2026 is approximately \textbf{53.15\%}, which the source's own
+documentation describes as ``barely above chance''~\cite{omnirisk2026systemdesign}.
+We surface this number rather than a more flattering one because the architectural
+contribution of this paper is the verification primitive
+(Section~\ref{sec:arch:bittensor}), not the predictive performance: a
+verification-architecture claim whose empirical accuracy is barely above chance is
+exactly the regime in which \emph{economic verification by an independent validator
+quorum} is most needed. The calibration manifest is the audit anchor against which
+any future prediction-engine improvement must be measured.
+
 \subsection{Bittensor prediction subnet}\label{sec:engine:subnet}
 
 The prediction engine is decentralised by exposing it as a Bittensor subnet, in
@@ -302,6 +316,37 @@ the live OmniRisk instantiation uses late fusion with stacking, on the grounds t
 text models and AMM-flow models have very different latency profiles and combining
 them at the score-aggregation layer is more robust than at the feature
 layer~\cite{gandhi2023multimodal,zhang2025sentistack}.
+
+\paragraph{Production text-modality adapters.} The deployed sentiment-fusion engine
+ingests twelve named news adapters --- \emph{CoinDesk, Cointelegraph, Yahoo Finance,
+Bloomberg, Reuters, U.S.\ SEC, CNBC, Investing.com, Blockworks, U.S.\ Federal
+Reserve, Decrypt, Glassnode} --- plus three social-stream adapters (X, Reddit,
+Telegram), per the engineering source-of-truth
+documentation~\cite{omnirisk2026systemdesign}. Per-window text features are scored
+by a deterministic lexicon
+\begin{equation}
+  \mathrm{score}_{\mathrm{text}}
+  \;=\; \mathrm{clamp}_{[-100, 100]}\!\bigl(
+    16\,N_{\mathrm{POS}}
+    - 18\,N_{\mathrm{NEG}}
+    + 6\,N_{\mathrm{HYPE}}
+    - 10\,N_{\mathrm{PANIC}}
+    + 3\,N_{\mathrm{PROMO}}
+    + 12\,N_{\mathrm{MM}}
+  \bigr)
+  \label{eq:lexicon}
+\end{equation}
+where $N_{\mathrm{POS}}, N_{\mathrm{NEG}}, N_{\mathrm{HYPE}}, N_{\mathrm{PANIC}},
+N_{\mathrm{PROMO}}, N_{\mathrm{MM}}$ count occurrences of the corresponding lexicon
+classes (\emph{POSITIVE}, \emph{NEGATIVE}, \emph{HYPE}, \emph{PANIC}, \emph{PROMO},
+\emph{MARKET\_MOVING}) in the window's text. The deterministic lexicon is the
+fallback / audit substrate that every learned text classifier in the late-fusion
+stack is calibrated against; it survives a determinism-contract check
+(Section~\ref{sec:miner}) trivially. We disclose two known limitations of the
+production lexicon, both inherited from the engineering documentation: the public
+score is clamped from $[-100, 100]$ to $[0, 100]$ before publication, which loses
+sign information; and the engine does not run an input-side prompt-injection
+sanitiser, so adversarial text inputs can probe the lexicon's edge cases.
 
 \paragraph{Verification.} Sentiment outputs are scored on the same Bittensor subnet
 as prediction outputs, with the realised-event channel supplying ground truth: a
@@ -747,6 +792,42 @@ addition --- sequenced after a mainnet cutover, not before --- is the Subtensor
 EVM (chain~ID~945)~\cite{opentensor2024evm}, motivated in
 Section~\ref{sec:arch:bittensor}.
 
+\paragraph{Canonical contract registry.} The definitive registry of chain IDs,
+LayerZero V2 endpoint identifiers, and OFT contract addresses lives in the
+\texttt{rayachain-oft} repository as \texttt{packages/config/rayachain.registry.json}
+(v2)~\cite{rayachain2026registry}; Table~\ref{tab:rayachain-registry} reproduces the
+deployed-contract subset with their last-validated date so a reviewer can
+independently audit each address on-chain.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.20\linewidth}p{0.55\linewidth}r}
+\toprule
+\textbf{Chain (testnet)} & \textbf{Address} & \textbf{Validated} \\
+\midrule
+Solana devnet (canonical) & Program ID
+\texttt{9tFnL3MJiQZhBzHsskQrXvhswidyx4GhynRtbVPRC8hy};
+mint \texttt{9DSqNkXxXic5cnQwpkvqjJV2pSJy6kM8NuKv3TSwAEFJ}; OFT store
+\texttt{3E65hKya7XZVN1DXq1uXpDdUJFfCHVrKW9iZuNDeyfEp}
+& 2026-03-14 \\
+Base Sepolia OFT & \texttt{0x0D502B598FFa3f11573A8349726915cB20ad4656}
+(deterministic CREATE2)
+& 2026-03-14 \\
+Ethereum Sepolia OFT & \texttt{0x4e2128623d9968000D2C4D2926d014373951c2ad}
+& 2026-03-14 \\
+LayerZero EndpointV2 (all EVM testnet) & \texttt{0x6EDCE65403992e310A62460808c4b910D972f10f}
+& 2026-03-14 \\
+\bottomrule
+\end{tabular}
+\caption{Subset of the canonical RayaChain registry deployed-contract addresses
+with last-validated dates. Reverse-route status for Arbitrum and Base has been
+``unknown'' since 2026-03-14; Polygon Amoy reverse-send is currently blocked by
+the operator wallet's native-token balance (an operational issue, not a wiring
+issue). The full registry is~\cite{rayachain2026registry}.}
+\label{tab:rayachain-registry}
+\end{table}
+
 \paragraph{Subsystems.} RayaChain is not a monolithic OFT deployment. Three named
 modules carry the cross-chain data and execution responsibilities relied on by
 OmniRisk and, downstream, by the verification layer of
@@ -835,6 +916,72 @@ market-priced reward miners voluntarily commit to. For OmniRisk's IoV stack, the
 practical implication is that Bittensor signal markets are best treated as one input
 modality among many --- not as a drop-in replacement for the in-house engines of
 Sections~\ref{sec:arch:omnirisk}--\ref{sec:arch:scenario}.
+
+\paragraph{Engineering shadow deployment, 2026-05-04 to 2026-05-07.} An engineering
+shadow deployment of the OmniRisk validator and miner pipeline against Bittensor
+testnet (\texttt{--subtensor.network test}, netuid 60) has been running continuously
+since 2026-05-04 and is reported in~\cite{omnirisk2026soak}. Across an approximately
+57-hour window, the deployment recorded \textbf{5{,}097 successful rounds} (rounds in
+which the validator queried the miner, called the OmniRisk \texttt{/v2/predict}
+endpoint, and computed a positive final score), \textbf{zero auth failures}, and
+\textbf{eleven autonomous Auth0 access-token refreshes} across multiple TTL
+boundaries. The shadow run \emph{validates the Auth0 \mbox{$\to$} OmniRisk \mbox{$\to$}
+per-round-score path at the operational layer}; it does \emph{not} produce the
+Section~\ref{sec:formal:vloss} validator-loss components (Brier accuracy,
+Inconsistency, Miscalibration), which require the realised-event channel of
+Section~\ref{sec:formal:realised} and a non-trivial miner population. The
+\texttt{final\_score} samples observed across 48~hours
+(\texttt{raw\_score}~$\in$~$[0.79, 0.81]$, \texttt{confidence}~$\in$~$[0.53, 0.56]$,
+\texttt{final\_score}~$\in$~$[0.42, 0.45]$) are the expected, by-design output of a
+deterministic placeholder miner being scored against a stable input distribution and
+are explicitly \emph{not evidence of predictive performance}. The
+Section~\ref{sec:formal:vloss} measurement is deferred to follow-up work consistent
+with the Section~\ref{sec:roadmap} sequencing.
+
+\paragraph{What the shadow run does not measure.} Table~\ref{tab:soak-deferred}
+reproduces the operational-status decomposition from~\cite{omnirisk2026soak}~\S5
+verbatim, so a peer reviewer can see in one place exactly which components of the
+Section~\ref{sec:formal:vloss} validator loss the soak run does and does not produce.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.32\linewidth}p{0.20\linewidth}p{0.42\linewidth}}
+\toprule
+\textbf{§\ref{sec:formal:vloss} component} & \textbf{Status in shadow} &
+\textbf{Why} \\
+\midrule
+Brier accuracy ($\alpha$ term) & Not computed & Realised-event indicator
+$E_{q, t+\Delta}$ (the $E_1$--$E_4$ disjunction of
+Section~\ref{sec:formal:realised}) is a design proposal; no ground-truth $y_n$ is
+generated by this loop. \\
+Inconsistency ($\beta$ term) & Not computed & The \texttt{Dummy} placeholder protocol
+carries no route, so paired-query consistency at $t$, $t + \delta$ on routes is
+undefined. \\
+Miscalibration ($\gamma$ term) & Not computed & Reliability bins of $c_i$ vs.\
+realised accuracy require an accuracy stream, which (i) is absent. \\
+Yuma reward share $M_j$ (Eq.~\ref{eq:yuma-consensus}) & Not applicable &
+\texttt{validator\_permit = false} on testnet (no stake); the validator's
+\texttt{set\_weights} branch never fires. \\
+Population consensus weight $\overline{W}_j$ & Degenerate & Single-miner metagraph
+(UID 18 only); Eq.~\eqref{eq:yuma-consensus} trivialises at $|M| = 1$. \\
+\bottomrule
+\end{tabular}
+\caption{What the 2026-05-04/07 Bittensor-testnet shadow run does and does not
+measure, mapped to the Section~\ref{sec:formal:vloss} validator-loss components.
+Reproduced verbatim from~\cite{omnirisk2026soak}~\S5.}
+\label{tab:soak-deferred}
+\end{table}
+
+The shadow deployment also surfaced four open issues that constrain the report's
+scope and that we sequence into the Section~\ref{sec:roadmap} engineering plan:
+(i)~validator service \texttt{NRestarts} regressed to 9 between 2026-05-06
+14:22~UTC and 2026-05-07 00:12~UTC, root-cause analysis pending; (ii)~the
+OmniRisk response envelope returns \texttt{requestId = None}, blocking any join
+between validator-side score events and OmniRisk-side audit records (non-blocking
+for soak telemetry, blocking for any future Brier evaluation); (iii)~the metagraph
+contains a single miner (UID 18), which makes population-level Yuma consensus
+arithmetic degenerate; (iv)~mainnet has not been deployed.
 
 Let $V$ index subnet validators, $M$ index subnet miners, and $S_i$ denote the stake of
 validator $i \in V$. Each validator submits a weight $W_{ij} \in [0,1]$ for each miner
@@ -2088,8 +2235,10 @@ Subtensor EVM lane (chain~945)
   & Design proposal; sequenced after mainnet cutover, not before
   & \cite{opentensor2024evm} \\
 Cross-chain risk subnet (Bittensor)
-  & Design proposal
-  & this paper \\
+  & Design proposal; testnet shadow deployment of the validator+miner
+    pipeline running on netuid~60 since 2026-05-04 (5{,}097 rounds, 0 auth
+    failures, 11 Auth0 refreshes over $\approx$57\,h)
+  & \cite{omnirisk2026soak} \\
 Validator scoring rule
   & Design proposal
   & \S\ref{sec:validator} \\
@@ -2170,8 +2319,8 @@ measurements pending those rotations.
 
 \section{Roadmap}\label{sec:roadmap}
 
-The work plan implied by Table~\ref{tab:status} and Section~\ref{sec:status:gaps}
-is, in order:
+The work plan implied by Table~\ref{tab:status}, Section~\ref{sec:status:gaps},
+and the shadow-soak open issues of Section~\ref{sec:arch:bittensor} is, in order:
 (i)~close the security incident (rotate the three exposed deployer keys, rotate
 the exposed Alchemy key, move secrets out of tracked files) and adopt mainnet
 governance (multisig + timelock);
@@ -2179,13 +2328,20 @@ governance (multisig + timelock);
 EIDs, mainnet registry entries, mainnet OFT and Solana-program deployments,
 peer wiring across the full 20-direction matrix) and run a third-party security
 audit;
-(iii)~finalise the miner API and the determinism contract (Section~\ref{sec:miner});
-(iv)~stand up the cross-chain risk subnet on Subtensor and integrate the validator
-scoring rule (Section~\ref{sec:validator});
-(v)~deploy the score-commitment contracts on Subtensor EVM (Section~\ref{sec:subtensor});
-(vi)~ship the Subtensor EVM RayaChain lane (sequenced after the mainnet cutover
+(iii)~complete the shadow-soak open items~\cite{omnirisk2026soak}: root-cause the
+validator-service \texttt{NRestarts}~$=$~9 regression observed in the
+2026-05-06 / 07 window, ship a non-\texttt{None} \texttt{requestId} on the
+OmniRisk response envelope so per-round score events can be joined to OmniRisk-side
+audit records, and grow the metagraph beyond the single-miner placeholder to make
+population-level Yuma consensus arithmetic non-degenerate;
+(iv)~finalise the miner API and the determinism contract (Section~\ref{sec:miner});
+(v)~promote the testnet shadow deployment to a Subtensor mainnet validator and
+integrate the Section~\ref{sec:validator} validator-loss rule against the
+realised-event channel of Section~\ref{sec:formal:realised};
+(vi)~deploy the score-commitment contracts on Subtensor EVM (Section~\ref{sec:subtensor});
+(vii)~ship the Subtensor EVM RayaChain lane (sequenced after the mainnet cutover
 of step~ii);
-(vii)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up
+(viii)~publish the evaluation results from Section~\ref{sec:eval} as a follow-up
 paper, with mainnet flows once available.
 
 \section{Comparative Advantage}\label{sec:compare}
@@ -2285,23 +2441,35 @@ concrete. Any errors are the authors'.
 
 \section*{Reproducibility Note}
 
+\paragraph{Source-of-truth artifacts.} Every load-bearing fact in this paper is
+anchored to a tracked engineering artifact in the OmniRisk family of
+repositories, so a peer reviewer can audit each claim against its source rather
+than against operator narrative. The principal artifacts are: the OmniRisk system
+design~\cite{omnirisk2026systemdesign}; the agentic risk-prediction engine
+specification~\cite{omnirisk2026agentic}; the implementation and deployment
+documentation~\cite{omnirisk2026deploy}; the predictive-risk calibration
+manifest v1~\cite{omnirisk2026calibration}; the RayaChain registry
+v2~\cite{rayachain2026registry}; the Bittensor shadow-validator soak telemetry
+report~\cite{omnirisk2026soak}; and the public companion publication for the
+RYA defence cycle~\cite{omnirisk2026defending}. Each of the seven file paths
+resolves on the operator's working tree and is committed to its respective
+repository as of 2026-05-07.
+
 \paragraph{Data and figures.} The case study of Section~\ref{sec:case-study} is
 fully reproducible from the operations repository's tracked decision log
-(\texttt{bot/logs/decisions.jsonl}, append-only structured JSONL with one decision
-record per line), the persisted bot state (\texttt{bot/state.json}; at the close
-of the cycle reported here, \texttt{lifetimeSpentSol}~$=$~6.445,
-\texttt{ratchetSteps}~$=$~3, \texttt{liquidityBaselineUsd}~$\approx$~6{,}244),
-and the operator journal (\texttt{bot/SOL.md}). The bot's full source code and
-the non-secret configuration knobs quoted in Section~\ref{sec:case-study:setup}
-(daily cap, per-trade ceiling, cooldown, TWAP slicing, slippage, ratchet, support
-tiers) are public; private keys and RPC tokens are explicitly out of scope.
-Figures~\ref{fig:rya-defence-prices}--\ref{fig:rya-defence-liquidity} are
-generated deterministically from the decision log by
-\texttt{figures/\_make\_figures.py}. The five-engine architecture
-(Fig.~\ref{fig:five-engine}), dependency graph
-(Fig.~\ref{fig:five-engine-dependency}), and scenario-engine data-flow
-(Fig.~\ref{fig:scenario-engine-dataflow}) figures are vector renderings of the
-specifications in Sections~\ref{sec:five-engine},~\ref{sec:engine:strategy},
+(\texttt{bot/logs/decisions.jsonl}), the persisted bot state
+(\texttt{bot/state.json}; at the close of the cycle reported here,
+\texttt{lifetimeSpentSol}~$=$~6.445, \texttt{ratchetSteps}~$=$~3,
+\texttt{liquidityBaselineUsd}~$\approx$~6{,}244), and the operator journal
+(\texttt{bot/SOL.md}). Configuration knobs cited in
+Section~\ref{sec:case-study:setup} are non-secret values from \texttt{bot/.env};
+private keys and RPC tokens are out of scope. Figures
+\ref{fig:rya-defence-prices}--\ref{fig:rya-defence-liquidity} are generated
+deterministically from the decision log by \texttt{figures/\_make\_figures.py}.
+The architecture, dependency-graph, and scenario-data-flow figures
+(\ref{fig:five-engine}, \ref{fig:five-engine-dependency},
+\ref{fig:scenario-engine-dataflow}) are vector renderings of the specifications
+in Sections~\ref{sec:five-engine}, \ref{sec:engine:strategy},
 and~\ref{sec:arch:scenario} respectively. On-chain transaction signatures for
 every TWAP slice in Table~\ref{tab:rya-defence-buys} are recorded in the
 decision log and verifiable on Solana mainnet.
@@ -2331,12 +2499,16 @@ agentic, context-aware IoV risk prediction; v0.11 integrated synthesis from
 three sub-issue agents (Bittensor prediction-subnet snapshot; OmniRisk API
 surface characterisation; five-engines-vs-composite strategic call);
 v0.12--v0.13 wired Designer figures and added Basel Magableh as first author;
-v0.14 (the present revision) extended the case study to cover both defence
-cycles, audited the bibliography against the senior-professor reading list
-(adding peer-reviewed primary sources for foundational ledgers, MEV,
-BFT-finality, prediction-market mechanism design, and crypto wash-trading), and
-flipped status to \emph{internal review} per the CEO publication directive of
-2026-05-07.
+v0.14 extended the case study to cover both defence cycles and audited the
+bibliography against the senior-professor reading list (peer-reviewed primaries
+for foundational ledgers, MEV, BFT-finality, prediction-market mechanism design,
+and crypto wash-trading); v0.15 (the present revision) integrated the Bittensor
+testnet shadow-soak telemetry into Section~\ref{sec:arch:bittensor},
+Table~\ref{tab:status}, and Section~\ref{sec:roadmap}, and anchored §arch and
+§engine claims to the canonical engineering source-of-truth artifacts
+(SYSTEM\_DESIGN, AGENTIC\_RISK\_PREDICTION\_ENGINE,
+IMPLEMENTATION\_AND\_DEPLOYMENT, calibration v1, rayachain.registry.json,
+soak report) per the CEO directive of 2026-05-07.
 
 \printbibliography
 
