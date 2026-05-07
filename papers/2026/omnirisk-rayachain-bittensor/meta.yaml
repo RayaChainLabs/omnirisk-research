@@ -1,4 +1,4 @@
-title: "Agentic, Context-Aware Risk Prediction for the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor"
+title: "Agentic, Context-Aware Risk Intelligence in the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor"
 slug: "omnirisk-rayachain-bittensor"
 authors:
   - name: "Basel Magableh"
@@ -209,7 +209,7 @@ revision_log:
     date: "2026-05-06"
     summary: "Reframe contribution from 'verifiable cross-chain bridge risk' to the broader thesis of 'agentic, context-aware risk prediction for the Internet of Value', characterised as the composition of five engines (prediction / Bittensor prediction subnet / sentiment fusion / agentic / API risk + scenario). Add the 2026-05-06 RYA defence cycle as an instrumented case study. Issue: OMN-152."
     changes:
-      - "Title and pdf metadata: 'Verifiable Cross-Chain Risk Intelligence: An Agentic Architecture over LayerZero V2 and Bittensor' → 'Agentic, Context-Aware Risk Prediction for the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor'."
+      - "Title and pdf metadata: 'Verifiable Cross-Chain Risk Intelligence: An Agentic Architecture over LayerZero V2 and Bittensor' → 'Agentic, Context-Aware Risk Intelligence in the Internet of Value: A Five-Engine, Verifiable Architecture over LayerZero V2 and Bittensor'."
       - "Abstract rewritten around the IoV thesis, the five engines (with citations), and the RYA defence-cycle case study."
       - "§intro: new paragraph 'The IoV reframe' (composite-context risk; rug pulls and sniper bots cited from cernera2023token); research-question paragraph rewritten to ask whether the IoV risk primitive can be made simultaneously agentic, context-aware, and verifiable; novelty-claim paragraph rewritten as the five-engine composition; contributions list expanded 5 → 6 (added the case study)."
       - "New §3 'A Five-Engine Architecture for Agentic IoV Risk' (label sec:five-engine), inserted between §problem and §rq, with five named subsections (sec:engine:prediction, sec:engine:subnet, sec:engine:sentiment, sec:engine:agentic, sec:engine:scenario) and a composition subsection (sec:engine:composition). New Figure 1 'five-engine-architecture.pdf' (vector, generated)."
