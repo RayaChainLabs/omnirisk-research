@@ -11,13 +11,14 @@ authors:
     ieee_membership: "Member"
     order: 1
     corresponding: true
-  - name: "Ahod [surname TBD]"
+  - name: "Ahod Alghuried"
     email: "[email TBD]"
-    affiliation: "[affiliation TBD]"
+    affiliation: "Prince Sattam Bin Abdulaziz University, Al-Kharj, Kingdom of Saudi Arabia"
     orcid: "[ORCID TBD]"
     ieee_membership: "[membership TBD]"
     order: 2
     corresponding: false
+    confirmed_by_ceo: "2026-05-07"
 
 target_venue:
   raw_url: "https://www.computer.org/csdl/journal/tq"
@@ -30,12 +31,26 @@ target_venue:
   document_class: "IEEEtran[journal]"
 
 status: "draft"           # scaffold → draft (after AW first populated cut) → CEO-review → submitted
-revision: "0.5"
+revision: "0.5.1"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
 
 revision_log:
+  - revision: "0.5.1"
+    date: "2026-05-07"
+    issue: "OMN-171"
+    by: "Academic Writer (agent 06e03389-c313-44f8-846f-82f99e0b3b6c)"
+    changes:
+      - "Applied CEO-confirmed Author 2 surname and affiliation: Ahod Alghuried, Prince Sattam Bin Abdulaziz University, Al-Kharj, Kingdom of Saudi Arabia."
+      - "Updated title-page \\author{} block, first \\thanks{} for Author 2, Author Contributions section (CRediT row + ORCID listing), and trailing IEEEbiography deferral comment."
+      - "Refreshed meta.yaml authors[1] (name + affiliation), added confirmed_by_ceo: 2026-05-07 marker."
+      - "Email, ORCID, and IEEE membership grade still TBD — placeholders preserved in second \\thanks{} line and authors[1] of meta.yaml per CEO directive."
+      - "Recompiles clean: 10 IEEEtran two-column journal pages, zero overfull hboxes, zero warnings."
+    pending:
+      - "Author 2 (A.~Alghuried) email, ORCID, and IEEE membership grade still TBD."
+      - "Target venue still unconfirmed; \\markboth still says [venue TBD]."
+      - "Below the 14-page target; CEO may request body expansion (e.g., a system-architecture figure, expanded experimental design)."
   - revision: "0.5"
     date: "2026-05-07"
     issue: "OMN-171"
@@ -72,12 +87,9 @@ ceo_directive_log:
 
 pending_before_ceo_handoff:
   - "CEO confirms target journal (likely meant TDSC, TNSM, or other — `tq` slug resolves to TQE which is topic-mismatch)"
-  - "CEO provides Author 2 (Ahod) full info: surname, email, affiliation, ORCID, IEEE membership grade"
-  - "AW dispatched once both confirmations are in"
+  - "CEO provides Author 2 (A.~Alghuried) remaining fields: email, ORCID, IEEE membership grade (surname + affiliation confirmed 2026-05-07)"
 
 pending_before_submission:
-  - "AW first populated draft (lift+tighten from seed; add Bittensor §; agentic-finance reframe)"
-  - "Citation port from _bib/references.bib for the Bittensor/validator-loss subset"
-  - "Author biographies (IEEEbiography blocks) once Ahod's affiliation is confirmed"
-  - "Final two-column pdflatex compile clean of warnings"
+  - "Author biographies (IEEEbiography blocks) once A.~Alghuried email, ORCID, and IEEE membership grade are confirmed"
+  - "Target venue resolution and \\markboth update"
   - "CEO read-through and submission decision"
