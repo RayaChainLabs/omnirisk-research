@@ -30,35 +30,32 @@
   Basel Magableh\thanks{Technological University of Dublin. Correspondence to \texttt{basel.magableh@tudublin.ie}.} \\
   \and OmniRisk Research\thanks{\texttt{research@omnirisk.io}.}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.17 (internal review)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.18 (internal review)}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-We argue that risk prediction for the \emph{Internet of Value} (IoV) is best modelled
-as the composition of five engines: a prediction engine over price, liquidity,
-volatility, and route health; a Bittensor prediction subnet that decentralises and
-verifies that engine via Yuma Consensus~\cite{rao2021bittensor,steeves2022incentivizing,
-opentensor2024yuma}; a sentiment-fusion engine over text, on-chain flow, and
-grey-literature feeds~\cite{lai2023multimodal,gandhi2023multimodal}; an agentic engine
-under Anthropic-style constitutional action constraints~\cite{bai2022constitutional};
-and an API-risk and scenario engine that converts forecast distributions into
-pre-committed action programs~\cite{glasserman2003monte,nist2006sp80084}. We formalise
-routes $q$, the risk score $s(q,t)$, and a validator loss
-$L_i = \alpha\,\mathrm{Brier} + \beta\,\mathrm{Inconsistency} + \gamma\,\mathrm{ECE}$
-that composes with Yuma weight aggregation, and we state two falsifiable hypotheses:
-\textbf{H1} cross-chain liquidity-fragmentation features improve early-detection lead
-time over single-chain features; \textbf{H2} confidence-calibrated miners receive
-monotonically higher Yuma weight than uncalibrated ones. As an empirical anchor we
-report a fully-public, signed-transaction case study --- the 2026-05-06/07 \textsc{RYA}
-liquidity-defence on a single Solana CPMM pool. Across 28~hours and 52~buys totalling
-6.445~SOL, the rule-based scenario engine drove price from
-USD~$5.68\!\times\!10^{-5}$ to USD~$7.43\!\times\!10^{-5}$ ($+30.8\%$), restored
-liquidity from USD~5{,}418 to USD~6{,}250, and crossed three ratchet steps without
-violating any of the constitutional action bounds (buy-only, board-gated cap raises,
-non-treasury wallet). The case study supports the architecture's deployability; H1 and
-H2 are deferred to a follow-up empirical paper.
+Cross-chain financial systems present a class of systemic risk that existing risk
+frameworks are ill-equipped to address. Current approaches assess risk within
+individual chains, yet the most consequential failure modes in multi-chain DeFi
+emerge at the boundaries between networks --- in bridge routes, liquidity
+transitions, and cross-chain message passing. We introduce
+\textsc{OmniRisk}, an agentic AI risk intelligence layer designed to detect,
+score, and verify risk across heterogeneous blockchain environments. Built on
+\textsc{RayaChain}, a LayerZero V2 Omnichain Fungible Token
+infrastructure~\cite{zarick2024layerzero,layerzero2024oft} spanning Ethereum,
+Arbitrum, Base, BSC, Polygon, Optimism, Solana, and Subtensor EVM, OmniRisk
+operationalizes four core research primitives: route-risk scoring, liquidity
+fragmentation analysis, anomalous cross-chain activity detection, and
+confidence-calibrated financial intelligence. Central to our design is the
+principle that risk intelligence must itself be independently verifiable. We
+propose Bittensor~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}
+as a decentralized verification substrate for financial intelligence outputs,
+enabling incentive-aligned validation of risk signals at network scale. This
+paper presents the theoretical foundations of cross-chain risk emergence, the
+architectural design of OmniRisk, and an initial framework for decentralized
+intelligence verification.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -83,10 +80,14 @@ in separate literatures: forecast, policy, sentiment, and pre-committed action.
 
 \textsc{OmniRisk} is a live cross-chain risk-intelligence service, and \textsc{RayaChain}
 is an actively deploying cross-chain transfer fabric. RayaChain's transfer lanes are
-implemented as Omnichain Fungible Tokens (OFTs) on LayerZero~V2, the protocol family
-that separates message verification (Decentralised Verifier Networks, DVNs) from message
-execution (Executors) and exposes per-application security configuration as a
-permissionless surface~\cite{zarick2024layerzero,layerzero2024oft}. As of submission,
+implemented as Omnichain Fungible Tokens (OFTs) on LayerZero~V2 --- a token that exists
+on multiple chains as one logical asset, where the LayerZero protocol separates the
+parties who \emph{verify} that a cross-chain message is legitimate (Decentralised
+Verifier Networks, DVNs --- independent parties that sign off on a cross-chain
+message before it is delivered) from the parties who \emph{execute} the message on
+the destination chain (Executors), and exposes the choice of those parties as a
+permissionless per-application security
+configuration~\cite{zarick2024layerzero,layerzero2024oft}. As of submission,
 RayaChain is operationally integrated on six \emph{testnet} chains --- Ethereum
 Sepolia, Arbitrum Sepolia, Base Sepolia, BSC testnet, Polygon Amoy, and Solana
 devnet --- with no mainnet deployments to date and an estimated four-to-eight
@@ -174,11 +175,18 @@ Table~\ref{tab:status} in Section~\ref{sec:status}).
 
 \section{Problem Definition}\label{sec:problem}
 
+In plain terms: cross-chain finance is now the dominant marginal risk in
+decentralised finance, but the tools used to assess that risk still think in
+terms of single chains. The three paragraphs below name three concrete consequences
+of that mismatch; the rest of the paper proposes a primitive that addresses them.
+
 \paragraph{Unified risk visibility across chains is missing.} A token's risk profile is
-not a property of any single chain. The same OFT can have safe liquidity on Ethereum
-and dangerously thin liquidity on a destination rollup; a user routing through it will
-realise the worse of the two. Empirical AMM-level evidence shows that liquidity is
-materially mis-allocated across L1 and L2s relative to LP-return
+not a property of any single chain. The same cross-chain token can have safe
+liquidity on Ethereum and dangerously thin liquidity on a destination rollup; a user
+routing through it will realise the worse of the two. Empirical evidence from
+decentralised trading pools (the on-chain equivalent of order-book exchanges, hereafter
+\emph{trading pools}) across Ethereum and rollups shows that liquidity is materially
+mis-allocated relative to liquidity-provider-return
 equilibrium~\cite{gogol2024liquidity}, which means \emph{route choice} --- not just
 token choice --- is a first-order risk decision.
 
@@ -983,9 +991,16 @@ for soak telemetry, blocking for any future Brier evaluation); (iii)~the metagra
 contains a single miner (UID 18), which makes population-level Yuma consensus
 arithmetic degenerate; (iv)~mainnet has not been deployed.
 
-Let $V$ index subnet validators, $M$ index subnet miners, and $S_i$ denote the stake of
-validator $i \in V$. Each validator submits a weight $W_{ij} \in [0,1]$ for each miner
-$j$. Yuma computes a benchmark consensus weight per miner as
+In plain terms: each validator gives every miner a quality score; the
+\emph{Yuma Consensus} mechanism (the Bittensor reward-allocation rule, hereafter
+\emph{the reward-allocation rule}) takes those scores, clips outliers against a
+stake-weighted majority threshold, and pays out rewards in proportion to the
+clipped scores. The clipping is what bounds the influence of any single validator,
+so a corrupted validator cannot unilaterally inflate or suppress a miner's
+reward. Formally: let $V$ index subnet validators, $M$ index subnet miners,
+and $S_i$ denote the stake of validator $i \in V$. Each validator submits a
+weight $W_{ij} \in [0,1]$ for each miner $j$. The reward-allocation rule
+computes a benchmark consensus weight per miner as
 \begin{equation}
   \overline{W}_j \;=\; \arg\max_{w \in [0,1]} \;
     \Bigl\{\, \textstyle \sum_{i \in V} S_i \cdot \mathbf{1}\!\left[W_{ij} \ge w\right]
@@ -1261,17 +1276,23 @@ mismatch between them blocks delivery and is itself a risk signal.
 
 \subsection{Confidence calibration}\label{sec:formal:calibration}
 
-A miner's confidence $c_i(q, t)$ is \emph{calibrated} if, over a window of $N$ scored
+In plain terms: we score a miner not just by whether it predicted the right
+direction but by whether its confidence matched its accuracy over time --- a miner
+that says ``90\% chance of bridge failure'' should be right about 90\% of the time
+when it says that. The standard tool for this is the \emph{Brier score} --- a
+calibration error that penalises both wrong predictions and overconfidence. Formally,
+a miner's confidence $c_i(q, t)$ is \emph{calibrated} if, over a window of $N$ scored
 queries with realised outcomes $y_n \in \{0,1\}$, the empirical Brier score
 \begin{equation}
   \text{Brier}_i \;=\; \frac{1}{N} \sum_{n=1}^{N} \bigl( s_i(q_n, t_n) - y_n \bigr)^{2}
   \label{eq:brier}
 \end{equation}
-is no worse than that of a calibrated reference predictor on the same window, and the
-self-reported confidence $c_i$ tracks miner accuracy in the sense that the reliability
-diagram (binned $c_i$ vs.\ realised accuracy) lies within a tolerance band of the
-identity. A miner that reports $c_i = 1$ on every query is automatically miscalibrated
-unless its $\text{Brier}_i$ is uniformly zero, which empirically does not occur.
+(hereafter \emph{the calibration error}) is no worse than that of a calibrated
+reference predictor on the same window, and the self-reported confidence $c_i$ tracks
+miner accuracy in the sense that the reliability diagram (binned $c_i$ vs.\ realised
+accuracy) lies within a tolerance band of the identity. A miner that reports
+$c_i = 1$ on every query is automatically miscalibrated unless its
+$\text{Brier}_i$ is uniformly zero, which empirically does not occur.
 
 \subsection{Validator loss}\label{sec:formal:vloss}
 
@@ -1571,102 +1592,139 @@ Solana mainnet.
 
 \subsection{Setup}\label{sec:case-study:setup}
 
-\paragraph{Asset and venue.} \textsc{RYA} is the RayaChain protocol token
-(Section~\ref{sec:economics:rya:design}); the Solana mint is
-\texttt{Eebqv\dots susV} (Solana Program Library token), traded on a single Raydium
-constant-product (CPMM) pool launched 2026-05-05 with 37~SOL of initial liquidity.
-The pool is the scenario engine's sole execution venue for this cycle; routing is
-through Jupiter, on the grounds that Jupiter is the standard Solana DEX router and
-that a single-venue execution path is simpler to instrument.
+\paragraph{The asset and the venue.} \textsc{RYA} is the RayaChain protocol token
+(Section~\ref{sec:economics:rya:design}). On Solana the asset trades on a single
+Raydium constant-product trading pool (a constant-product trading pool is one
+where the product of the two reserve quantities is held constant by the pricing
+function, so larger trades move the price more), launched on 2026-05-05 with
+37~SOL of seed liquidity. That pool is the scenario engine's only execution
+venue for this run; routing goes through Jupiter, the standard Solana router,
+because a single-venue execution path is the simplest thing to audit.
 
-\paragraph{Wallet and policy.} The defence wallet is a non-treasury hot wallet
-\texttt{AHbBv\dots EX3} funded explicitly outside the treasury / Squads / deployer
-key custody. Hard rules from the Trader role contract: \emph{(i)~buy-only --- no sell
-path is implemented, (ii)~the deployer wallet is never used, (iii)~live mode requires
-\texttt{DRY\_RUN=false}, an explicit \texttt{LIVE\_CONFIRM} acknowledgement, and a
-board sign-off recorded in the issue thread, (iv)~daily-cap raises require a written
-rationale and a CEO approval, (v)~no human impersonation; the wallet is one address
-and any anti-MEV jitter is anti-MEV only}. These rules are the agentic engine's
-constitution under the Trader role
+\paragraph{The wallet, the role contract, and what the bot is allowed to do.}
+The defence wallet is a hot wallet that was deliberately funded \emph{outside}
+the treasury, Squads multisig, and deployer-key custody. The bot operates under
+a Trader role contract whose hard rules are unusual enough to state in full,
+because the rest of the case study is the story of those rules holding under
+pressure: \emph{(i) buy-only --- the codebase does not contain a sell path};
+\emph{(ii) the deployer wallet is never used}; \emph{(iii) live mode requires
+two flags, an explicit acknowledgement string, and a board sign-off recorded in
+the issue thread}; \emph{(iv) raising the daily spending cap requires a written
+rationale and an explicit CEO approval}; \emph{(v) no human impersonation, and
+the wallet is one address whose only timing jitter is anti-frontrunning}. These
+five rules are the agentic engine's constitution under the Trader role
 (Sections~\ref{sec:engine:agentic},~\ref{sec:arch:omnirisk}).
 
-\paragraph{Tier ladder and caps.} The scenario engine reads its tier ladder, daily
-cap, per-trade ceiling, cooldown, TWAP slicing, and ratchet bounds from the bot's
-\texttt{.env} file. As of the start of the 2026-05-06 cycle (post the cap raise
-recorded at 01:07~UTC, see Section~\ref{sec:case-study:timeline}):
-\texttt{MAX\_DAILY\_SOL}~$=$~3.0, \texttt{MAX\_TRADE\_SOL}~$=$~0.10,
-\texttt{COOLDOWN\_SECONDS}~$=$~600, \texttt{TWAP\_SLICES}~$=$~5,
-\texttt{TWAP\_DURATION\_SECONDS}~$=$~30, \texttt{SLIPPAGE\_BPS}~$=$~150,
-\texttt{STOP\_LOSS\_DROP\_PCT}~$=$~30 with a 600~s window. The ladder
-\texttt{SUPPORT\_TIERS}~$=$~\texttt{0.00016:0.05, 0.00013:0.07, 0.00011:0.08,
-0.00009:0.10} maps four price tiers (in USD per RYA) to four per-tier slice budgets
-(in SOL); the bottom tier --- \texttt{0.00009 USD : 0.10 SOL} --- is the one
-exercised throughout the 2026-05-06 cycle. The ratchet primitive raises the bottom
-tier by \texttt{RATCHET\_STEP\_BPS}~$=$~50 basis points after every
-\texttt{RATCHET\_TRIGGER\_SOL}~$=$~2.0~SOL of cumulative spend, capped at
-\texttt{RATCHET\_MAX\_PRICE\_USD}~$=$~0.00020.
+\paragraph{The tier ladder.} The bot's defence policy is a ladder of four price
+tiers --- USD~$1.6\!\times\!10^{-4}$, $1.3\!\times\!10^{-4}$, $1.1\!\times\!10^{-4}$,
+$0.9\!\times\!10^{-4}$ --- each carrying a per-tier spend budget in SOL. When the
+price falls through a tier, the bot fires a single buy at that tier's budget,
+sliced into five pieces over $5\times 30 = 150$~s using time-weighted slicing
+(splitting a single order into smaller pieces over a fixed window to reduce
+price impact, hereafter \emph{time-weighted slicing}). After each buy a
+600-second cooldown holds before the next tier can fire. A daily cap (initially
+3.0~SOL, raised to 5.0~SOL at the start of cycle-2) bounds the bot's exposure
+per UTC day. A \emph{ratchet} mechanism raises the bottom tier by 50 basis
+points (a 0.5\% upward step) after every 2.0~SOL of cumulative lifetime spend,
+so a successful defence does not leave the bottom tier sitting on the original
+launch-day price forever.
 
 \subsection{Timeline}\label{sec:case-study:timeline}
 
-The defence comprises two sub-cycles plus an interleaved quiet plateau, spanning
-2026-05-06~01:04~UTC to 2026-05-07~01:14~UTC. The narrative arc is
-\textbf{dump $\to$ defend $\to$ first organic recovery $\to$ second sell wave $\to$
-continued defence $\to$ ratchet step 3 $\to$ wallet topped for sustained runway}.
+The defence runs from 2026-05-06 01:04~UTC to 2026-05-07 01:14~UTC. We tell the
+story chronologically, anchored on the timestamps that survive in the public
+decision log, because the architectural argument depends on \emph{when} each
+action was authorised and \emph{when} the policy held.
 
-\begin{description}
-  \item[2026-05-06 01:00 UTC --- threat-surface escalation.] RYA was down
-        $\sim$60.9\% over the trailing 24h and 24.2\% over the trailing 6h.
-        Liquidity had drifted from $\sim$USD~6{,}098 to $\sim$USD~5{,}418; 6h
-        flow asymmetry was 6 buys against 15 sells. The bot was off (prior-day
-        stop-loss auto-pause; manual \texttt{KILL}).
-  \item[2026-05-06 01:04 UTC --- cycle-1 live flip.] CEO authorisation recorded in
-        the issue thread; non-treasury wallet topped up $+$5.000~SOL to
-        $\sim$6.7548~SOL. \texttt{KILL} removed; \texttt{paused} cleared. First
-        TWAP buy: $5\times 0.02$~SOL at USD~$5.679\!\times\!10^{-5}$, 0.000\%
-        reported impact.
-  \item[2026-05-06 01:07 UTC --- cap raise 1.0$\to$3.0 SOL.] CEO sign-off
-        recorded. Rationale: wallet headroom warranted approximately five hours of
-        sustained defence rather than approximately 100~min.
-  \item[2026-05-06 01:15--06:13 UTC --- cycle-1 defence.] Twenty-nine further TWAP
-        buys complete at the bottom tier; ratchet step 2 fires at lifetime spend
-        $\approx$4.045~SOL. Cycle-1 total: 30 buys, 3.000~SOL spent, price
-        $5.679 \to 6.785\!\times\!10^{-5}$~USD ($+19.5\%$ within the cycle),
-        liquidity $5{,}418 \to 6{,}098$~USD.
-  \item[2026-05-06 06:13--21:30 UTC --- quiet plateau.] Daily cap binds; the bot
-        logs \texttt{buy\_skipped: daily cap reached} on every tick. A first
-        organic buyer prints at $\sim$10:00~UTC. Price holds at
-        $\sim$$7.00\!\times\!10^{-5}$~USD; the rolling 24h window recovers from
-        $-51\%$ to $+22\%$ as the dump prints age out.
-  \item[2026-05-06 21:15 UTC --- second sell wave.] $-5.84\%$ in one hour
-        ($7.00 \to 6.59\!\times\!10^{-5}$~USD); liquidity $6{,}071 \to 5{,}911$~USD.
-        Bot still cap-blocked.
-  \item[2026-05-06 21:30 UTC --- cap raise 3.0$\to$5.0 SOL; cycle-2 begins.] CEO
-        sign-off recorded. Bot fires the 31st buy immediately at the ratchet-2
-        bottom tier USD~$0.0000909$, price USD~$6.591\!\times\!10^{-5}$.
-  \item[2026-05-06 21:30 -- 2026-05-07 01:14 UTC --- cycle-2 defence.] Twenty-one
-        further TWAP buys complete across the UTC date boundary. The bottom-tier
-        trigger remains at ratchet-2 ($0.0000909$) through buy~50 and shifts to
-        ratchet-3 ($0.0000914$) at buy~51 (2026-05-07 00:42:18~UTC) when lifetime
-        spend crosses the 6.0~SOL threshold. Final cycle-2 buy at 01:14:12~UTC,
-        price USD~$7.385\!\times\!10^{-5}$.
-  \item[2026-05-07 01:19 UTC --- second wallet top-up.] CEO records $+$5.000~SOL,
-        bringing the hot wallet from 1.554 to 6.554~SOL --- approximately three
-        further days of full-cap defence runway.
-\end{description}
+\paragraph{2026-05-06, 01:00 UTC --- the dump.} Going into the cycle, RYA was
+down approximately 60.9\% over the trailing 24~hours and 24.2\% over the
+trailing six. The pool's liquidity had drifted from a baseline of about
+USD~6{,}098 to about USD~5{,}418, and six-hour trade flow had gone six-buys to
+fifteen-sells. The bot was off: the previous day's stop-loss had auto-paused
+the engine after a $-41.22\%$ shock inside a 10-minute window, and a manual
+kill-switch had been left in place overnight. Nothing about the architecture
+required intervention; the role contract required board sign-off before the
+engine could re-arm.
 
-\paragraph{Cumulative empirical result.} Across the 28-hour window, 52 TWAP buys
-totalling 6.445~SOL of lifetime spend (\texttt{state.json}:
-\texttt{lifetimeSpentSol}~$=$~6.44499899999995, \texttt{ratchetSteps}~$=$~3) drove
-price USD~$5.679 \to 7.385\!\times\!10^{-5}$ ($+30.0\%$ over the bot-active
-window, $+30.8\%$ from cycle-1 trough to current spot of
-$\sim$$7.43\!\times\!10^{-5}$~USD), restored pool liquidity from
-USD~$5{,}418$ to USD~$6{,}244$ (\texttt{liquidityBaselineUsd} persisted in
-\texttt{state.json}; $+15.2\%$), and crossed three ratchet steps without
-violating any of the role-contract action bounds (buy-only, board-gated cap raises,
-non-treasury wallet, no human-impersonation jitter). The price-time and
-liquidity-time series across both cycles are plotted in
-Figures~\ref{fig:rya-defence-prices}--\ref{fig:rya-defence-liquidity}, with
-bot-buy markers and ratchet-step annotations superimposed.
+\paragraph{2026-05-06, 01:03 UTC --- authorisation, top-up, live flip.} The CEO
+recorded an authorisation in the issue thread and topped the non-treasury hot
+wallet up by 5.000~SOL, bringing it to roughly 6.7548~SOL --- the first of two
+sustaining top-ups across the cycle. At 01:04 the kill sentinel was removed
+and the paused flag was cleared. The first time-weighted-sliced buy fired at
+01:04:09: five 0.02~SOL slices at USD~$5.679\!\times\!10^{-5}$ per RYA, with
+0.000\% reported price impact per slice. The rest of the cycle is built on this
+trigger.
+
+\paragraph{2026-05-06, 01:07 UTC --- cap raise.} Three minutes after the live
+flip, the CEO recorded a separate sign-off raising the daily cap from 1.0 to
+3.0~SOL --- the rationale being that the wallet's post-top-up headroom
+warranted roughly five hours of sustained defence rather than the approximately
+100 minutes the original cap funded. The bot restarted to pick up the
+\texttt{.env} change; the cooldown state survived restart through the persisted
+state file. This is the first place the role contract's ``cap raises require
+written rationale plus CEO approval'' rule had to actually fire under pressure;
+it did, with a one-paragraph rationale recorded on the same issue thread that
+authorised the live flip.
+
+\paragraph{2026-05-06, 01:15--06:13 UTC --- cycle-1 defence.} The bot fires
+twenty-nine further time-weighted-sliced buys at the bottom of the ladder, each
+spending 0.10~SOL across five slices over a 150-second window. The
+ratchet-step-2 raise fires between buys eight and nine when cumulative lifetime
+spend crosses approximately 2.0~SOL; ratchet-step-2 fires again between buys
+twenty-eight and twenty-nine when spend crosses approximately 4.0~SOL. By
+06:13~UTC the daily cap binds at exactly 3.000~SOL and the bot stands down. The
+price recovered from USD~$5.679\!\times\!10^{-5}$ to
+USD~$6.785\!\times\!10^{-5}$ during the 5h~9m of bot-active time --- a $+19.5\%$
+in-cycle move --- and pool liquidity climbed from USD~5{,}418 to USD~6{,}098, a
+recovery to the pre-dump baseline.
+
+\paragraph{2026-05-06, 06:13--21:30 UTC --- the quiet plateau.} For the next
+fifteen hours the daily cap binds; the bot logs \texttt{buy\_skipped: daily cap
+reached} on every tick and does nothing else. Around 10:00~UTC the first
+organic buyer (not the bot) prints. Price holds near
+USD~$7.00\!\times\!10^{-5}$ for the rest of the window. The trailing-24-hour
+print on the public dashboard recovers from about $-51\%$ at the start of the
+window to about $+22\%$ by the end of it, as the older dump prints age out of
+the rolling window.
+
+\paragraph{2026-05-06, 21:15 UTC --- the second sell wave.} A second sell wave
+prints: $-5.84\%$ in roughly an hour, taking price from
+USD~$7.00\!\times\!10^{-5}$ to USD~$6.59\!\times\!10^{-5}$ and shaving liquidity
+from USD~6{,}071 to USD~5{,}911. The bot is still cap-blocked.
+
+\paragraph{2026-05-06, 21:30 UTC --- second cap raise; cycle-2 begins.} The
+CEO records a second cap-raise sign-off; the daily cap moves from 3.0 to
+5.0~SOL. The bot fires the thirty-first buy of the run almost immediately, at
+the ratchet-step-2 bottom tier ($0.0000909$) and price
+USD~$6.591\!\times\!10^{-5}$. Twenty-one further buys complete across the
+UTC-date boundary; the ratchet-step-2 trigger holds through buy fifty, and
+ratchet-step-3 fires at buy fifty-one (2026-05-07 00:42:18~UTC) when lifetime
+spend crosses approximately 6.0~SOL.
+
+\paragraph{2026-05-07, 01:14 UTC --- cycle-2 cap binds; ratchet-step-3
+recorded.} The fifty-second and final buy of the run completes at price
+USD~$7.385\!\times\!10^{-5}$. The persisted state file at the close of the run
+records \texttt{lifetimeSpentSol}~$=$~6.445, \texttt{ratchetSteps}~$=$~3, and a
+\texttt{liquidityBaselineUsd} of approximately USD~6{,}244. Five minutes later,
+at 01:19~UTC, the CEO records a second wallet top-up of 5.000~SOL, bringing the
+hot wallet from 1.554 to 6.554~SOL --- approximately three further days of
+full-cap defence runway. The architecturally-load-bearing observation is not the
+size of the price move; it is that across both sub-cycles, every single
+escalation step (live flip, two cap raises, two top-ups) was an
+\emph{out-of-band human approval} on the same issue thread, recorded
+\emph{before} the bot's policy widened. The role contract's invariants held
+throughout.
+
+\paragraph{Cumulative result.} Across the 28-hour window, 52 time-weighted-sliced
+buys totalling 6.445~SOL of lifetime spend drove price from
+USD~$5.679\!\times\!10^{-5}$ to USD~$7.385\!\times\!10^{-5}$ ($+30.0\%$ over
+the bot-active window, $+30.8\%$ from the cycle-1 trough to a contemporaneous
+spot of approximately USD~$7.43\!\times\!10^{-5}$), restored pool liquidity
+from USD~5{,}418 to USD~6{,}244 ($+15.2\%$), and crossed three ratchet steps
+without violating any of the role-contract action bounds (buy-only, board-gated
+cap raises, non-treasury wallet, no human-impersonation jitter). The price-time
+and liquidity-time series across both cycles are plotted in
+Figures~\ref{fig:rya-defence-prices}--\ref{fig:rya-defence-liquidity}.
 
 \subsection{Buy-by-buy record}\label{sec:case-study:buys}
 
@@ -2503,60 +2561,68 @@ black-box. The architecture we propose is differentiated on three axes simultane
 
 \section{Limitations}\label{sec:limitations}
 
-We explicitly flag the following limitations.
+We state the load-bearing limitations as falsification statements --- what
+would have to be observed for the claim to fail, and the smallest experiment
+that could observe it. A senior referee should be able to read each bullet as
+``here is what would prove me wrong, and here is the cheapest way to try.''
+
 \begin{itemize}
-  \item \textbf{The case study is a single 5-hour cycle on a single Solana
-        micro-cap pool.} Section~\ref{sec:case-study} is a single-instance
-        demonstration of the scenario-engine decomposition, not a statistical
-        claim. We do not assert that the bot caused the price recovery; we do not
-        assert that the cycle would replicate on a different pool, on a different
-        venue, or at a different liquidity scale. The natural-experiment
-        counterfactual (``what would have happened without the bot?'') is
-        unavailable. The cycle's purpose is to instantiate the program-registry /
-        trigger-evaluator / constrained-execution decomposition with public
-        timestamps and signatures.
-  \item \textbf{The agentic engine in the case study is rule-based.} The cycle in
-        Section~\ref{sec:case-study} runs the agentic engine as a deterministic
-        Trader-role policy. The LLM-mediated agentic engine of
-        Section~\ref{sec:engine:agentic} --- a constitutional-AI-style decision
-        layer in the sense of \cite{bai2022constitutional} --- is the next-step
-        build, sequenced after the live Bittensor subnet integration of
-        Section~\ref{sec:engine:subnet}. The rule-based instantiation is
-        sufficient to demonstrate the scenario-engine decomposition but does not
-        validate the agentic engine itself.
-  \item \textbf{Most quantitative claims are deferred.} The score-commitment
-        contracts, the Bittensor subnet, and the evaluation framework
-        (Section~\ref{sec:eval}) are design proposals; this paper does not yet report
-        AUC numbers, reward-retention curves, or measured comparisons against the
-        baselines of Section~\ref{sec:eval:baselines}. The hypotheses H1 and H2
-        (Section~\ref{sec:rq}) are stated as falsifiable claims, not as established
-        results.
-  \item \textbf{Bittensor centralisation risk.} Independent empirical work has raised
-        concerns about Bittensor's actual decentralisation under the dynamic-TAO
-        regime~\cite{lui2025bittensor}. We treat the Yuma collusion-resistance bound
-        of \cite{steeves2022incentivizing} as a \emph{design property of the algorithm}
-        rather than as a guarantee about the deployed network's stake distribution.
-        The same caveat applies to the prediction-subnet claim of
-        Section~\ref{sec:engine:subnet}: a TAO-incentivised distributed prediction
-        subnet is collusion-resistant under the Yuma bound, but its empirical
-        decentralisation has to be revisited against the deployed stake distribution.
-  \item \textbf{Withdrawn primary source.} The original BitTensor preprint
-        (arXiv:2003.03917) was withdrawn by its authors as obsolete on 2021-11-10. Any
-        prior whitepaper that cited it should be reread against the canonical
-        \cite{rao2021bittensor} or the workshop
-        formalisation~\cite{steeves2022incentivizing}.
-  \item \textbf{Determinism in agentic LLM components.} Section~\ref{sec:miner}'s
-        determinism contract is straightforward for classical analytics but is more
-        delicate when the miner uses an LLM under the hood; the
+  \item \emph{The case study is a single 28-hour run on a single Solana
+        micro-cap pool.} A second run on a second pool that fails to recover
+        price under the same role contract would falsify the deployability
+        claim. The smallest experiment is the same scenario engine pointed at
+        any other RYA-tier asset on Solana, with the same buy-only constitution
+        and a $\geq$2-cycle window. We make no causal claim that the bot caused
+        the recovery; the natural-experiment counterfactual (``what would have
+        happened without the bot?'') is unavailable.
+  \item \emph{The agentic engine is rule-based in the case study.} A future
+        cycle in which the LLM-mediated agentic engine of
+        Section~\ref{sec:engine:agentic} (constitutional-AI-style action
+        constraints in the sense of~\cite{bai2022constitutional}) is run on the
+        same role contract would either replicate the policy-invariant outcome
+        or violate one of the hard rules under pressure. Either result
+        sharpens the claim. The current paper validates the scenario-engine
+        decomposition but not the LLM-mediated agentic engine.
+  \item \emph{Most quantitative validator-loss claims are deferred.} The
+        $E_1$--$E_4$ realised-event channel of Section~\ref{sec:formal:realised}
+        is a design proposal, and the validator-loss decomposition of
+        Section~\ref{sec:formal:vloss} is therefore not yet measured at scale.
+        The smallest falsification experiment is the prediction-router open
+        work of Section~\ref{sec:roadmap}: broaden the cohort, drive the
+        calibration error below 0.10, and join the rollups to the Bittensor
+        shadow soak. Hypotheses H1 and H2 (Section~\ref{sec:rq}) are stated as
+        falsifiable claims, not established results.
+  \item \emph{The 99.34\% headline accuracy is on a top-1{,}000-by-mcap
+        cohort.} The honest accuracy number is the 53.15\% live-API baseline
+        on the broader cohort~\cite{omnirisk2026systemdesign}. The smallest
+        experiment that would falsify the broad-cohort claim is to expand the
+        outcome-resolver corpus and re-run the 168-hour evaluation; the
+        hypothesis would be falsified if the broad-cohort calibration error
+        exceeds 0.20.
+  \item \emph{Bittensor centralisation risk.} Independent empirical
+        work~\cite{lui2025bittensor} raises concerns about Bittensor's actual
+        decentralisation under the dynamic-TAO regime. We treat the Yuma
+        collusion-resistance bound of~\cite{steeves2022incentivizing} as a
+        property of the algorithm, not of the deployed network's stake
+        distribution; the same caveat applies to the prediction-subnet claim
+        of Section~\ref{sec:engine:subnet}.
+  \item \emph{Determinism under LLM-mediated mining.} The determinism contract
+        of Section~\ref{sec:miner} is straightforward for classical analytics
+        but is more delicate when the miner uses an LLM under the hood; the
         consistency component of the validator rule
-        (Section~\ref{sec:validator}) is what catches the residual non-determinism in
-        practice.
-  \item \textbf{Grey-literature feeds in the sentiment-fusion engine.} The Solana
-        sentiment modality of Section~\ref{sec:arch:sentiment} relies on
-        non-peer-reviewed dashboards (Birdeye, DexScreener) and meme-coin launch
-        trackers (Pump.fun). These are functionally part of the attention surface
-        but are operationally fragile; the fusion engine must continue to function
-        when any single grey-literature feed degrades or is rate-limited.
+        (Section~\ref{sec:validator}) is the falsification surface that would
+        catch the residual non-determinism in practice.
+  \item \emph{Grey-literature feeds in the sentiment-fusion engine.} The
+        Solana sentiment modality of Section~\ref{sec:arch:sentiment} relies
+        on non-peer-reviewed dashboards (Birdeye, DexScreener) and a memecoin
+        launchpad (Pump.fun); the engine must continue to function when any
+        single grey-literature feed degrades or is rate-limited. A failure
+        mode in which the fusion stack catastrophically depends on one of
+        these feeds would falsify the noisy-weak-supervision framing.
+  \item \emph{Withdrawn primary source.} The original BitTensor preprint
+        (arXiv:2003.03917) was withdrawn by its authors as obsolete on
+        2021-11-10; we cite the canonical \cite{rao2021bittensor} or the
+        workshop formalisation~\cite{steeves2022incentivizing} instead.
 \end{itemize}
 
 \section{Conclusion}\label{sec:conclusion}
