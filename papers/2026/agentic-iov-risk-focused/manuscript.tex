@@ -17,6 +17,15 @@
 \usepackage{xcolor}
 \usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
 
+% Typography polish (CEO directive 161d8c72): zero-warnings target.
+\setlength{\emergencystretch}{3em}
+\widowpenalty=10000
+\clubpenalty=10000
+% Allow ragged-right + bigger emergency stretch inside the bibliography so long
+% Lambda / endpoint identifiers in the source-of-truth note fields wrap rather
+% than overrun the line.
+\AtBeginBibliography{\sloppy\raggedright\setlength{\emergencystretch}{6em}}
+
 \addbibresource{references.bib}
 
 \hypersetup{
@@ -37,7 +46,7 @@
   \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
   \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.6 (draft)}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.7 (internal review)}}
 
 \begin{document}
 \maketitle
@@ -57,9 +66,10 @@ constraints~\cite{bai2022constitutional}; and an API-risk and scenario
 engine that converts forecasts into pre-committed action programs in the
 sense of Monte-Carlo financial-engineering scenario
 generation~\cite{glasserman2003monte}. We anchor the architecture in two
-fully-public empirical artefacts: a 28-hour \textsc{RYA} liquidity-defence
-cycle on Solana whose 52~timestamped buys held the role contract under
-two stop-loss events and a CEO override; and a 168-hour
+fully-public empirical artefacts: a 27-hour \textsc{RYA} liquidity-defence
+cycle on Solana whose 52~timestamped buys (5.2~SOL deployed) held the
+role contract under two stop-loss events and three CEO sign-offs; and a
+168-hour
 prediction-router calibration arc that improves from a 53\% live-API
 baseline to 99\% on a top-cap-restricted cohort, with explicit
 class-imbalance honesty. The case study supports the architecture's
@@ -99,10 +109,10 @@ pre-committed action programs whose triggers and resource bounds are
 declared in advance.
 
 The architecture is grounded in two fully-public empirical artefacts.
-The first is a 28-hour \textsc{RYA} liquidity-defence cycle on Solana
-(Section~\ref{sec:case-study}): 52~time-weighted-sliced buys totalling
-6.45~SOL, holding the role contract under two stop-loss events and one
-CEO override. The second is a 168-hour prediction-router calibration arc
+The first is a 27-hour \textsc{RYA} liquidity-defence cycle on Solana
+(Section~\ref{sec:case-study}): 52~time-weighted-sliced buys deploying
+5.2~SOL, holding the role contract under two stop-loss events and three
+CEO sign-offs. The second is a 168-hour prediction-router calibration arc
 on the production Blue \texttt{us-east-1} deployment
 (Section~\ref{sec:metrics}): empirical accuracy improves from a 53\%
 live-API baseline to 99\% on a top-cap-restricted cohort, with explicit
@@ -119,10 +129,10 @@ work~\cite{omnirisk2026soak}.
         coherent dataflow with a single hard architectural rule
         (constitutional action constraints on the agentic engine, gated
         by an upstream agent-task-management layer).
-  \item A fully-public 28-hour \emph{case study} (Section~\ref{sec:case-study})
+  \item A fully-public 27-hour \emph{case study} (Section~\ref{sec:case-study})
         instrumenting the scenario engine on a single Solana micro-cap pool
-        as a deterministic Trader-role policy, with timestamped buy data,
-        two stop-loss events, and an out-of-band human override.
+        as a deterministic Trader-role policy, with 52 timestamped buys
+        across two stop-loss events and three out-of-band CEO sign-offs.
   \item A \emph{production calibration arc} (Section~\ref{sec:metrics})
         from the live OmniRisk prediction router, framed honestly:
         the headline 99\% accuracy is paired with the 53\% baseline, the
@@ -139,7 +149,7 @@ Section~\ref{sec:conclusion} closes.
 
 \section{The Five-Engine Architecture}\label{sec:arch}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=0.92\linewidth]{../omnirisk-rayachain-bittensor/figures/five-engine-dependency-graph.pdf}
 \caption{Dependency graph for the five-engine composition. The shared
@@ -353,7 +363,7 @@ window, and persists per-cohort metrics. We report five representative
 runs in Table~\ref{tab:calibration-arc}, reproduced
 from~\cite{omnirisk2026predmetrics}.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \small
 \begin{tabular}{lrrrr}
@@ -486,7 +496,7 @@ decomposition; the LLM-mediated agentic engine is a follow-on build.
 
 We have proposed a five-engine composition for agentic, context-aware
 risk prediction in the Internet of Value, anchored to two fully-public
-empirical artefacts: a 28-hour \textsc{RYA} liquidity-defence cycle
+empirical artefacts: a 27-hour \textsc{RYA} liquidity-defence cycle
 that holds its constitution across two stop-loss events and three
 human approvals, and a 168-hour production calibration arc that we
 report with the class-imbalance and cohort-recomposition caveats that

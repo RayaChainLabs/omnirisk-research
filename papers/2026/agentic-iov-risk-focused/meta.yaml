@@ -13,8 +13,8 @@ authors:
     affiliation: "Rayachain Lab, Dublin, Ireland"
     order: 2
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list — same as long paper
-status: "draft"              # scaffold | draft | internal-review | submitted | published
-revision: "0.6"
+status: "internal-review"    # scaffold | draft | internal-review | submitted | published
+revision: "0.7"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
@@ -45,9 +45,23 @@ provenance:
     paper that are not also in the long paper, with the same primary-source anchors.
   bibliography: "../../../_bib/references.bib (shared, 52 entries; focused paper cites a subset of ~20-25)"
 
-last_local_compile: "2026-05-07T06:08Z (v0.6, latexmk + biber, papers/2026/agentic-iov-risk-focused; 11 pages, no unresolved citations, top-level manuscript.pdf matches build/manuscript.pdf)"
+last_local_compile: "2026-05-07T06:17Z (v0.7, latexmk + biber, papers/2026/agentic-iov-risk-focused; 11 pages, ZERO WARNINGS, no unresolved citations or references, no overfull/underfull hboxes, no missing-font-shape notices, top-level manuscript.pdf matches build/manuscript.pdf)"
 
 revision_log:
+  v0_7:
+    date: "2026-05-07"
+    summary: "Final polish pass per CEO directive 161d8c72 (2026-05-07T05:12Z): zero-warnings compile, abstract↔case-study number reconciliation, 28h→27h window correction, 6.45 SOL→5.2 SOL in-window deployed-spend correction (the 6.45 SOL figure was the lifetime state.json value INCLUDING the prior-day defence; the in-window deployment is 52 buys × 0.10 SOL = 5.2 SOL), CEO-sign-off / stop-loss-event count reconciliation. Status flipped draft → internal-review."
+    changes:
+      - "Preamble typography polish: \\setlength{\\emergencystretch}{3em} so the bibliography's longer URL fields wrap without overfull \\hbox warnings; \\widowpenalty=10000 \\clubpenalty=10000 to suppress orphan/widow lines per directive."
+      - "Abstract reconciliation: '28-hour' → '27-hour'; '52 timestamped buys held the role contract under two stop-loss events and a CEO override' → '52 timestamped buys (5.2 SOL deployed) held the role contract under two stop-loss events and three CEO sign-offs'. Numbers now match §case-study."
+      - "§intro empirical-anchor paragraph: '28-hour' → '27-hour'; '52 time-weighted-sliced buys totalling 6.45 SOL, holding the role contract under two stop-loss events and one CEO override' → '52 time-weighted-sliced buys deploying 5.2 SOL, holding the role contract under two stop-loss events and three CEO sign-offs'. The 6.45 SOL figure (state.json lifetime including the prior-day spend) is no longer used as the in-window deployment claim — the in-window claim is now 5.2 SOL = 52 × 0.10 SOL, audit-defensible against the bot's MAX_TRADE_SOL=0.10 contract."
+      - "§intro contributions-list: 'A fully-public 28-hour case study... with timestamped buy data, two stop-loss events, and an out-of-band human override' → 'A fully-public 27-hour case study... with 52 timestamped buys across two stop-loss events and three out-of-band CEO sign-offs'. Sharpens both the window and the count."
+      - "§conclusion: '28-hour RYA liquidity-defence cycle' → '27-hour RYA liquidity-defence cycle'."
+      - "§case-study scope statement at the head ('between 2026-05-06 01:04 UTC and 2026-05-07 03:44 UTC') is unchanged because the explicit window endpoints already imply ~26.7 hours; the 'three acts' framing is unchanged. The 'Why this story matters' paragraph already used 'two stop-loss events and three CEO sign-offs'; that phrasing is now consistent with the abstract and intro."
+      - "§case-study buy-record framing: 'the long-form report carries the buy-by-buy table (52 rows) and the price- and liquidity-time series figures' was previously a forward-reference. Per directive's 'Self-references stay removed' constraint we now phrase as 'the buy-by-buy decision log (52 rows of timestamps, prices, tier-trigger values, and slice-level execution records) is publicly available alongside that writeup' (the writeup being the cited Paragraph article omnirisk2026defending). No `\\cite{omnirisk2026techreport}` reintroduced; this was already removed in the v0.6 → polish-pass interim."
+      - "Title-page revision tag bumped 0.6 → 0.7; status field draft → internal-review; last_local_compile updated."
+      - "Build target: ZERO warnings (not just zero errors) per directive. Verified with `make pdf` 2>&1 grep for 'warning|undefined|overfull|underfull|missing'."
+      - "What is NOT changed (per directive): IoV abstract opener; 5-engine architecture as headline; §case-study three-act narrative; §metrics calibration arc; §langgraph 3-paragraph compression; §limits falsification posture; bibliography (53 entries); page count (still 11 ≤ 15)."
   v0_6:
     date: "2026-05-07"
     summary: "Tighten §langgraph (orchestration) per CEO directive 51c23c5c (2026-05-07T05:06Z): drop deployment-plumbing detail (port numbers, header names, config flag names, Dockerfile paths, test counts, Phase-N gates, Redis TTL specifics, graph step counts, LocalAI route names) in favour of three research-grade conceptual claims: (i) the agent-task-management vs runtime-orchestration separation as the architectural primitive, NOT either implementation; (ii) the constitutional gate (the runtime cannot bypass the agentic engine's policy boundary) plus the strict-JSON-schema emission contract with validationStatus ∈ {valid, degraded, fallback}; (iii) the three-tier fallback ladder and the Phase-13 Strategy-Alpha synthesis layer as the agentic engine of §arch. Section retitled 'Orchestration: Two Layers' (was 'Orchestration: LangGraph and Paperclip')."
