@@ -1,0 +1,135 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
+
+\setlength{\emergencystretch}{3em}
+\widowpenalty=10000
+\clubpenalty=10000
+
+\addbibresource{references.bib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={Agentic, Context-Aware Risk Intelligence in the Internet of Value — a summary},
+  pdfauthor={Basel Magableh; OmniRisk Research},
+}
+
+\title{Agentic, Context-Aware Risk Intelligence\\
+       in the Internet of Value\\[0.4em]
+       \large{\normalfont(a short summary)}}
+\author{%
+  Basel Magableh\textsuperscript{1,*} \quad\quad OmniRisk Research\textsuperscript{2} \\[0.8em]
+  \normalsize\textsuperscript{1}School of Computer Science, Technological University Dublin, Ireland \\
+  \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
+  \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
+}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\textbf{[SCAFFOLD --- AW: rewrite as 80--100 word abstract that a smart
+non-specialist can follow in one read. Open with the IoV reframe in one
+sentence. Name the five engines in one sentence (no commas-as-list — use
+``which include\dots''). Close with one sentence on the empirical anchor
+(27-hour intervention, 168-hour calibration arc). No \cite\{\} calls.]}
+\end{abstract}
+
+\section*{The problem in one paragraph}
+
+\textbf{[SCAFFOLD --- AW: 1 paragraph (~120 words). The IoV is now a
+heterogeneous network where the dominant marginal risk is composite, not
+single-chain. Existing risk tooling treats one chain at a time. The
+research question: \emph{what does context-aware risk intelligence have
+to do, and how is it kept honest?} Plain English; no jargon; no
+citations.]}
+
+\section*{The five engines}
+
+\textbf{[SCAFFOLD --- AW: ~250 words across five short paragraphs (one
+per engine). Each paragraph: what the engine does (~30 words), what it
+isn't (~10 words). No equations. No subsection headings. Use sentence
+case for engine names: prediction engine, agentic engine, sentiment
+fusion, Bittensor verification subnet, scenario engine.]}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/omnirisk-architecture.png}
+\caption{The OmniRisk architecture: five engines composed over a single
+shared intelligence fabric. \textbf{[SCAFFOLD --- AW: tighten this caption
+to ~50 words; the focused paper carries the full caption.]}}
+\label{fig:summary-architecture}
+\end{figure}
+
+\section*{The case study (in plain English)}
+
+\textbf{[SCAFFOLD --- AW: ~300 words. Tell the story of the 27-hour
+on-chain intervention as a story, not a results dump. Anchors:
+\begin{itemize}
+\item Day 1, early morning UTC: token dropped ~60\% on a single
+      Solana pool.
+\item The agentic policy was activated under a constitutional gate
+      (paused-by-default, board-sign-off-required). 52 small buys
+      followed over 27 hours.
+\item Two stop-loss events tripped the safety circuit; both were
+      manually overridden after explicit board sign-off.
+\item Outcome: price recovered ~20\% from the floor; pool liquidity
+      grew from \$5.4k to \$10.5k.
+\item One organic buyer arrived at the new defended floor without
+      the policy firing.
+\end{itemize}
+Tone: calm, factual, reflective. The point is the architecture worked
+under the constitutional constraints, not that the price went up.]}
+
+\section*{The 168-hour calibration arc}
+
+\textbf{[SCAFFOLD --- AW: ~150 words. The prediction engine ships a
+production calibration arc: from a 53\% baseline accuracy on a broad
+cohort to a 99\% headline accuracy on a 915-sample, top-1000-by-cap
+restricted cohort, with a Brier calibration error of 0.1335. State the
+class-imbalance caveat plainly: low base rate of crash events makes the
+99\% accuracy easier than it sounds; the Brier 0.1335 is the more honest
+number. Lead with the 53\%, end with the Brier.]}
+
+\section*{What this isn't}
+
+\textbf{[SCAFFOLD --- AW: ~120 words. Honest disclaimer paragraph. Three
+things this isn't:}
+\begin{itemize}
+\item \textbf{Not a trading bot for retail.} The bot is buy-only,
+      capped, and operates under board sign-off. It would not work as
+      a generic ``defend my coin'' product.
+\item \textbf{Not a decentralised system yet.} The Bittensor
+      verification subnet is a testnet shadow deployment, not a
+      production validator-loss measurement.
+\item \textbf{Not a generalisation claim.} The case study is a single
+      pool, a single token, a single 27-hour cycle. Replication on
+      other pools is the obvious next step.\textbf{]}
+\end{itemize}\textbf{]}
+
+\section*{Read more}
+
+\textbf{[SCAFFOLD --- AW: 1 short paragraph. Point to (a) the focused
+paper for the full architecture and the threat model; (b) the public
+decision log on Paragraph for the per-buy execution record; (c) the
+public source repository for the artefact paths. No bibliography
+required for this summary; in-text URLs only. If you do include
+\printbibliography, cap at 6 entries (the most cited primary sources).]}
+
+\end{document}

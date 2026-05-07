@@ -1,0 +1,54 @@
+title: "Agentic, Context-Aware Risk Intelligence in the Internet of Value — a summary"
+slug: "agentic-iov-risk-summary"
+companion_to: "agentic-iov-risk-focused"   # the focused-paper companion (not the long technical report)
+target_length_pages: 5                       # CEO directive 2026-05-07: short summary article, accessible voice
+authors:
+  - name: "Basel Magableh"
+    email: "basel.magableh@tudublin.ie"
+    affiliation: "School of Computer Science, Technological University Dublin, Ireland"
+    orcid: "0000-0003-2337-637X"
+    order: 1
+    corresponding: true
+  - name: "OmniRisk Research"
+    email: "research@omnirisk.io"
+    affiliation: "Rayachain Lab, Dublin, Ireland"
+    order: 2
+target_venue: "paragraph or arxiv-extended-abstract"   # CEO call before publish
+status: "scaffold"                            # scaffold → draft → CEO-review → published; CEO directive: keep in draft until they look
+revision: "0.1"
+created_at: "2026-05-07"
+submitted_at: null
+published_at: null
+doi: null
+arxiv_id: null
+canonical_url: null
+tags: ["internet-of-value","agentic-ai","cross-chain","summary","blog","accessible","companion"]
+
+scope:
+  in: |
+    Plain-English summary of the five-engine architecture and the RYA defence cycle.
+    Aimed at a non-specialist technical reader (CTO / VC / engineer in another vertical).
+    Heavy use of analogies, light use of formalisation, no equations except where unavoidable.
+    Same numbers as the focused paper (5,097 round soak, 99% accuracy with class-imbalance caveat,
+    27-hour cycle / 52 buys / 5.2 SOL deployed) but woven into a narrative rather than a results table.
+  out: |
+    No threat-model section.
+    No formal validator-loss decomposition.
+    No bibliography section heavier than ~6 entries (the most-cited primary sources).
+    No CRediT / funding / data-availability statements (those live in the focused paper).
+    No tables; up to 2 figures (the architecture diagram and one chart).
+
+provenance:
+  source_paper: "papers/2026/agentic-iov-risk-focused/manuscript.tex (v1.1+)"
+  extraction_rule: |
+    Where text appears in both the focused paper and the summary, the summary may rephrase
+    for the more accessible register, but no new claims may appear in the summary that are
+    not also in the focused paper. The summary is shorter and more readable; not different
+    in substance.
+
+last_local_compile: null
+pending_before_submission:
+  - "First-pass populate from the focused paper into a 5-page accessible summary"
+  - "Compile clean (make pdf)"
+  - "CEO read-through (status stays `draft` until then)"
+  - "Pick venue: Paragraph (long-form blog) or arXiv extended abstract"
