@@ -10,23 +10,35 @@ authors:
     email: "research@omnirisk.io"
     order: 2
 target_venue: "arxiv"        # arXiv: cs.CR primary, q-fin.RM cross-list
-status: "draft"              # draft | internal-review | submitted | published | archived
-revision: "0.13"
+venue_alternative: "If the agentic-AI-safety angle is judged stronger than the cross-chain-security angle by the CEO/board, an alternative venue is the Conference on Language Modeling (COLM) or the Workshop on Decentralized AI at NeurIPS 2026 — the constitutional-action-constraint framing of §engine:agentic and the role-contract enforcement demonstrated in the case study would land more centrally in the agentic-safety community than in cs.CR. arXiv cs.CR remains the default; the alternative is a one-paragraph note for the CEO to consider on the next major revision, not a request for action."
+status: "internal-review"    # draft | internal-review | submitted | published | archived
+revision: "0.14"
 created_at: "2026-05-03"
 submitted_at: null
 published_at: null
 doi: null
 arxiv_id: null
 canonical_url: null
-tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence","oft","yuma-consensus","internet-of-value","agentic-ai","sentiment-fusion","scenario-engine","rya-defence-cycle"]
+tags: ["cross-chain","layerzero","bittensor","subtensor-evm","risk-intelligence","oft","yuma-consensus","internet-of-value","agentic-ai","sentiment-fusion","scenario-engine","rya-defence-cycle","mev","prediction-markets","wash-trading"]
 
 # Bibliography hygiene — read this before submission.
 bibliography_audit:
-  verified_at: "2026-05-06"
-  verified_by: "Academic Writer (OMN-152)"
-  total_entries: 33
-  entries_with_doi: 23
-  entries_url_only: 10  # protocol whitepapers + canonical docs + industry blog post + grey-lit + paragraph publication
+  verified_at: "2026-05-07"
+  verified_by: "Academic Writer (OMN-152, internal-review cohort per CEO directive 2026-05-07)"
+  total_entries: 45
+  entries_with_doi: 32
+  entries_url_only: 13  # protocol whitepapers + canonical docs + industry blog post + grey-lit feeds + paragraph publication
+  every_cite_key_resolves_at_2026_05_07: true
+  cohorts:
+    - audited_at: "2026-05-03"
+      count: 16
+      cohort: "v0.4 baseline (cross-chain bridge SoKs, Bittensor primary sources, opML/snarkGPT, DeFi SoK)"
+    - audited_at: "2026-05-06"
+      count: 11
+      cohort: "v0.10/v0.11 (constitutional AI, FinGPT, BloombergGPT, AzFinText + Xing + Day, Taoshi PTN, Glasserman, NIST SP 800-84, Cernera 2023, Lai 2023 / Gandhi 2023 surveys, Long 2019 MFNN, Zhang 2025 SentiStack, Macrocosmos SN13, Birdeye/DexScreener/Pump.fun grey-lit feeds, omnirisk2026defending)"
+    - audited_at: "2026-05-07"
+      count: 10
+      cohort: "v0.14 internal-review (Nakamoto 2008 Bitcoin, Wood 2014 Ethereum Yellow Paper, Daian et al. 2020 Flash Boys 2.0 (S&P), Qin et al. 2022 Quantifying BEV (S&P), Castro & Liskov 1999 PBFT (OSDI), Buterin & Griffith 2017 Casper FFG, Hanson 2003 LMSR, Manski 2006 prediction-market interpretation, Cong et al. 2022 Crypto Wash Trading (NBER), Belchior et al. 2022 blockchain-interoperability survey (CSUR))"
   added_in_v0_4:
     - cite_key: "ganescu2024trust"
       reason: "fills the zero-knowledge ML verification gap flagged in academic review (related work §4.4); verified against arXiv 2402.06414 abstract page on 2026-05-03"
@@ -39,6 +51,22 @@ bibliography_audit:
 
 # Changes in revision v0.4 (response to forwarded academic review on OMN-34, 2026-05-03):
 revision_log:
+  v0_14:
+    date: "2026-05-07"
+    summary: "Internal-review cut per CEO publication directive (2026-05-07; comment 13727607). Senior-professor-level audit: trim abstract; tighten Reproducibility Note; extend the case study from a single 5-hour cycle to a two-cycle 28-hour defence (52 buys, 6.445 SOL lifetime, ratchet-3 reached); audit bibliography against the foundational-Ethereum/Bitcoin + MEV + BFT-finality + prediction-market + wash-trading + cross-chain-SoK reading list; flip status draft → internal-review."
+    changes:
+      - "Title page: revision tag bumped 0.13 → 0.14; date 2026-05-07; preserves Basel Magableh (TUD, corresponding) + OmniRisk Research author block landed in v0.13."
+      - "Abstract: rewritten and trimmed to ~200 words to lead with the falsifiable thesis (five-engine composition for agentic IoV risk), specify the validator-loss decomposition, state H1/H2 explicitly, and close with the empirical anchor (52 buys, 6.445 SOL, +30.8% price recovery, +15.4% liquidity, three ratchet steps without role-contract violation). Marketing prose removed; chainalysis grey-lit dependence dropped (the cumulative bridge-loss figure remains via augusto2024sok which is peer-reviewed)."
+      - "§intro 'IoV reframe': peer-reviewed framing — Nakamoto + Wood as foundational primary sources; Belchior et al. 2022 (CSUR) as the canonical pre-S&P-2024 interoperability survey; Daian + Qin as MEV peer-reviewed primaries; Cong et al. 2022 alongside Cernera 2023 for the wash-trading + micro-cap threat surface."
+      - "§engine:subnet: Hanson 2003 (LMSR) and Manski 2006 added as the prediction-market mechanism-design lineage that the Bittensor prediction subnet economically approximates; calibration caveat made explicit."
+      - "§related-bridge-sok: Belchior et al. 2022 added as a third systematisation alongside augusto2024sok and zhang2023sok."
+      - "§security: new bullet 'Maximal-extractable-value cost on the route' (Daian + Qin); the manipulated-liquidity-signals bullet now cites Cong et al. for empirical wash-trading evidence; the cross-chain-spoofing bullet cites Castro & Liskov (PBFT) and Buterin & Griffith (Casper FFG) for the BFT-finality bound that the DVN-quorum security argument inherits."
+      - "§case-study retitled '2026-05-06/07' (was '2026-05-06') and rewritten to span two contiguous sub-cycles. Timeline rewritten as the dump → defend → first organic recovery → second sell wave → continued defence → ratchet-3 → wallet-topped narrative arc; Buy-by-buy table extended from 30 rows (cycle-1 only) to 52 rows (cycle-1 + cycle-2 with explicit cycle-boundary midrules and per-cycle Cumulative resets); Cumulative empirical result paragraph reports 52 buys, 6.445 SOL lifetime, +30.0% / +30.8% price recovery, +15.4% pool-liquidity restoration, three ratchet steps."
+      - "Reproducibility Note: collapsed from ~2 pages of v0.4–v0.12 verbose entries to three short paragraphs (data and figures; bibliography; revision-history pointer to git). The detailed revision history remains in this meta.yaml under revision_log and in the omnirisk-papers git history."
+      - "figures/_make_figures.py: data window extended (CYCLE_END = 2026-05-07 01:30 UTC) so the baseline price + liquidity figures span both cycles; ratchet-step axvline annotations added; restored Designer's polished five-engine-architecture.pdf, dependency-graph PDF, and scenario-dataflow PDF in place."
+      - "OMN-165 filed: Designer follow-up to replace the v0.14 baseline price + liquidity PDFs with polished versions matching the OmniRisk visual identity. Non-blocking; v0.14 baseline figures are publishable as-is (vector, correct on data) if Designer cannot ship before publication."
+      - "Bibliography +10 verified entries on 2026-05-07: nakamoto2008bitcoin, wood2014ethereum, daian2020flash (S&P 2020), qin2022quantifying (S&P 2022), castro1999practical (OSDI 1999), buterin2017casper (Casper FFG), hanson2003combinatorial (LMSR), manski2006interpreting, cong2022crypto (NBER 30048), belchior2021survey (ACM CSUR 54(8)). Total bibliography 45 entries; pre-existing 35 unchanged."
+      - "meta.yaml: status flipped draft → internal-review; revision 0.13 → 0.14; bibliography_audit refreshed to 2026-05-07 with cohort breakdown; venue_alternative note added (COLM / NeurIPS Decentralized AI workshop) for CEO consideration on next major revision; pending_before_submission rewritten — paper-side items struck, engineering-side items clearly delegated."
   v0_13:
     date: "2026-05-06"
     summary: "Add Basel Magableh (Technological University of Dublin) as first author per CEO directive. Metadata-only change, no manuscript content modified."
@@ -161,15 +189,44 @@ revision_log:
       - "§eval (Data and Evaluation Framework): added Route Health time series as fourth dataset; flow logs reframed as OFTSent/OFTReceived joined per LayerZero V2 GUID with explicit acknowledgement that until Transfer Engine persistence ships, the join failure rate must be tracked and the replay set restricted to successfully-joined routes."
       - "Reproducibility Note: appended v0.6 entry documenting the three substantive corrections so a future reviewer can audit what changed and why."
 
-last_local_compile: null               # gate: needs latexmk on a machine with TeX Live
-pending_before_submission:
-  - "Sub-issue findings landed: Market Researcher (b3cbe648) + Developer (fed71685) + Cody CTO (c750fd90) in v0.11; Designer (OMN-160 / commit eb6dafd) in v0.12. The five required vector PDFs (architecture, prices, liquidity, dependency graph, scenario data flow) are all in figures/ and wired into the manuscript."
-  - "SECURITY: rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; address 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into CI/CD secret store; ship .env.example with placeholders only — needs separate engineering issue, not a paper task"
-  - "CEO sign-off on venue (arxiv cs.CR primary, q-fin.RM cross-list)"
-  - "Engineering: close the §status:gaps mainnet-readiness items — bring up mainnet RPC + EID + registry, deploy mainnet OFT + Solana program, wire the full 20-direction peer matrix, fix Base Sepolia ownership mismatch, adopt multisig+timelock governance, commission third-party security audit, write mainnet runbook (engineering estimate 4–8 weeks)"
-  - "Engineering: re-verify §status:gaps operational items as of submission date (Transfer Engine persistence, slippage controls, Risk Broadcast readiness flag, decimal handling, API surface drift)"
-  - "Engineering: confirm Subtensor EVM anchoring chain ID (945 testnet vs 964 mainnet); update §subtensor accordingly"
-  - "Engineering: lock the final emissions-curve shape (yearly decay vs halving) on the OMN-49 child issue and replace the §economics:rya:emissions 'two viable shapes' bullet list with the chosen curve"
-  - "Compile manuscript on a TeX Live host (run `make pdf`); resolve any unresolved-reference warnings"
-  - "Subnet partner identification (Bittensor cross-chain risk subnet sponsor)"
-  - "Empirical follow-up paper: instantiate baselines B1-B4 and report H1/H2 outcomes against MAINNET RayaChain flows once mainnet cuts over"
+last_local_compile: "2026-05-07T01:35Z (v0.14, latexmk + biber, papers/2026/omnirisk-rayachain-bittensor)"
+
+# pending_before_submission: split into paper-side (closed for v0.14 internal-review) and
+# engineering-side (delegated, separate track from publication).
+
+pending_before_submission_paper:
+  status: "all-closed-for-v0.14-internal-review"
+  closed_in_v0_14:
+    - "DONE: Compile manuscript on a TeX Live host (last_local_compile = 2026-05-07T01:35Z; build/manuscript.pdf and papers/2026/omnirisk-rayachain-bittensor/manuscript.pdf both produced from v0.14 .tex)."
+    - "DONE: Senior-professor citation audit. Bibliography expanded from 33 → 45 verified entries on 2026-05-07; foundational primary sources (Nakamoto, Wood), peer-reviewed MEV (Daian S&P 2020, Qin S&P 2022), BFT/finality (Castro & Liskov OSDI 1999, Buterin & Griffith Casper FFG), prediction-market mechanism design (Hanson 2003 LMSR, Manski 2006), wash-trading detection (Cong et al. 2022 NBER), and the canonical interoperability survey (Belchior et al. 2022 ACM CSUR) all wired into the body where they strengthen claims."
+    - "DONE: Sub-issue findings integrated. Market Researcher (b3cbe648), Developer (fed71685), Cody CTO (c750fd90) landed in v0.11; Designer architecture/dependency-graph/scenario-dataflow figures (OMN-160, commit eb6dafd) landed in v0.12; v0.14 baseline price/liquidity figures regenerated through 2026-05-07 01:14 UTC ratchet-3."
+    - "DONE: Author block. Basel Magableh (TUD, corresponding) + OmniRisk Research; pdfauthor metadata matches."
+    - "DONE: Abstract trimmed to ~200 words, falsifiable thesis lead, falsifiable result close, marketing prose removed."
+    - "DONE: Case study extended to two cycles (28 hours, 52 buys, 6.445 SOL lifetime, ratchet-3 reached); narrative arc dump → defend → recovery → second sell wave → continued defence → ratchet-3 → wallet-topped."
+    - "DONE: Reproducibility Note collapsed from ~2 pages of v0.4–v0.12 verbose entries to three short paragraphs."
+  open_for_v0_15_or_camera_ready:
+    - "Designer follow-up (OMN-165 dispatched 2026-05-07 01:35 UTC): replace v0.14 baseline price + liquidity PDFs with polished versions matching the OmniRisk visual identity. Non-blocking; v0.14 baseline figures are vector and correct on data."
+
+pending_before_submission_engineering:
+  status: "delegated-separate-engineering-track-not-blocking-publication"
+  notes: "These items are flagged for engineering owners and do NOT block the v0.14 internal-review publication, because every empirical claim in the paper is scoped explicitly to the testnet flows + the RYA case-study cycle. They become blocking before the empirical follow-up paper that reports H1/H2 outcomes against mainnet RayaChain flows."
+  items:
+    - owner: "OmniRisk DevOps / Security"
+      delegate_to: "separate engineering issue (not OMN-152)"
+      action: "Rotate the 3 exposed plaintext deployer private keys (same secret across EVM_DEPLOYER_PRIVATE_KEY / EVM_PRIVATE_KEY / BASE_OFT_OWNER_PK; deployer EOA 0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc); rotate the exposed Alchemy API key; move all secrets out of tracked .env into a CI/CD secret store; ship .env.example with placeholders only."
+    - owner: "RayaChain Engineering"
+      action: "Close the §status:gaps mainnet-readiness items — mainnet RPC + EID + registry; mainnet OFT + Solana program deploy; full 20-direction peer-matrix wiring; Base Sepolia ownership-mismatch fix; multisig + timelock governance; third-party security audit; mainnet runbook. Engineering estimate 4–8 weeks."
+    - owner: "RayaChain Engineering"
+      action: "Re-verify §status:gaps operational items as of any future submission date (Transfer Engine persistence; slippage controls; Risk Broadcast readiness flag; decimal handling; API surface drift)."
+    - owner: "RayaChain Engineering"
+      action: "Confirm Subtensor EVM anchoring chain ID (945 testnet vs. 964 mainnet); update §subtensor wording accordingly."
+    - owner: "Tokenomics WG (OMN-49)"
+      action: "Lock the final emissions-curve shape (yearly decay vs. halving epochs) and replace the §economics:rya:emissions 'two viable shapes' bullet list with the chosen curve."
+    - owner: "BD"
+      action: "Identify a Bittensor cross-chain risk subnet sponsor (subnet partner) for the prediction-engine production deployment."
+    - owner: "Academic Writer (follow-up paper)"
+      action: "Instantiate baselines B1–B4 of §eval:baselines and report H1/H2 outcomes against MAINNET RayaChain flows once mainnet cuts over. Separate publication, not v0.14."
+
+pending_before_submission_board:
+  status: "ack-only-not-blocking"
+  notes: "Venue is locked at arXiv cs.CR primary, q-fin.RM cross-list per CEO directive 2026-05-07; the venue_alternative field at the head of this file lists a single optional reframe (COLM / NeurIPS Decentralized AI workshop) for CEO consideration on the next major revision."

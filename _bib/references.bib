@@ -479,3 +479,142 @@
   urldate      = {2026-05-06},
   note         = {Solana memecoin launch surface whose homepage trend leaderboards (Movers, Mayhem, New, Last-trade) function as a de-facto attention ticker for the memecoin segment of the IoV. Cited as the third Solana grey-literature feed, with the explicit caveat that the population (memecoins) has a fat-tailed price distribution under which off-the-shelf sentiment-classifier confidence scores are poorly calibrated.}
 }
+
+% =============================================================================
+% Added in v0.14 (2026-05-07) per CEO directive on OMN-152: senior-professor
+% reading-list audit. Adds foundational primary sources (Nakamoto, Wood),
+% peer-reviewed MEV / extractable-value work (Daian et al. S&P 2020; Qin et al.
+% S&P 2022), Byzantine-fault-tolerance (Castro & Liskov), Casper FFG
+% (Buterin & Griffith), prediction-market mechanism design (Hanson; Manski),
+% peer-reviewed wash-trading-detection (Cong et al.), and the canonical
+% blockchain-interoperability survey (Belchior et al. 2021 CSUR). Each entry
+% verified against its primary source on 2026-05-07.
+% =============================================================================
+
+% --- Foundational primary sources --------------------------------------------
+
+@misc{nakamoto2008bitcoin,
+  author       = {Nakamoto, Satoshi},
+  title        = {{Bitcoin: A Peer-to-Peer Electronic Cash System}},
+  year         = {2008},
+  url          = {https://bitcoin.org/bitcoin.pdf},
+  urldate      = {2026-05-07},
+  note         = {The original Bitcoin whitepaper; cited as the foundational primary source for Nakamoto consensus and the proof-of-work chain primitive that the IoV inherits.}
+}
+
+@techreport{wood2014ethereum,
+  author       = {Wood, Gavin},
+  title        = {{Ethereum: A Secure Decentralised Generalised Transaction Ledger}},
+  institution  = {Ethereum Foundation},
+  type         = {Yellow Paper},
+  year         = {2014},
+  url          = {https://ethereum.github.io/yellowpaper/paper.pdf},
+  urldate      = {2026-05-07},
+  note         = {Ethereum Yellow Paper; canonical primary specification of the EVM that the LayerZero V2 OFT lanes execute on and that the Subtensor EVM~\cite{opentensor2024evm} is compatible with.}
+}
+
+% --- Maximal Extractable Value (MEV): peer-reviewed primary sources ----------
+
+@inproceedings{daian2020flash,
+  author       = {Daian, Philip and Goldfeder, Steven and Kell, Tyler and Li, Yunqi and Zhao, Xueyuan and Bentov, Iddo and Breidenbach, Lorenz and Juels, Ari},
+  title        = {{Flash Boys 2.0: Frontrunning in Decentralized Exchanges, Miner Extractable Value, and Consensus Instability}},
+  booktitle    = {2020 IEEE Symposium on Security and Privacy (SP)},
+  year         = {2020},
+  pages        = {910--927},
+  publisher    = {IEEE},
+  doi          = {10.1109/SP40000.2020.00040},
+  note         = {Foundational peer-reviewed treatment of miner extractable value and frontrunning in decentralised exchanges; the security primitive a route-risk score on the IoV must price.}
+}
+
+@inproceedings{qin2022quantifying,
+  author       = {Qin, Kaihua and Zhou, Liyi and Gervais, Arthur},
+  title        = {{Quantifying Blockchain Extractable Value: How Dark is the Forest?}},
+  booktitle    = {2022 IEEE Symposium on Security and Privacy (SP)},
+  year         = {2022},
+  pages        = {198--214},
+  publisher    = {IEEE},
+  doi          = {10.1109/SP46214.2022.9833734},
+  note         = {Empirical quantification of blockchain extractable value across sandwich attacks, liquidations, and arbitrage. Cited for the lower-bound MEV figures the IoV risk model has to internalise as a route-cost component.}
+}
+
+% --- BFT and finality primitives ---------------------------------------------
+
+@inproceedings{castro1999practical,
+  author       = {Castro, Miguel and Liskov, Barbara},
+  title        = {{Practical Byzantine Fault Tolerance}},
+  booktitle    = {Proceedings of the Third USENIX Symposium on Operating Systems Design and Implementation (OSDI '99)},
+  year         = {1999},
+  pages        = {173--186},
+  publisher    = {USENIX Association},
+  url          = {https://www.usenix.org/legacy/events/osdi99/full_papers/castro/castro.pdf},
+  urldate      = {2026-05-07},
+  note         = {The PBFT paper; canonical reference for the Byzantine-fault-tolerance bound that LayerZero V2 DVN configurations~\cite{zarick2024layerzero} and the Subtensor validator quorum~\cite{steeves2022incentivizing} both assume.}
+}
+
+@misc{buterin2017casper,
+  author       = {Buterin, Vitalik and Griffith, Virgil},
+  title        = {{Casper the Friendly Finality Gadget}},
+  year         = {2017},
+  eprint       = {1710.09437},
+  archiveprefix= {arXiv},
+  primaryclass = {cs.CR},
+  doi          = {10.48550/arXiv.1710.09437},
+  url          = {https://arxiv.org/abs/1710.09437},
+  urldate      = {2026-05-07},
+  note         = {Casper the Friendly Finality Gadget: BFT-style economic-finality overlay on a longest-chain protocol; the ancestor of Ethereum's current proof-of-stake finality model and the relevant primitive for cross-chain finality assumptions.}
+}
+
+% --- Prediction-market mechanism design --------------------------------------
+
+@article{hanson2003combinatorial,
+  author       = {Hanson, Robin},
+  title        = {{Combinatorial Information Market Design}},
+  journal      = {Information Systems Frontiers},
+  volume       = {5},
+  number       = {1},
+  pages        = {107--119},
+  year         = {2003},
+  doi          = {10.1023/A:1022058209073},
+  note         = {Hanson's market scoring rule and the LMSR (logarithmic market scoring rule) primitive on which a large strand of prediction-market mechanism design rests; cited as the underlying primitive that the Bittensor prediction-subnet validator quorum economically approximates.}
+}
+
+@article{manski2006interpreting,
+  author       = {Manski, Charles F.},
+  title        = {{Interpreting the Predictions of Prediction Markets}},
+  journal      = {Economics Letters},
+  volume       = {91},
+  number       = {3},
+  pages        = {425--429},
+  year         = {2006},
+  doi          = {10.1016/j.econlet.2006.01.004},
+  note         = {Manski's note on the gap between prediction-market prices and underlying probability beliefs; cited as the methodological caution for interpreting Yuma-emission-share as a probability estimator.}
+}
+
+% --- Wash-trading detection: peer-reviewed primary --------------------------
+
+@techreport{cong2022crypto,
+  author       = {Cong, Lin William and Li, Xi and Tang, Ke and Yang, Yang},
+  title        = {{Crypto Wash Trading}},
+  institution  = {National Bureau of Economic Research},
+  type         = {NBER Working Paper},
+  number       = {30048},
+  year         = {2022},
+  doi          = {10.3386/w30048},
+  url          = {https://www.nber.org/papers/w30048},
+  urldate      = {2026-05-07},
+  note         = {Foundational empirical study of crypto wash-trading patterns; the methodological reference for the sentiment-fusion engine's grey-literature caveats (Birdeye, DexScreener, Pump.fun feeds are vulnerable to exactly the patterns this paper documents) and for the security-model section's manipulated-liquidity-signals threat class.}
+}
+
+% --- Cross-chain interoperability: canonical pre-2024 survey -----------------
+
+@article{belchior2021survey,
+  author       = {Belchior, Rafael and Vasconcelos, Andr{\'e} and Guerreiro, S{\'e}rgio and Correia, Miguel},
+  title        = {{A Survey on Blockchain Interoperability: Past, Present, and Future Trends}},
+  journal      = {ACM Computing Surveys},
+  volume       = {54},
+  number       = {8},
+  pages        = {168:1--168:41},
+  year         = {2022},
+  doi          = {10.1145/3471140},
+  note         = {Canonical pre-S\&P-2024 systematisation of blockchain interoperability mechanisms (notary schemes, sidechains/relays, hashed time-locked contracts); cited alongside~\cite{augusto2024sok} as the broader interoperability-mechanism context for the OFT-on-LayerZero-V2 substrate.}
+}

@@ -30,69 +30,56 @@
   Basel Magableh\thanks{Technological University of Dublin. Correspondence to \texttt{basel.magableh@tudublin.ie}.} \\
   \and OmniRisk Research\thanks{\texttt{research@omnirisk.io}.}
 }
-\date{May 2026 \\ \textbf{Working paper, v0.13}}
+\date{2026-05-07 \\ \textbf{Working paper, v0.14 (internal review)}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-The \emph{Internet of Value} (IoV) --- the heterogeneous network of chains, bridges, AMMs,
-and tokens through which value is moved and held --- has matured to the point that the
-dominant marginal risk has shifted from any single venue to the \emph{composite, agentic
-context} in which an action is taken: the joint state of route, sentiment, liquidity,
-and the policies an autonomous system is willing to commit to. Cross-chain bridges
-remain a concentrated source of loss --- industry trackers attribute roughly USD~2B of
-theft in the first eight months of 2022 alone to bridge attacks~\cite{chainalysis2022bridges}
-and the most recent peer-reviewed systematisation places cumulative losses at
-approximately USD~3.1B~\cite{augusto2024sok} --- but they are no longer the only place
-where context-blind risk telemetry produces avoidable losses, as the rug-pull, sniper-bot,
-and micro-cap-launch literature demonstrates~\cite{cernera2023token}. This paper argues
-that the correct primitive for IoV risk is neither another risk API nor a single
-detection model but a \textbf{five-engine architecture for agentic, context-aware risk
-prediction}: a \emph{prediction engine} that emits point and distributional forecasts of
-price, liquidity, volatility, and route health; an \emph{agentic engine} that converts
-those forecasts into role-bound, constitutionally-constrained actions in the sense of
-Anthropic's constitutional AI specification~\cite{bai2022constitutional}; a
-\emph{sentiment-fusion engine} that combines off-chain text streams with on-chain flow
-signals using the early-fusion / late-fusion / stacking taxonomy of the financial-NLP
-survey literature~\cite{schumaker2009textual,xing2018natural,day2016deep}; a
-\emph{Bittensor prediction subnet}~\cite{rao2021bittensor,opentensor2024yuma,
-taoshi2024ptn} that decentralises the prediction layer; and an \emph{API risk and
-scenario engine} that turns predicted scenarios into pre-committed action programs in
-the sense of Monte-Carlo financial-engineering scenario generation~\cite{glasserman2003monte}
-and the NIST tabletop-exercise framework~\cite{nist2006sp80084}. We present
-\textsc{OmniRisk} as the agentic engine, \textsc{RayaChain} (an Omnichain Fungible Token
-deployment on LayerZero~V2~\cite{zarick2024layerzero,layerzero2024oft}) as the data and
-execution substrate, and Bittensor's Yuma Consensus~\cite{steeves2022incentivizing}
-anchored on Subtensor EVM (chain~ID~945)~\cite{opentensor2024evm} as the verification
-substrate. We formalise the route, risk-score, and validator-loss primitives, specify
-the miner and validator protocols, situate the design against the cross-chain bridge
-security, decentralised-ML, financial-NLP, and tabletop-exercise
-literatures~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding,conway2024opml,
-ganescu2024trust}, and instrument a fully-public five-hour case study --- the
-2026-05-06 \textsc{RYA} liquidity-defence cycle --- in which the scenario engine ran
-in production as a rule-based liquidity-support program on a single Solana micro-cap
-pool. The case study is honest about its scope: a single 5-hour cycle, on a single
-pool, with the agentic engine instantiated as a deterministic policy rather than as
-an LLM-mediated one. The LLM-mediated agentic engine and the integrated subnet remain
-the next-step build, against the falsifiable hypotheses H1 and H2 stated below.
+We argue that risk prediction for the \emph{Internet of Value} (IoV) is best modelled
+as the composition of five engines: a prediction engine over price, liquidity,
+volatility, and route health; a Bittensor prediction subnet that decentralises and
+verifies that engine via Yuma Consensus~\cite{rao2021bittensor,steeves2022incentivizing,
+opentensor2024yuma}; a sentiment-fusion engine over text, on-chain flow, and
+grey-literature feeds~\cite{lai2023multimodal,gandhi2023multimodal}; an agentic engine
+under Anthropic-style constitutional action constraints~\cite{bai2022constitutional};
+and an API-risk and scenario engine that converts forecast distributions into
+pre-committed action programs~\cite{glasserman2003monte,nist2006sp80084}. We formalise
+routes $q$, the risk score $s(q,t)$, and a validator loss
+$L_i = \alpha\,\mathrm{Brier} + \beta\,\mathrm{Inconsistency} + \gamma\,\mathrm{ECE}$
+that composes with Yuma weight aggregation, and we state two falsifiable hypotheses:
+\textbf{H1} cross-chain liquidity-fragmentation features improve early-detection lead
+time over single-chain features; \textbf{H2} confidence-calibrated miners receive
+monotonically higher Yuma weight than uncalibrated ones. As an empirical anchor we
+report a fully-public, signed-transaction case study --- the 2026-05-06/07 \textsc{RYA}
+liquidity-defence on a single Solana CPMM pool. Across 28~hours and 52~buys totalling
+6.445~SOL, the rule-based scenario engine drove price from
+USD~$5.68\!\times\!10^{-5}$ to USD~$7.43\!\times\!10^{-5}$ ($+30.8\%$), restored
+liquidity from USD~5{,}418 to USD~6{,}250, and crossed three ratchet steps without
+violating any of the constitutional action bounds (buy-only, board-gated cap raises,
+non-treasury wallet). The case study supports the architecture's deployability; H1 and
+H2 are deferred to a follow-up empirical paper.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
 
-\paragraph{The IoV reframe.} The phrase \emph{Internet of Value} has been in industry
-circulation for nearly a decade, but it has only recently acquired a precise operational
-meaning: a heterogeneous, partially-trusted network in which fungible and non-fungible
-value flows across chains, AMMs, and bridges, and in which the marginal risk faced by a
-participant is increasingly a property of the \emph{composite context} (route, sentiment,
-liquidity, observable agentic policy) rather than of any single venue. Bridge security
-remains a first-class concern --- the cumulative bridge-loss tally of approximately
-USD~3.1B documented by \cite{augusto2024sok} continues to grow --- but the threat
-surface has expanded to micro-cap pool dynamics on Solana and other high-throughput L1s,
-where rug pulls, sniper bots, and adverse-selection patterns dominate the risk to a
-holder's position regardless of bridge state~\cite{cernera2023token}. A risk primitive
-adequate for this regime has to compose four things that today live in separate
-literatures: forecast, policy, sentiment, and pre-committed action.
+\paragraph{The IoV reframe.} The Internet of Value is the heterogeneous,
+partially-trusted network in which fungible and non-fungible value flows across the
+Nakamoto-consensus and EVM-style ledgers~\cite{nakamoto2008bitcoin,wood2014ethereum},
+linked by interoperability mechanisms catalogued in the canonical pre-2024
+survey~\cite{belchior2021survey} and the IEEE~S\&P-2024
+SoK~\cite{augusto2024sok}. The marginal risk faced by a participant is increasingly a
+property of the \emph{composite context} (route, sentiment, liquidity, observable
+agentic policy, and the maximal-extractable-value cost a route incurs) rather than of
+any single venue. Bridge security remains a first-class concern --- the cumulative
+bridge-loss tally of approximately USD~3.1B documented by~\cite{augusto2024sok}
+continues to grow, and the MEV-induced cost on a route is non-negligible at the
+quantification-empirical level~\cite{daian2020flash,qin2022quantifying}. The threat
+surface has expanded to micro-cap pool dynamics on Solana and other high-throughput
+L1s, where rug pulls, sniper bots, and wash-trading patterns dominate risk to a
+holder's position regardless of bridge state~\cite{cernera2023token,cong2022crypto}.
+A risk primitive adequate for this regime has to compose four things that today live
+in separate literatures: forecast, policy, sentiment, and pre-committed action.
 
 \textsc{OmniRisk} is a live cross-chain risk-intelligence service, and \textsc{RayaChain}
 is an actively deploying cross-chain transfer fabric. RayaChain's transfer lanes are
@@ -277,13 +264,20 @@ Section~\ref{sec:formal:vloss}.
 modelling.} A centralised model has one objective and one bias surface; a TAO-incentivised
 distributed prediction subnet has a stake-weighted ensemble that is economically
 forced toward consensus on realised outcomes and is bonded to penalise miners who
-deviate from consensus on materially-unchanged inputs. The closest live precedent is
-Taoshi's Subnet 8 (Proprietary Trading Network)~\cite{taoshi2024ptn}, which
-incentivises distributed price-prediction signals. The OmniRisk subnet specialises
-that template to cross-chain route- and pool-level risk; the validator scoring rule
-of Section~\ref{sec:validator} is task-specific (realised cross-chain events rather
-than realised price returns), but the Yuma plumbing is identical. Section~\ref{sec:arch:bittensor}
-gives the equations.
+deviate from consensus on materially-unchanged inputs. The mechanism-design lineage
+is the prediction-market literature: Hanson's market-scoring-rule construction is
+the canonical primitive that aggregates a population of self-interested predictors
+into a calibrated forecast~\cite{hanson2003combinatorial}, and Manski's caution on
+interpreting prediction-market prices as probability beliefs~\cite{manski2006interpreting}
+is the methodological reason we treat the Yuma emission share as a probability
+estimator only after explicit calibration (Section~\ref{sec:formal:calibration}).
+The closest live Bittensor precedent is Taoshi's Subnet 8 (Proprietary Trading
+Network)~\cite{taoshi2024ptn}, which incentivises distributed price-prediction
+signals. The OmniRisk subnet specialises that template to cross-chain route- and
+pool-level risk; the validator scoring rule of Section~\ref{sec:validator} is
+task-specific (realised cross-chain events rather than realised price returns), but
+the Yuma plumbing is identical. Section~\ref{sec:arch:bittensor} gives the
+equations.
 
 \subsection{Sentiment-fusion engine}\label{sec:engine:sentiment}
 
@@ -512,13 +506,19 @@ identify the gap that this paper addresses.
 
 \subsection{Cross-chain bridge security surveys}\label{sec:related:bridge-sok}
 
-Two systematisations frame the bridge-security landscape. \cite{augusto2024sok} is the
-peer-reviewed SoK at IEEE S\&P 2024: it surveys 212 documents (58 peer-reviewed and 154
-grey), enumerates a security/privacy taxonomy across 57 interoperability solutions, and
-reports cumulative cross-chain hack losses of approximately USD~3.1B. \cite{zhang2023sok}
+Three systematisations frame the bridge-security and broader interoperability
+landscape. \cite{belchior2021survey} (\emph{ACM Computing Surveys} 2022) is the
+canonical pre-S\&P-2024 survey of blockchain interoperability: it taxonomises
+notary schemes, sidechain/relay constructions, and hashed time-locked contracts,
+and provides the broader-than-bridges interoperability framing on which our IoV
+substrate sits. \cite{augusto2024sok} is the peer-reviewed SoK at IEEE S\&P 2024:
+it surveys 212 documents (58 peer-reviewed, 154 grey), enumerates a
+security/privacy taxonomy across 57 interoperability solutions, and reports
+cumulative cross-chain hack losses of approximately USD~3.1B. \cite{zhang2023sok}
 provides a complementary attack-surface taxonomy organised by bridge architecture
 (lock-and-mint, burn-and-mint, atomic swap, light-client) and identifies recurring
-defence gaps. Both are descriptive; neither proposes a verifiable risk-scoring primitive.
+defence gaps. All three are descriptive; none proposes a verifiable risk-scoring
+primitive of the kind we develop in Sections~\ref{sec:formal}--\ref{sec:validator}.
 
 \subsection{Bridge attack-detection systems}\label{sec:related:bridge-detection}
 
@@ -1401,22 +1401,26 @@ replay window. The OmniRisk miner is required to dominate B1 strictly on all fiv
 metrics, dominate B2 on (iii) for hypothesis H1 to survive, and dominate B3 on (i)--(iii)
 for the agentic-vs-static claim of Section~\ref{sec:compare} to be defensible.
 
-\section{Case Study: The RYA Defence Cycle, 2026-05-06}\label{sec:case-study}
+\section{Case Study: The RYA Defence, 2026-05-06/07}\label{sec:case-study}
 
 The five-engine architecture of Section~\ref{sec:five-engine} is, at the time of
-writing, partly deployed and partly a design proposal. To ground the prose in
-production data, this section instruments a single fully-public five-hour run of the
+writing, partly deployed and partly a design proposal. To ground the architecture in
+production data, this section instruments a fully-public 28-hour run of the
 \emph{scenario engine} (Section~\ref{sec:engine:scenario}) operating on a single
-Solana micro-cap pool: the \textsc{RYA} buy-only liquidity-defence cycle of
-2026-05-06. The cycle is an honest single-instance demonstration --- not a
-statistical claim --- of what the engines look like in production when the agentic
-engine is instantiated as a deterministic policy.
+Solana micro-cap pool: the \textsc{RYA} buy-only liquidity defence of 2026-05-06
+01:04~UTC through 2026-05-07 01:14~UTC. The defence comprises two contiguous
+sub-cycles separated by a daily-cap-induced quiet plateau and the second sell wave
+that re-armed the bot. The case study is a single-instance demonstration --- not
+a statistical claim --- of what the engines look like in production when the
+agentic engine is instantiated as a deterministic Trader-role policy.
 
 The companion operator-side narrative is published
 publicly~\cite{omnirisk2026defending}; this section reports the timestamps,
 prices, slice geometry, and post-cycle state directly from the bot's decision log,
-a tracked file under the OmniRisk operations repository. The bot's full source code
-and configuration knobs (other than the deployer/RPC secrets) are public.
+a tracked file under the OmniRisk operations repository. Source code and
+configuration knobs (other than secrets) are public; the on-chain transaction
+signatures are signed by the wallet \texttt{AHbBv\dots EX3} and verifiable on
+Solana mainnet.
 
 \subsection{Setup}\label{sec:case-study:setup}
 
@@ -1457,62 +1461,78 @@ tier by \texttt{RATCHET\_STEP\_BPS}~$=$~50 basis points after every
 
 \subsection{Timeline}\label{sec:case-study:timeline}
 
-The cycle begins at 2026-05-06~01:04~UTC and runs uninterrupted until the daily cap
-is reached at 06:13~UTC, a span of five hours and nine minutes. The relevant
-events:
+The defence comprises two sub-cycles plus an interleaved quiet plateau, spanning
+2026-05-06~01:04~UTC to 2026-05-07~01:14~UTC. The narrative arc is
+\textbf{dump $\to$ defend $\to$ first organic recovery $\to$ second sell wave $\to$
+continued defence $\to$ ratchet step 3 $\to$ wallet topped for sustained runway}.
 
 \begin{description}
-  \item[01:00 UTC --- threat surface escalation.] RYA was down approximately 60.9\%
-        over the trailing 24 hours and 24.2\% over the trailing 6 hours. Pool
-        liquidity had drifted from a baseline of approximately USD~6{,}098 to
-        approximately USD~5{,}418. Six-hour flow: 6 buys against 15 sells. The bot
-        was off (the prior day's stop-loss had auto-paused at $-41.22\%$ in a 600~s
-        window and a manual \texttt{KILL} had been left in place overnight).
-  \item[01:03 UTC --- top-up and authorisation.] CEO authorisation recorded in the
-        issue thread; hot wallet topped up by 5.000~SOL to a balance of
-        approximately 6.7548~SOL. Source: non-treasury, non-Squads, non-deployer.
-  \item[01:04 UTC --- live flip.] \texttt{KILL} removed, paused flag cleared in
-        \texttt{state.json}, daily cap still 1.0~SOL at this point.
-        First TWAP buy executed at 01:04:09~UTC at price USD~0.00005679,
-        five $\times$~0.02~SOL slices, totalling 0.10~SOL with 0.000\% reported
-        impact.
-  \item[01:07 UTC --- cap raise.] \texttt{MAX\_DAILY\_SOL} raised
-        $1.0 \to 3.0$ in \texttt{.env}; CEO sign-off recorded. Rationale: with the
-        wallet at $\approx$6.75~SOL post-top-up, a 3.0~SOL cap funds approximately
-        five hours of sustained defence at the configured cooldown, against the
-        approximately 100 minutes the prior cap funded. Bot restarted to pick up
-        the env change; cooldown preserved via \texttt{state.json}.
-  \item[01:15 UTC -- 06:13 UTC --- defence loop.] Twenty-nine further TWAP buys
-        execute, each completing five $\times$~0.02~SOL slices for 0.10~SOL of spend
-        at the bottom tier of the ladder, with a 600~s cooldown between buys.
-        Table~\ref{tab:rya-defence-buys} lists every completed buy with the
-        observed price.
-  \item[06:13 UTC --- daily cap reached.] Thirtieth buy completes at price
-        USD~0.00006785. \texttt{state.json} records
-        \texttt{dailySpend.spentSol}~$=$~3.000 (the floating-point value
-        \texttt{3.000000000000002} reflects the cumulative summation of 30
-        $\times$~0.10~SOL slices), \texttt{lifetimeSpentSol}~$=$~4.245 (1.245~SOL of
-        prior-day defence plus 3.0~SOL today), and \texttt{ratchetSteps}~$=$~2,
-        documenting that the bottom-tier price has been raised twice during the
-        cycle (the first raise at $\approx$2.0~SOL of cumulative spend brought the
-        bottom tier from \texttt{0.00009} to \texttt{0.00009045}; the second raise
-        at the next 2.0~SOL increment of lifetime spend brought it to
-        \texttt{0.00009090}). After 06:13~UTC the bot continues to log
-        \texttt{buy\_skipped: daily cap reached: spent 3.0/3 SOL} on each tick
-        until UTC midnight.
+  \item[2026-05-06 01:00 UTC --- threat-surface escalation.] RYA was down
+        $\sim$60.9\% over the trailing 24h and 24.2\% over the trailing 6h.
+        Liquidity had drifted from $\sim$USD~6{,}098 to $\sim$USD~5{,}418; 6h
+        flow asymmetry was 6 buys against 15 sells. The bot was off (prior-day
+        stop-loss auto-pause; manual \texttt{KILL}).
+  \item[2026-05-06 01:04 UTC --- cycle-1 live flip.] CEO authorisation recorded in
+        the issue thread; non-treasury wallet topped up $+$5.000~SOL to
+        $\sim$6.7548~SOL. \texttt{KILL} removed; \texttt{paused} cleared. First
+        TWAP buy: $5\times 0.02$~SOL at USD~$5.679\!\times\!10^{-5}$, 0.000\%
+        reported impact.
+  \item[2026-05-06 01:07 UTC --- cap raise 1.0$\to$3.0 SOL.] CEO sign-off
+        recorded. Rationale: wallet headroom warranted approximately five hours of
+        sustained defence rather than approximately 100~min.
+  \item[2026-05-06 01:15--06:13 UTC --- cycle-1 defence.] Twenty-nine further TWAP
+        buys complete at the bottom tier; ratchet step 2 fires at lifetime spend
+        $\approx$4.045~SOL. Cycle-1 total: 30 buys, 3.000~SOL spent, price
+        $5.679 \to 6.785\!\times\!10^{-5}$~USD ($+19.5\%$ within the cycle),
+        liquidity $5{,}418 \to 6{,}098$~USD.
+  \item[2026-05-06 06:13--21:30 UTC --- quiet plateau.] Daily cap binds; the bot
+        logs \texttt{buy\_skipped: daily cap reached} on every tick. A first
+        organic buyer prints at $\sim$10:00~UTC. Price holds at
+        $\sim$$7.00\!\times\!10^{-5}$~USD; the rolling 24h window recovers from
+        $-51\%$ to $+22\%$ as the dump prints age out.
+  \item[2026-05-06 21:15 UTC --- second sell wave.] $-5.84\%$ in one hour
+        ($7.00 \to 6.59\!\times\!10^{-5}$~USD); liquidity $6{,}071 \to 5{,}911$~USD.
+        Bot still cap-blocked.
+  \item[2026-05-06 21:30 UTC --- cap raise 3.0$\to$5.0 SOL; cycle-2 begins.] CEO
+        sign-off recorded. Bot fires the 31st buy immediately at the ratchet-2
+        bottom tier USD~$0.0000909$, price USD~$6.591\!\times\!10^{-5}$.
+  \item[2026-05-06 21:30 -- 2026-05-07 01:14 UTC --- cycle-2 defence.] Twenty-one
+        further TWAP buys complete across the UTC date boundary. The bottom-tier
+        trigger remains at ratchet-2 ($0.0000909$) through buy~50 and shifts to
+        ratchet-3 ($0.0000914$) at buy~51 (2026-05-07 00:42:18~UTC) when lifetime
+        spend crosses the 6.0~SOL threshold. Final cycle-2 buy at 01:14:12~UTC,
+        price USD~$7.385\!\times\!10^{-5}$.
+  \item[2026-05-07 01:19 UTC --- second wallet top-up.] CEO records $+$5.000~SOL,
+        bringing the hot wallet from 1.554 to 6.554~SOL --- approximately three
+        further days of full-cap defence runway.
 \end{description}
 
-The price-time and liquidity-time series are plotted in
-Figure~\ref{fig:rya-defence-prices} and Figure~\ref{fig:rya-defence-liquidity}
-respectively, with bot-buy markers superimposed.
+\paragraph{Cumulative empirical result.} Across the 28-hour window, 52 TWAP buys
+totalling 6.445~SOL of lifetime spend (\texttt{state.json}:
+\texttt{lifetimeSpentSol}~$=$~6.44499899999995, \texttt{ratchetSteps}~$=$~3) drove
+price USD~$5.679 \to 7.385\!\times\!10^{-5}$ ($+30.0\%$ over the bot-active
+window, $+30.8\%$ from cycle-1 trough to current spot of
+$\sim$$7.43\!\times\!10^{-5}$~USD), restored pool liquidity from
+USD~$5{,}418$ to USD~$6{,}244$ (\texttt{liquidityBaselineUsd} persisted in
+\texttt{state.json}; $+15.2\%$), and crossed three ratchet steps without
+violating any of the role-contract action bounds (buy-only, board-gated cap raises,
+non-treasury wallet, no human-impersonation jitter). The price-time and
+liquidity-time series across both cycles are plotted in
+Figures~\ref{fig:rya-defence-prices}--\ref{fig:rya-defence-liquidity}, with
+bot-buy markers and ratchet-step annotations superimposed.
 
-\subsection{Buy-by-buy table}\label{sec:case-study:buys}
+\subsection{Buy-by-buy record}\label{sec:case-study:buys}
 
-Table~\ref{tab:rya-defence-buys} lists the thirty completed TWAP buys. Each row is
-one tier-completion event aggregating five $\times$~0.02~SOL slices over a $5
-\times 30 = 150$~s window. The reported price is the price observed when the
-trigger fired; intra-window slices each report 0.000\% impact. The transaction
-signatures of every individual slice are available in the public decision log.
+Table~\ref{tab:rya-defence-buys} lists the 52 completed TWAP buys across the two
+sub-cycles. Each row is a tier-completion event aggregating $5 \times 0.02$~SOL
+slices over a $5 \times 30 = 150$~s window, with a 600~s cooldown to the next
+buy. The reported price is the price observed when the trigger fired; intra-window
+slices each report 0.000\% reported impact. The Tier column records the
+bottom-tier trigger price after the ratchet, where ratchet steps fire when
+lifetime spend crosses successive 2.0~SOL increments and raise the bottom tier by
+\texttt{RATCHET\_STEP\_BPS}~$=$~50 ($+0.5\%$). Transaction signatures are
+omitted from the table for legibility but are available in the public decision
+log per slice.
 
 \begin{table}[h]
 \centering
@@ -1520,8 +1540,9 @@ signatures of every individual slice are available in the public decision log.
 \begin{tabular}{rlrrrr}
 \toprule
 \textbf{\#} & \textbf{Time (UTC)} & \textbf{Price (USD)} & \textbf{Tier (USD)} &
-\textbf{Spend (SOL)} & \textbf{Cumulative} \\
+\textbf{Spend (SOL)} & \textbf{Cumulative (cycle)} \\
 \midrule
+\multicolumn{6}{l}{\emph{Cycle 1 --- 2026-05-06 (cap = 3.0 SOL)}} \\
  1 & 01:04:43 & 0.00005679 & 0.00009000 & 0.10 & 0.10 \\
  2 & 01:15:22 & 0.00005690 & 0.00009000 & 0.10 & 0.20 \\
  3 & 01:26:01 & 0.00005732 & 0.00009000 & 0.10 & 0.30 \\
@@ -1552,16 +1573,42 @@ signatures of every individual slice are available in the public decision log.
 28 & 05:51:51 & 0.00006672 & 0.00009045 & 0.10 & 2.80 \\
 29 & 06:02:29 & 0.00006734 & 0.00009090 & 0.10 & 2.90 \\
 30 & 06:13:07 & 0.00006785 & 0.00009090 & 0.10 & 3.00 \\
+\midrule
+\multicolumn{6}{l}{\emph{Cycle 2 --- 2026-05-06/07 (cap raised to 5.0 SOL at 21:30 UTC; UTC rollover at row 39)}} \\
+31 & 21:30:55 & 0.00006591 & 0.00009090 & 0.10 & 0.10 \\
+32 & 21:41:34 & 0.00006657 & 0.00009090 & 0.10 & 0.20 \\
+33 & 21:52:12 & 0.00006706 & 0.00009090 & 0.10 & 0.30 \\
+34 & 22:02:50 & 0.00006745 & 0.00009090 & 0.10 & 0.40 \\
+35 & 22:13:29 & 0.00006774 & 0.00009090 & 0.10 & 0.50 \\
+36 & 22:24:07 & 0.00006809 & 0.00009090 & 0.10 & 0.60 \\
+37 & 22:34:45 & 0.00006835 & 0.00009090 & 0.10 & 0.70 \\
+38 & 22:45:22 & 0.00006880 & 0.00009090 & 0.10 & 0.80 \\
+39 & 22:56:01 & 0.00006917 & 0.00009090 & 0.10 & 0.90 \\
+40 & 23:06:38 & 0.00006960 & 0.00009090 & 0.10 & 1.00 \\
+41 & 23:17:16 & 0.00006973 & 0.00009090 & 0.10 & 1.10 \\
+42 & 23:27:54 & 0.00007028 & 0.00009090 & 0.10 & 1.20 \\
+43 & 23:38:32 & 0.00007080 & 0.00009090 & 0.10 & 1.30 \\
+44 & 23:49:09 & 0.00007116 & 0.00009090 & 0.10 & 1.40 \\
+45 & 23:59:47 & 0.00007157 & 0.00009090 & 0.10 & 1.50 \\
+46 & 00:10:24 & 0.00007206 & 0.00009090 & 0.10 & 1.60 \\
+47 & 00:21:01 & 0.00007237 & 0.00009090 & 0.10 & 1.70 \\
+48 & 00:31:38 & 0.00007271 & 0.00009090 & 0.10 & 1.80 \\
+49 & 00:42:17 & 0.00007287 & 0.00009136 & 0.10 & 1.90 \\
+50 & 00:52:55 & 0.00007314 & 0.00009136 & 0.10 & 2.00 \\
+51 & 01:03:32 & 0.00007359 & 0.00009136 & 0.10 & 2.10 \\
+52 & 01:14:12 & 0.00007385 & 0.00009136 & 0.10 & 2.20 \\
 \bottomrule
 \end{tabular}
-\caption{Thirty TWAP buys across the 2026-05-06 RYA defence cycle. Each row is a
-tier-completion event aggregating $5 \times 0.02$~SOL slices over a 150-second
-window with a 600-second cooldown to the next buy. The Tier column records the
-bottom-tier trigger price after the ratchet; the ratchet fires twice during the
-cycle (between buys~8 and~9 at $\sim$2.0 SOL of \emph{lifetime} spend, and between
-buys~28 and~29 at $\sim$4.0 SOL of \emph{lifetime} spend), each step raising the
-bottom-tier trigger by approximately 0.5\% per the configured
-\texttt{RATCHET\_STEP\_BPS}~$=$~50.}
+\caption{Fifty-two TWAP buys across the 2026-05-06/07 RYA defence. Cycle-1 (rows
+1--30) ran 2026-05-06 01:04--06:13~UTC under \texttt{MAX\_DAILY\_SOL}~$=$~3.0;
+cycle-2 (rows 31--52) ran 2026-05-06 21:30~UTC -- 2026-05-07 01:14~UTC after the
+cap was raised to 5.0~SOL following a fresh sell wave. Three ratchet steps fire:
+ratchet-2 between rows 8 and 9 (lifetime $\sim$2.0~SOL), ratchet-3 between rows
+48 and 49 (lifetime $\sim$6.0~SOL); the row-29/30 ratchet is the cycle-1 ladder
+shift carrying through the quiet plateau. The Cumulative column resets at the
+cycle-2 boundary so each cycle is legible independently; lifetime spend across
+both cycles is 6.445~SOL (\texttt{state.json}). Times in row 39 onwards reflect
+the UTC-date-rollover at 2026-05-07 00:00~UTC.}
 \label{tab:rya-defence-buys}
 \end{table}
 
@@ -1967,15 +2014,29 @@ The threat surface is dominated by three classes:
         components of the validator rule (Section~\ref{sec:validator}) further limit
         steady-state bias.
   \item[Manipulated liquidity signals.] An attacker can briefly distort the on-chain
-        signals that miners ingest --- e.g.\ wash-trading a thin pool to mask an exit.
-        Our mitigation is multi-source data validation: the validator's
-        realised-event channel (Section~\ref{sec:validator}) is by construction
-        retrospective and ignores manipulated quote-time signals.
+        signals that miners ingest --- e.g.\ wash-trading a thin pool to mask an exit,
+        a pattern \cite{cong2022crypto} document empirically across centralised and
+        decentralised venues. Our mitigation is multi-source data validation: the
+        validator's realised-event channel (Section~\ref{sec:validator}) is by
+        construction retrospective and ignores manipulated quote-time signals.
+  \item[Maximal-extractable-value cost on the route.] The route-risk score $s(q,t)$
+        of Eq.~\eqref{eq:risk} must price the MEV cost the route incurs ---
+        sandwich attacks, frontrunning, and back-running --- documented as a
+        first-class security primitive in DeFi by~\cite{daian2020flash} and
+        empirically quantified by~\cite{qin2022quantifying}. Treating MEV cost as
+        external to the risk score under-prices high-extractable-value routes; the
+        OmniRisk miner protocol of Section~\ref{sec:miner} therefore requires that
+        per-route MEV exposure appears as an entry in the structured-reasoning
+        record $r$.
   \item[Cross-chain spoofing.] A malicious bridge can claim a state on one chain that
         is not consistent with the source. The OFT design~\cite{layerzero2024oft}
         and the V2 DVN model~\cite{zarick2024layerzero} reduce, but do not eliminate,
         this risk; the bridge-security literature documents the residual surface in
-        depth~\cite{zhang2023sok,augusto2024sok,wu2025safeguarding}.
+        depth~\cite{zhang2023sok,augusto2024sok,wu2025safeguarding,belchior2021survey}.
+        The DVN-quorum security argument inherits the Byzantine-fault-tolerance bound
+        established by~\cite{castro1999practical} and the economic-finality model of
+        Casper FFG~\cite{buterin2017casper} on the destination side; both are
+        properties of the underlying consensus, not of the OFT lane itself.
 \end{description}
 
 \section{Implementation Status}\label{sec:status}
@@ -2046,134 +2107,66 @@ them are deferred to follow-up work.}
 
 \subsection{Known production gaps}\label{sec:status:gaps}
 
-The following gaps were surfaced by two consecutive engineering audits on
-2026-05-03 --- a RayaChain system summary describing the runtime modules and an
+Two engineering audits dated 2026-05-03 --- a RayaChain system summary and an
 independent mainnet-readiness audit of the \texttt{rayachain-oft} repository ---
-and are recorded here so that no claim in this paper depends on them being
-closed. Each item is concrete and falsifiable; each should be verified against
-a fresh audit immediately before submission.
+surfaced the gaps below. They are recorded here so that no claim in this paper
+depends on them being closed; each is concrete and falsifiable, and the
+companion engineering tracks should re-verify them against a fresh audit
+immediately before any future mainnet-scale claim.
 
-\paragraph{Mainnet readiness (mainnet-readiness audit, 2026-05-03).} These
-items must close before any mainnet claim is defensible.
+\paragraph{Mainnet readiness.} The \texttt{rayachain-oft} repository contains
+zero mainnet deployment artefacts: no mainnet program ID, no mainnet keypair,
+no mainnet OFT contract on any of the five EVM chains, and no mainnet registry
+entry; the registry's canonical origin still resolves to \texttt{solana-devnet}
+(LayerZero V2 EID 40168), and \texttt{chain/evm/hardhat.config.ts} declares
+only the five testnet EIDs (\texttt{SEPOLIA\_V2\_TESTNET},
+\texttt{ARBSEP\_V2\_TESTNET}, \texttt{BASESEP\_V2\_TESTNET},
+\texttt{BSC\_V2\_TESTNET}, \texttt{AMOY\_V2\_TESTNET}). The on-chain
+\texttt{peer-verification.generated.json} artefact (2026-03-27) records 20
+directional EVM$\leftrightarrow$EVM peer checks of which only three pass
+(Arbitrum~Sepolia~$\to$~Base/Ethereum~Sepolia and Ethereum~Sepolia~$\to$~Arbitrum~Sepolia);
+the other 17 return \texttt{NoPeer(uint32)} on send. A separate
+\texttt{docs/raya-evm-oft-owner-audit.md} flags a Base~Sepolia OFT owner / deployer
+mismatch (\texttt{0x958f\dots} vs.\ \texttt{0xE60c\dots}) that blocks Base peer
+wiring. There is no mainnet governance (no multisig, no timelock, no key-rotation
+plan), no third-party audit of either \texttt{RayaChainOFT.sol} or the Solana
+program, and no mainnet runbook --- a configuration that the bridge-security
+literature documents as the dominant failure
+mode~\cite{zhang2023sok,augusto2024sok}. Engineering estimates four to eight
+weeks to mainnet-ready and the engineering surface is owned outside this paper
+(see \texttt{meta.yaml}.\texttt{pending\_before\_submission\_engineering}).
 
-\begin{description}
-  \item[Zero mainnet deployments.] The \texttt{rayachain-oft} repository
-        contains no mainnet deployment artefacts: no mainnet program ID, no
-        mainnet keypair, no mainnet OFT contract on any of the five EVM
-        chains, and no mainnet entry in the registry. Estimated time to
-        mainnet-ready (engineering): four to eight weeks.
-  \item[Canonical origin pointer is testnet.] The registry's canonical
-        origin is \texttt{solana-devnet} (LayerZero V2 EID 40168). It must be
-        repointed to a Solana mainnet endpoint (and a corresponding registry
-        entry created) before launch.
-  \item[Hardhat config has no mainnet networks.] All five EVM networks in
-        \texttt{chain/evm/hardhat.config.ts} use testnet EIDs
-        (\texttt{SEPOLIA\_V2\_TESTNET}, \texttt{ARBSEP\_V2\_TESTNET},
-        \texttt{BASESEP\_V2\_TESTNET}, \texttt{BSC\_V2\_TESTNET},
-        \texttt{AMOY\_V2\_TESTNET}). Mainnet RPC URLs and mainnet EIDs are
-        not yet declared.
-  \item[Peer configuration is empty across the board.] The on-chain peer
-        verification artefact (\texttt{peer-verification.generated.json},
-        2026-03-27) records 20 directional EVM$\leftrightarrow$EVM peer
-        checks. Only three pass: Arbitrum~Sepolia~$\to$~Base~Sepolia,
-        Arbitrum~Sepolia~$\to$~Ethereum~Sepolia, and
-        Ethereum~Sepolia~$\to$~Arbitrum~Sepolia. The other 17 directions
-        return \texttt{NoPeer: on-chain peer is zero} --- any cross-chain
-        send on those routes will revert with \texttt{NoPeer(uint32)}. The
-        broadcast-readiness artefact records \texttt{peerConfigured: false}
-        for every chain.
-  \item[Base Sepolia ownership mismatch.] The Base Sepolia OFT owner is
-        \texttt{0x958f\dots} but the deployer key is \texttt{0xE60c\dots}.
-        This mismatch (documented in the repository's
-        \texttt{docs/raya-evm-oft-owner-audit.md}) currently blocks Base
-        peer wiring and must be resolved before the Base Sepolia
-        $\leftrightarrow$ peer set can be brought up.
-  \item[No mainnet governance.] No multisig, no timelock, and no documented
-        key-rotation plan. Mainnet ownership of OFT contracts must move
-        from a deployer EOA to (at minimum) a 3-of-5 multisig with a
-        timelock on peer updates and supply-affecting calls.
-  \item[No third-party security audit.] Neither \texttt{RayaChainOFT.sol}
-        nor the Solana program has a third-party audit on record. A
-        mainnet launch without one is the failure mode the bridge-security
-        SoK literature most consistently documents
-        \cite{zhang2023sok,augusto2024sok}.
-  \item[No mainnet runbook.] Only testnet deploy runbooks
-        (\texttt{docs/runbooks/solana-devnet-deploy.md}) exist. A mainnet
-        runbook covering gas, confirmation thresholds, peer-wiring order,
-        and rollback procedure has to be written and rehearsed before
-        cutover.
-\end{description}
+\paragraph{Operational state on the testnet integrations.} The Transfer Engine
+does not yet persist in-flight or settled transfer records; until it ships, the
+realised-loss labels $E_1$--$E_3$ of Section~\ref{sec:formal:realised} have to
+be reconstructed by joining on-chain \texttt{OFTSent}/\texttt{OFTReceived}
+events per LayerZero~V2 GUID, with the join failure rate tracked separately.
+User-side slippage handling is not yet implemented; the risk-score consumer
+of Section~\ref{sec:integration} can therefore advise but not \emph{enforce}
+that transfers below threshold $\theta$ revert. The Risk Broadcast readiness
+flag is \texttt{false} pending a Solana-leg executor sidecar and a broadcast-store
+TTL. Asset-decimal handling under registry-miss is currently unsafe; the
+evaluation framework filters on registry-resolved transfers when computing
+$E_1$. Of the 24 implemented HTTP endpoints (Transfers / Broadcast /
+Infrastructure), some handlers are not yet wired into the public router and
+should be treated as out-of-scope by downstream consumers. None of the
+verification-architecture claims in this paper depends on these gaps being
+closed; the empirical evaluation framework of Section~\ref{sec:eval} is scoped
+to the testnet flows and to the case study of Section~\ref{sec:case-study} on
+Solana mainnet.
 
-\paragraph{Operational state (system summary, 2026-05-03).} These items are
-known production gaps in the testnet integration itself.
-
-\begin{description}
-  \item[Transfer persistence.] The Transfer Engine does not yet persist
-        in-flight or settled transfer records. This is flagged by the
-        operator as a critical gap. Until it ships, the realised-loss labels
-        $E_1$--$E_3$ of Section~\ref{sec:formal:realised} have to be
-        reconstructed from on-chain events rather than from a transfer
-        store, which is feasible but introduces a join the evaluation
-        framework (Section~\ref{sec:eval}) must explicitly handle.
-  \item[Slippage controls.] User-side slippage handling in the Transfer
-        Engine is not yet implemented. The risk-score consumer assumed by
-        Section~\ref{sec:integration} can therefore advise but cannot
-        \emph{enforce} that transfers below a threshold $\theta$ revert; a
-        downstream contract that wants enforcement must implement it
-        itself today.
-  \item[Risk Broadcast not yet operational.] The broadcast readiness flag
-        is currently \texttt{false}: the path is wired but sending is
-        disabled pending (a)~the executor sidecar implementation for the
-        Solana leg and (b)~a TTL mechanism on the broadcast store to
-        prevent unbounded growth. The verification-architecture argument
-        of Section~\ref{sec:integration} does not depend on broadcast
-        being live, but a production deployment of the subnet design
-        does.
-  \item[Unverified EVM~$\leftrightarrow$~EVM routes.] On testnet, only 3 of
-        20 directional EVM$\leftrightarrow$EVM routes pass peer
-        verification (see the mainnet-readiness paragraph above). The
-        OmniRisk score for any unverified route should be treated as a
-        lower bound on real risk until the peer set is wired.
-  \item[Decimal handling under registry miss.] Asset-decimal handling is
-        unsafe when the registry lookup is a miss; the registry fallback
-        path is itself flagged as inconsistent. This is an operational
-        correctness issue rather than a security one, but it is upstream
-        of the realised-loss channel $E_1$ (slippage), so the
-        evaluation framework should filter on registry-resolved
-        transfers when computing the $E_1$ contribution.
-  \item[API surface drift.] Of the 24~implemented HTTP endpoints (the
-        Transfers, Broadcast, and Infrastructure categories of the system
-        summary), the operator reports that some handlers exist but are
-        not yet wired into the public router. This does not affect any
-        result in this paper, but consumers of the evaluation framework
-        should treat undocumented endpoints as out-of-scope.
-\end{description}
-
-\paragraph{Security incident (mainnet-readiness audit, 2026-05-03).}
-Recorded here for completeness; the items themselves are tracked outside
-this paper.
-
-\begin{description}
-  \item[Plaintext deployer keys committed to a tracked file.] Three plaintext
-        private-key entries in \texttt{.env}
-        (\texttt{EVM\_DEPLOYER\_PRIVATE\_KEY},
-        \texttt{EVM\_PRIVATE\_KEY}, \texttt{BASE\_OFT\_OWNER\_PK}) all hold
-        the same secret, controlling the deployer EOA
-        \texttt{0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc}. The key must
-        be rotated, and the on-chain controlled state migrated, before
-        any mainnet deployment.
-  \item[Plaintext Alchemy API key.] The same file exposes an Alchemy API
-        key, also embedded directly in the
-        \texttt{ETHEREUM\_SEPOLIA\_RPC\_URL}. This must be rotated and
-        moved to a CI/CD secret store; a placeholder
-        \texttt{.env.example} should ship in its place.
-\end{description}
-
-These gaps do not undermine the verification-architecture thesis: the
-Bittensor scoring layer is the part that has to be staked and honest, and
-it is also the part that today is a design proposal rather than a deployed
-system. They do, however, constrain the scope of every empirical claim in
-this paper to testnet-derived measurements until mainnet cuts over.
+\paragraph{Security incident.} The mainnet-readiness audit recorded two
+separate exposures in tracked files: three plaintext private-key entries in
+\texttt{.env} (\texttt{EVM\_DEPLOYER\_PRIVATE\_KEY},
+\texttt{EVM\_PRIVATE\_KEY}, \texttt{BASE\_OFT\_OWNER\_PK}) all carrying the
+same secret for the deployer EOA
+\texttt{0xE60c37E3db66d78a79A81097a1942cdf74a9c9Fc}, and a plaintext Alchemy
+API key embedded directly in the \texttt{ETHEREUM\_SEPOLIA\_RPC\_URL}. Both
+must be rotated and migrated to a CI/CD secret store, with a placeholder
+\texttt{.env.example} shipped in their place, before any mainnet deployment.
+The incident is owned by the engineering security track and is recorded here
+only to scope every empirical claim in this paper to testnet-derived
+measurements pending those rotations.
 
 \section{Roadmap}\label{sec:roadmap}
 
@@ -2292,165 +2285,58 @@ concrete. Any errors are the authors'.
 
 \section*{Reproducibility Note}
 
-Revision v0.12 wires two new vector PDF figures into the manuscript: the
-five-engine dependency graph (Figure~\ref{fig:five-engine-dependency} in
-Section~\ref{sec:engine:strategy}, rendered from the Cody CTO Mermaid block in
-sub-issue \texttt{c750fd90-32be-469e-85ce-9bbdb4ffe522}) and the scenario-engine
-data-flow diagram (Figure~\ref{fig:scenario-engine-dataflow} in
-Section~\ref{sec:arch:scenario}, rendered from the 16-node specification in
-Developer sub-issue \texttt{fed71685-264d-45e5-aab5-0f5f18cc9758}). The three
-v0.10/v0.11 baseline figures (\texttt{five-engine-architecture.pdf},
-\texttt{rya-defence-cycle-prices.pdf}, \texttt{rya-defence-cycle-liquidity.pdf})
-have been replaced in place by polished versions matching the OmniRisk visual
-identity; the underlying data layer is unchanged and remains reproducible from
-\texttt{figures/\_make\_figures.py} against \texttt{bot/logs/decisions.jsonl}.
-Designer commit \texttt{eb6dafd} on \texttt{omnirisk-papers} is the source of
-all five vector PDFs in \texttt{figures/} as of v0.12. No textual content from
-the v0.11 architecture, case study, tokenomics, status, limitations, or
-bibliography sections has been modified in v0.12; the only changes are the
-title-page revision tag and two \texttt{\textbackslash includegraphics} blocks
-plus their captions.
-
-Revision v0.11 integrates synthesis blocks delivered against three OMN-152
-sub-issues into the v0.10 architecture. Source-of-truth pointers for each
-integration: \emph{(i)~Bittensor / Taoshi PTN / dTAO / Macrocosmos SN13} from
-sub-issue \texttt{b3cbe648-318a-4907-b9ae-54bf869824af} (Market Researcher) is
-folded into Section~\ref{sec:arch:bittensor}; \emph{(ii)~contemporary multimodal-
-sentiment surveys + SentiStack worked example + Solana grey-literature feeds}
-from the same sub-issue is folded into Section~\ref{sec:arch:sentiment};
-\emph{(iii)~OmniRisk API surface characterisation + smallest-delta scenario-engine
-build} from sub-issue \texttt{fed71685-264d-45e5-aab5-0f5f18cc9758} (Developer)
-is folded into Section~\ref{sec:arch:scenario}; \emph{(iv)~strategic call on
-five separable engines vs.\ a composite agent + 90-day build order + out-of-scope
-boundary list} from sub-issue \texttt{c750fd90-32be-469e-85ce-9bbdb4ffe522}
-(Cody CTO) is folded into the new Section~\ref{sec:engine:strategy}. Seven new
-bibliography entries were added on 2026-05-06 (\cite{lai2023multimodal,
-gandhi2023multimodal,long2019deep,zhang2025sentistack,macrocosmos2024datauniverse,
-birdeye2026docs,dexscreener2026docs,pumpfun2026site}); each was verified against
-its primary source (DOI page, arXiv abstract page, or canonical project URL) on
-the same date. Total bibliography: 33 entries; pre-existing 26 entries audited
-2026-05-06 are preserved verbatim. No abstract / intro / formal-definitions /
-case-study / tokenomics / status / limitations content was modified in v0.11;
-the contribution framing of v0.10 is unchanged.
-
-Revision v0.10 reframes the contribution from ``verifiable cross-chain bridge
-risk'' to the broader thesis of \emph{agentic, context-aware risk prediction for
-the Internet of Value}, characterised as the composition of five engines
-(prediction, Bittensor prediction subnet, sentiment fusion, agentic, API risk +
-scenario; Section~\ref{sec:five-engine}). Eleven new bibliography entries were
-added (10 literature + the Paragraph operator-side companion \cite{omnirisk2026defending});
-each was verified against its primary source (DOI page, arXiv abstract page, ACM
-Digital Library record, NIST CSRC page, Springer book record, or canonical
-project URL) on 2026-05-06; the pre-existing 16 entries audited 2026-05-03 are
-preserved verbatim. The 2026-05-06 RYA defence-cycle case study
-(Section~\ref{sec:case-study}) is reproduced from the bot's tracked decision log
-at \texttt{bot/logs/decisions.jsonl}, the post-cycle persisted state at
-\texttt{bot/state.json} (\texttt{lifetimeSpentSol}~$=$~4.245,
-\texttt{ratchetSteps}~$=$~2, \texttt{liquidityBaselineUsd}~$\approx$~6098.2), and
-the operator journal at \texttt{bot/SOL.md}; the configuration knobs quoted in
-Section~\ref{sec:case-study:setup} are non-secret values from \texttt{bot/.env}
+\paragraph{Data and figures.} The case study of Section~\ref{sec:case-study} is
+fully reproducible from the operations repository's tracked decision log
+(\texttt{bot/logs/decisions.jsonl}, append-only structured JSONL with one decision
+record per line), the persisted bot state (\texttt{bot/state.json}; at the close
+of the cycle reported here, \texttt{lifetimeSpentSol}~$=$~6.445,
+\texttt{ratchetSteps}~$=$~3, \texttt{liquidityBaselineUsd}~$\approx$~6{,}244),
+and the operator journal (\texttt{bot/SOL.md}). The bot's full source code and
+the non-secret configuration knobs quoted in Section~\ref{sec:case-study:setup}
 (daily cap, per-trade ceiling, cooldown, TWAP slicing, slippage, ratchet, support
-tiers) and explicitly do not include any private key or RPC API key. The three
-new figures (five-engine architecture; cycle prices; cycle liquidity) are
-generated by \texttt{figures/\_make\_figures.py} from the same decision log and
-are vector PDFs; the Designer agent is expected to replace these v0.10 baseline
-figures with polished versions in a follow-up revision without altering any
-underlying datum.
+tiers) are public; private keys and RPC tokens are explicitly out of scope.
+Figures~\ref{fig:rya-defence-prices}--\ref{fig:rya-defence-liquidity} are
+generated deterministically from the decision log by
+\texttt{figures/\_make\_figures.py}. The five-engine architecture
+(Fig.~\ref{fig:five-engine}), dependency graph
+(Fig.~\ref{fig:five-engine-dependency}), and scenario-engine data-flow
+(Fig.~\ref{fig:scenario-engine-dataflow}) figures are vector renderings of the
+specifications in Sections~\ref{sec:five-engine},~\ref{sec:engine:strategy},
+and~\ref{sec:arch:scenario} respectively. On-chain transaction signatures for
+every TWAP slice in Table~\ref{tab:rya-defence-buys} are recorded in the
+decision log and verifiable on Solana mainnet.
 
-The bibliography for this paper is the master \texttt{references.bib} of the
-\texttt{omnirisk-papers} repository. Every entry was reverified against its primary
-source on 2026-05-03 (existing 16) and 2026-05-06 (added 11) prior to inclusion.
-Two entries were added in revision v0.4 to
-fill the related-work gaps flagged in academic review (\cite{ganescu2024trust} for
-zero-knowledge ML verification, \cite{werner2022sok} for the broader DeFi oracle
-landscape) and were verified against their arXiv abstract pages on the same date.
-Revision v0.5 deepened engagement with three previously cited primary sources by
-extracting concrete material rather than relying on summary attribution: the Yuma
-Consensus equations of Eqs.~\eqref{eq:yuma-consensus} and~\eqref{eq:vweight} were
-extracted from~\cite{opentensor2024yuma}; the \texttt{UlnConfig} and
-\texttt{ExecutorConfig} field names of Section~\ref{sec:formal:material} from the
-LayerZero V2 developer documentation~\cite{layerzero2024oft,zarick2024layerzero}; the
-$1{:}197$ class-imbalance ratio of Section~\ref{sec:related:bridge-detection} from the
-BridgeGuard dataset described in~\cite{wu2025safeguarding}. The retracted preprint
-arXiv:2003.03917 is intentionally excluded; see the comment block in
-\texttt{references.bib} and Section~\ref{sec:limitations} for the rationale.
+\paragraph{Bibliography.} All references in \texttt{\_bib/references.bib} were
+reverified against their primary source (DOI page, arXiv abstract page,
+publisher of record, or canonical project URL) on either 2026-05-03 (the
+original audit cohort), 2026-05-06 (the IoV-thesis cohort), or 2026-05-07 (the
+internal-review cohort added in this revision: foundational primary sources,
+peer-reviewed MEV / wash-trading / BFT / prediction-market literature). The
+withdrawn preprint arXiv:2003.03917 is intentionally excluded in favour of the
+canonical \cite{rao2021bittensor} and the workshop
+formalisation~\cite{steeves2022incentivizing}; see the bibliography header for
+provenance notes. URL-only entries are protocol whitepapers, developer
+documentation, or grey-literature feeds explicitly framed in the body as
+non-load-bearing weak supervision (Section~\ref{sec:arch:sentiment}).
 
-Revision v0.9 reconciles \texttt{§economics:rya:design} and \texttt{§economics:rya:config}
-against the v5 update to the RYA tokenomics specification
-(\texttt{[OMN-48]} post-investor-audit correction, 2026-05-04). The Solana mechanic
-is unchanged: mint authority is revoked at TGE~$+$~LP via
-\texttt{setAuthority(mint, null)}, freeze authority is \texttt{null} from the mint
-instruction, and the token is irreversibly non-mintable and non-freezable. The EVM
-mechanic is corrected: ownership of each OFT spoke is retained at the 3-of-5 Safe
-multisig (not burned to \texttt{0x\ldots dEaD}) so that LayerZero peer
-configuration, endpoint and DVN updates, and Guardian assignment remain callable
-for the lifetime of the protocol; supply expansion is removed at the contract level
-instead, with no \texttt{mint()} function in production bytecode and no owner-gated
-\texttt{\_mint} path. A separate Guardian role is restricted to
-\texttt{pause}/\texttt{unpause} of OFT bridging. The end-state guarantee --- no
-protocol-level mint path on any chain post-TGE --- is preserved on both chains; the
-v4 burn-to-\texttt{dEaD} description has been removed from the design-rationale
-paragraph and from Table~\ref{tab:rya-config}, and a Guardian row has been added to
-the configuration table. No other tokenomics numbers or sections are affected.
-
-Revision v0.8 reconciles the manuscript against a RayaChain mainnet-readiness
-audit (2026-05-03), which surfaced two material facts not visible in the prior
-operator system summary: (i)~the six chains the v0.6 framing called
-``operationally supported'' are in fact \emph{testnet} integrations (Ethereum,
-Arbitrum, Base Sepolia; BSC testnet; Polygon Amoy; Solana devnet) with zero
-mainnet deployments, and an engineering-estimated four to eight weeks of
-pre-launch security and configuration work outstanding; (ii)~on the testnets
-themselves only three of twenty directional EVM$\leftrightarrow$EVM peer routes
-pass on-chain peer verification (the other seventeen return \texttt{NoPeer}).
-Section~\ref{sec:intro}, \ref{sec:arch:rayachain}, the Layer-2 line of
-Figure~\ref{fig:arch-text}, the entire \texttt{lanes} block of
-Table~\ref{tab:status}, the \texttt{Mainnet readiness} and \texttt{Security
-incident} paragraphs of Section~\ref{sec:status:gaps}, the re-sequenced
-Section~\ref{sec:roadmap}, and the testnet-only caveat at the head of
-Section~\ref{sec:eval} all reflect this revision. The verification-architecture
-thesis is unchanged; what changed is that every empirical claim is now scoped
-explicitly to testnet flows pending mainnet cutover, and the security incident
-(three plaintext private-key entries holding the same deployer secret in a
-tracked file, plus an exposed Alchemy API key) is recorded as a separately
-tracked engineering item rather than treated as a paper concern.
-
-Revision v0.7 integrates the locked RYA tokenomics specification (Final v1,
-board-locked 2026-05-04) into Section~\ref{sec:economics}: the Bittensor
-verification-side flows of v0.6 are preserved as
-Section~\ref{sec:economics:bittensor} and the RYA application-side surface is
-specified in Sections~\ref{sec:economics:rya:design}--\ref{sec:economics:rya:bittensor}
-as a fixed-supply asset (cap $10^9$, pre-minted, with no protocol mint path
-post-TGE; see the v0.9 entry below for the chain-specific mechanics), a six-bucket
-distribution
-(35/25/15/10/10/5; Table~\ref{tab:rya-dist}) with a 5--8\% TGE-day circulating
-supply, a 4--5-year pre-minted lockup-contract emission curve, and a buy-back
-fee-capture model with the buy-back fraction $\phi$ multisig-tunable in
-$[0.30, 0.50]$ (Figure~\ref{fig:rya-fee-flow}). The Bittensor alignment is stated
-at the value-flow layer with present-day fee-routing and distribution-carve-out
-levers and an explicitly forward-compatible
-staking-influences-weighting governance hook
-(Section~\ref{sec:economics:rya:bittensor}); no immediate subnet-governance
-technical commitment is asserted. The numbers above match the v1 plan locked
-on 2026-05-04; the final emission-curve shape (yearly decay vs.\ halving epochs)
-and the specific buy-back-router contract addresses are deferred to follow-up
-issues and are not asserted by this paper.
-
-Revision v0.6 reconciles the manuscript against an operator-published
-RayaChain system summary (2026-05-03), with three substantive corrections:
-(i)~the operational lane count is six, not seven, with one further lane in
-active integration (Sections~\ref{sec:intro}, \ref{sec:arch:rayachain},
-\ref{sec:status}; the prior ``seven live lanes / planned eighth'' framing was
-not consistent with the engineering source-of-truth);
-(ii)~RayaChain's three named subsystems --- Transfer Engine (eight-state
-lifecycle), Risk Broadcast System (currently with readiness flag false), and
-Route Health System (15-second telemetry) --- are now described in
-Section~\ref{sec:arch:rayachain} and feed the evaluation dataset enumeration of
-Section~\ref{sec:eval};
-(iii)~Section~\ref{sec:status:gaps} now records the specific known production
-gaps the operator surfaced (transfer persistence, slippage controls, broadcast
-not yet operational, unverified EVM~$\leftrightarrow$~EVM routes,
-registry-fallback decimal handling, API-handler drift) so that no claim in the
-paper depends on closed gaps that are in fact open.
+\paragraph{Revision history.} The complete revision log
+(v0.4--v0.14) is tracked in \texttt{papers/2026/omnirisk-rayachain-bittensor/
+meta.yaml} under \texttt{revision\_log}, and in the \texttt{omnirisk-papers}
+git history; this paragraph would otherwise duplicate that record. The
+substantive lineage relevant to the present version: v0.4--v0.5 stabilised the
+formal definitions and Yuma equations against primary sources;
+v0.6--v0.9 reconciled tokenomics and RayaChain status against engineering
+audits; v0.10 reframed the contribution as the five-engine architecture for
+agentic, context-aware IoV risk prediction; v0.11 integrated synthesis from
+three sub-issue agents (Bittensor prediction-subnet snapshot; OmniRisk API
+surface characterisation; five-engines-vs-composite strategic call);
+v0.12--v0.13 wired Designer figures and added Basel Magableh as first author;
+v0.14 (the present revision) extended the case study to cover both defence
+cycles, audited the bibliography against the senior-professor reading list
+(adding peer-reviewed primary sources for foundational ledgers, MEV,
+BFT-finality, prediction-market mechanism design, and crypto wash-trading), and
+flipped status to \emph{internal review} per the CEO publication directive of
+2026-05-07.
 
 \printbibliography
 

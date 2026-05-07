@@ -36,7 +36,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # -----------------------------------------------------------------------------
 
 
+CYCLE_START = datetime(2026, 5, 6, 1, 0, tzinfo=timezone.utc)
+CYCLE_END = datetime(2026, 5, 7, 1, 30, tzinfo=timezone.utc)
+
+
 def load_cycle_buys():
+    """Tier-completion buy events across cycle-1 + cycle-2 through ratchet-3."""
     rows = []
     with open(DECISIONS, "r") as fh:
         for line in fh:
@@ -45,32 +50,25 @@ def load_cycle_buys():
                 continue
             ev = json.loads(line)
             ts = ev.get("ts", "")
-            if not ts.startswith("2026-05-06T0"):
+            if not ts:
+                continue
+            t = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            if not (CYCLE_START <= t <= CYCLE_END):
                 continue
             if ev.get("action") != "buy_executed":
                 continue
             reason = ev.get("reason", "")
             if not reason.startswith("tier $"):
                 continue  # only the tier-completion summary rows
-            rows.append(
-                (
-                    datetime.fromisoformat(ts.replace("Z", "+00:00")),
-                    float(ev["priceUsd"]),
-                )
-            )
+            rows.append((t, float(ev["priceUsd"])))
     rows.sort()
     return rows
 
 
 def load_cycle_prices():
-    """Every priced log entry (skips, executes, slices) within the cycle.
-
-    Used to draw the price-time curve. Sliced executions have the same price
-    as the parent tier-completion event, so they don't perturb the curve.
-    """
+    """Every priced log entry through cycle-1 + cycle-2 (extended through
+    2026-05-07 01:14 UTC ratchet-3)."""
     rows = []
-    cycle_start = datetime(2026, 5, 6, 1, 0, tzinfo=timezone.utc)
-    cycle_end = datetime(2026, 5, 6, 6, 30, tzinfo=timezone.utc)
     with open(DECISIONS, "r") as fh:
         for line in fh:
             line = line.strip()
@@ -82,11 +80,10 @@ def load_cycle_prices():
             if not ts or price is None:
                 continue
             t = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-            if not (cycle_start <= t <= cycle_end):
+            if not (CYCLE_START <= t <= CYCLE_END):
                 continue
             rows.append((t, float(price)))
     rows.sort()
-    # de-duplicate adjacent same-price points
     dedup = []
     for t, p in rows:
         if not dedup or dedup[-1][1] != p:
@@ -251,13 +248,22 @@ def make_price_pdf():
             label="bot buy (0.10 SOL TWAP)",
         )
 
-    ax.set_xlabel("Time (UTC, 2026-05-06)")
+    ax.set_xlabel("Time (UTC)")
     ax.set_ylabel("RYA price (µUSD per RYA)")
     ax.set_title(
-        "RYA defence cycle 2026-05-06 — price (µUSD) and bot-buy markers"
+        "RYA defence 2026-05-06/07 — price (µUSD), bot-buy markers, ratchet steps"
     )
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-    ax.xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 30]))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d %H:%M"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=[0, 6, 12, 18]))
+    # Annotate ratchet-step events
+    ratchet_events = [
+        (datetime(2026, 5, 6, 2, 29, 51, tzinfo=timezone.utc), "ratchet 2"),
+        (datetime(2026, 5, 7, 0, 42, 17, tzinfo=timezone.utc), "ratchet 3"),
+    ]
+    for rt, label in ratchet_events:
+        ax.axvline(rt, color="#7f8c8d", lw=0.7, ls=":", alpha=0.7)
+        ax.text(rt, ax.get_ylim()[1] * 0.98, label, fontsize=7,
+                rotation=90, va="top", ha="right", color="#7f8c8d")
     ax.grid(True, alpha=0.3, linestyle=":")
     ax.legend(loc="lower right", frameon=False, fontsize=9)
 
@@ -290,14 +296,21 @@ def make_liquidity_pdf():
     import matplotlib.dates as mdates
 
     points = [
-        # (timestamp, liquidity_usd)
-        (datetime(2026, 5, 6, 1, 0, tzinfo=timezone.utc), 5418.0),
+        # (timestamp, liquidity_usd) — point readings from SOL.md and state.json
+        (datetime(2026, 5, 6, 1, 0, tzinfo=timezone.utc), 5418.0),    # cycle-1 start
         (datetime(2026, 5, 6, 1, 4, tzinfo=timezone.utc), 5500.0),
         (datetime(2026, 5, 6, 2, 0, tzinfo=timezone.utc), 5650.0),
         (datetime(2026, 5, 6, 3, 0, tzinfo=timezone.utc), 5800.0),
         (datetime(2026, 5, 6, 4, 0, tzinfo=timezone.utc), 5900.0),
         (datetime(2026, 5, 6, 5, 0, tzinfo=timezone.utc), 6000.0),
-        (datetime(2026, 5, 6, 6, 13, tzinfo=timezone.utc), 6098.2),
+        (datetime(2026, 5, 6, 6, 13, tzinfo=timezone.utc), 6098.0),   # cycle-1 end
+        (datetime(2026, 5, 6, 11, 0, tzinfo=timezone.utc), 6098.0),   # plateau
+        (datetime(2026, 5, 6, 18, 0, tzinfo=timezone.utc), 6071.0),   # quiet plateau
+        (datetime(2026, 5, 6, 21, 15, tzinfo=timezone.utc), 5911.0),  # second sell wave
+        (datetime(2026, 5, 6, 21, 30, tzinfo=timezone.utc), 5938.0),  # cycle-2 start
+        (datetime(2026, 5, 6, 23, 30, tzinfo=timezone.utc), 6000.0),
+        (datetime(2026, 5, 7, 0, 0, tzinfo=timezone.utc), 6071.0),
+        (datetime(2026, 5, 7, 1, 14, tzinfo=timezone.utc), 6244.0),   # ratchet-3 fires
     ]
 
     fig, ax = plt.subplots(figsize=(8.5, 4.0))
@@ -306,23 +319,34 @@ def make_liquidity_pdf():
     ax.plot(ts, ls, color="#117a65", lw=1.4, marker="s", markersize=4,
             label="pool liquidity (point readings, USD)")
     ax.axhline(
-        6098.2,
+        6244.0,
         color="#7f8c8d",
         lw=0.8,
         ls="--",
-        label="liquidityBaselineUsd persisted in state.json",
+        label="liquidityBaselineUsd at ratchet-3 (state.json)",
     )
 
-    ax.set_xlabel("Time (UTC, 2026-05-06)")
+    # Annotate cycle and ratchet boundaries
+    annotations = [
+        (datetime(2026, 5, 6, 1, 0, tzinfo=timezone.utc), "cycle-1"),
+        (datetime(2026, 5, 6, 21, 30, tzinfo=timezone.utc), "cycle-2"),
+        (datetime(2026, 5, 7, 1, 14, tzinfo=timezone.utc), "ratchet 3"),
+    ]
+    for at, label in annotations:
+        ax.axvline(at, color="#bdc3c7", lw=0.6, ls=":", alpha=0.7)
+        ax.text(at, 6450, label, fontsize=7, rotation=90,
+                va="top", ha="right", color="#7f8c8d")
+
+    ax.set_xlabel("Time (UTC)")
     ax.set_ylabel("Pool liquidity (USD)")
     ax.set_title(
-        "RYA defence cycle 2026-05-06 — pool liquidity envelope"
+        "RYA defence 2026-05-06/07 — pool liquidity envelope across cycles 1 & 2"
     )
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-    ax.xaxis.set_major_locator(mdates.MinuteLocator(byminute=[0, 30]))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d %H:%M"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=[0, 6, 12, 18]))
     ax.grid(True, alpha=0.3, linestyle=":")
     ax.legend(loc="lower right", frameon=False, fontsize=9)
-    ax.set_ylim(5000, 6500)
+    ax.set_ylim(5300, 6500)
 
     out = os.path.join(HERE, "rya-defence-cycle-liquidity.pdf")
     fig.tight_layout()
