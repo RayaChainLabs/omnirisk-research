@@ -597,6 +597,33 @@ economically verifiable, not merely operationally useful.
 \section{RayaChain Architecture}\label{sec:arch}
 %% =====================================================================
 
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/canary-signal-flow}
+  \caption{End-to-end RayaChain canary signal flow. Anomalous on-chain
+  events (\emph{Detect}, A1--A3) are normalized to typed
+  \texttt{WalletSignal} envelopes, scored by the OmniRisk subnet under
+  a Brier\,+\,Inconsistency\,+\,Calibration validator loss
+  (\emph{Transform}, A4--A6), propagated cross-chain via signed OFT
+  envelopes (\emph{Propagate}, A7--A9), and ingested by consumer
+  systems that act under role-bound constitutional constraints
+  (\emph{Decide\,+\,Respond}, A10--A13). \emph{Solid} nodes (Layer-1)
+  are orchestration-validated by the $5{,}097$-round shadow soak of
+  Section~\ref{sec:vri}; \emph{dashed blue} nodes (Layer-2)---
+  validator-quorum signing, OFT routing, and quorum-verifying
+  receivers---are designed but deferred per the Layer-1/Layer-2
+  honesty split of Section~\ref{sec:vri}. The curved feedback arrow
+  (A13\,$\to$\,A4) closes the economic self-correction loop: realized
+  outcomes are the ground-truth signal for the validator loss.
+  Decision diamonds gate the flow at score threshold (D1),
+  envelope-signature verification (D2), and role-permission check
+  (D3). The audit sub-rail anchors signed records from A2, A6, and
+  A12 to a Merkle root. Cross-reference
+  Table~\ref{tab:scoring-features} for the per-score feature
+  decomposition at A5.}
+  \label{fig:canary-signal-flow}
+\end{figure*}
+
 \subsection{System Overview}
 
 RayaChain is an omnichain signal layer built on LayerZero OFT
@@ -605,10 +632,12 @@ and arbitrary messages between chains, RayaChain transports
 \emph{evaluated context}: structured, semantically-typed risk and
 credit signals carrying a confidence and a window of validity. The
 layer is positioned beneath agentic policy engines and above existing
-interoperability primitives. Figure-conceptually, an originating chain
-emits a signal; a relayer carries the signal and its provenance to a
-target chain; and a consuming protocol or agent reads the signal under
-a typed schema before deciding to act.
+interoperability primitives. The end-to-end flow is summarized in
+Figure~\ref{fig:canary-signal-flow}: an originating chain emits a
+signal; the OmniRisk subnet scores it; a relayer carries the signed
+envelope and its provenance to a target chain; and a consuming
+protocol or agent reads the signal under a typed schema before
+deciding to act.
 
 \subsection{Core Components}
 
@@ -762,7 +791,11 @@ agents can place in it. The canary layer of Section~\ref{sec:arch}
 provides typed propagation; it does not, by itself, provide a
 verifiable backing for the values it carries. This section adds that
 backing by composing the layer with a decentralized validation
-subnet, and states the specification formally.
+subnet, and states the specification formally. Activities A4--A6 of
+Figure~\ref{fig:canary-signal-flow}---miner forecast emission,
+validator scoring against realized $E_1$--$E_4$ events, and signed
+envelope production---are the locus of the verifiability argument
+developed below.
 
 \subsection{Verification by Decentralized Subnet}
 

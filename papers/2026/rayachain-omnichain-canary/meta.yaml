@@ -31,12 +31,28 @@ target_venue:
   document_class: "IEEEtran[journal]"
 
 status: "draft"           # scaffold → draft (after AW first populated cut) → CEO-review → submitted
-revision: "0.7.1"
+revision: "0.7.2"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
 
 revision_log:
+  - revision: "0.7.2"
+    date: "2026-05-08"
+    issue: "OMN-175"
+    by: "Academic Writer (agent 06e03389-c313-44f8-846f-82f99e0b3b6c)"
+    changes:
+      - "Integrated Designer's v2 canary-signal-flow figure (figures/canary-signal-flow.pdf, 13 activities × 4 swimlanes Detect/Transform/Propagate/Decide+Respond, 3 decision diamonds, audit sub-rail, A13→A4 feedback loop, L1/L2 honesty marker via solid/dashed-blue node borders) as Figure 1 (label fig:canary-signal-flow) at the top of §IV RayaChain Architecture, rendered \\begin{figure*}[t] full-width (\\textwidth) per IEEEtran two-column journal convention."
+      - "Used the v2 RECIPE.md caption (source-of-truth per Designer's locked CEO spec 2026-05-08), adapted to point at real manuscript labels: Section~\\ref{sec:vri} for the L1 soak / L2 deferral split, Table~\\ref{tab:scoring-features} for the per-score feature decomposition cross-reference at A5. Did NOT use the Designer's latest comment caption (which was a verbatim repeat of the v1 5-activity caption now archived under figures/_archived/) — disk truth (v2) takes precedence over comment thread per past Designer-stale-continuation behavior."
+      - "Rewrote the awkward 'Figure-conceptually, an originating chain emits a signal' sentence in §IV-A System Overview into a proper 'The end-to-end flow is summarized in Figure~\\ref{fig:canary-signal-flow}…' reference; removed the placeholder phrasing."
+      - "Added a textual cross-reference in §V Verifiable Risk Intelligence opening: 'Activities A4--A6 of Figure~\\ref{fig:canary-signal-flow}---miner forecast emission, validator scoring against realized E_1--E_4 events, and signed envelope production---are the locus of the verifiability argument developed below.' Per v2 RECIPE's secondary-reference recommendation."
+      - "No content additions beyond figure integration; no edits to the figure source (figures/canary-signal-flow.tex remains Designer's surface); no edits to bib, tables, or §VI–§IX."
+      - "Compiles clean: 13 IEEEtran two-column journal pages (was 12 at v0.7.1; +1 page from the full-width figure*, within the 9–14 target band, well below the 16-page hard ceiling), zero undefined references, zero undefined citations, zero errors, no new warnings beyond the longstanding T1/lmr/m/scit font-shape note (predates this revision). Figure resolves and renders at the page-6 [t]-float position."
+      - "Cross-link to §V's body-expansion pending item from v0.5: meta.yaml's standing 'CEO may request body expansion (e.g., a system-architecture figure)' note is now satisfied — the canary-signal-flow figure is the system-architecture figure."
+    pending:
+      - "Author 2 (A.~Alghuried) ORCID and IEEE membership grade still TBD."
+      - "Target venue still unconfirmed; \\markboth still says [venue TBD]. CEO leans TDSC."
+      - "Layer-2 economic verification of validator-loss components remains the load-bearing measurement gap."
   - revision: "0.7.1"
     date: "2026-05-08"
     issue: "OMN-177"
