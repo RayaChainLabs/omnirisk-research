@@ -555,19 +555,34 @@ market-level signal classes; the \texttt{prov\_root} field is the hook
 that lets a verifying consumer chase signal provenance back to an
 attestation set without re-deriving the signal value itself.
 
-Each field in \texttt{WalletSignal} maps onto a row of the
-feature-inputs table introduced later
+The fields of \texttt{WalletSignal} are populated as follows, each
+traceable back to a row of the feature-inputs table introduced later
 (Table~\ref{tab:scoring-features}, Section~\ref{sec:vri:features}).
-The \texttt{value\_bps} field carries the wallet-class anomaly score
-whose feature inputs are enumerated in the first row of that table;
-\texttt{confidence\_q7} carries the calibration-channel score of the
-fourth row. The \texttt{type} field selects which row the consumer
-dereferences: a wallet-class signal points the consumer at the
-wallet row of Table~\ref{tab:scoring-features}, while protocol- and
-market-class signals point at the protocol and market rows under
-their equivalent IDL structures. The \texttt{prov\_root} field is
-therefore the audit hook by which a verifying consumer reaches the
-underlying feature evidence set without re-deriving the score.
+\texttt{origin} is the chain identifier of the emitting
+signal-generation engine and is not scored; \texttt{wallet} is the
+20-byte subject and is not scored. \texttt{type} is the
+\texttt{WalletSignalType} discriminant and selects which row block of
+Table~\ref{tab:scoring-features} the consumer dereferences---a
+wallet-class signal points at the wallet \texttt{value\_bps} row,
+while protocol- and market-class signals (under their equivalent IDL
+structures) point at the protocol and market \texttt{value\_bps}
+rows. \texttt{value\_bps} is the value sub-score whose feature inputs
+are enumerated in the corresponding wallet, protocol, or market row;
+\texttt{confidence\_q7} is the engine-level \texttt{confidence} score
+whose feature inputs are enumerated in the
+\texttt{confidence\_q7} (all) row. \texttt{window\_start} and
+\texttt{window\_end} carry the validator scoring window $\Delta$ of
+Section~\ref{sec:vri:formal} and are not themselves scored.
+\texttt{prov\_root} is a Merkle commitment over the underlying feature
+observations, so a verifying consumer can chase any \texttt{value\_bps}
+or \texttt{confidence\_q7} back through Table~\ref{tab:scoring-features}
+to a verifiable feature set without re-deriving the score. The
+bridge-and-oracle anomaly indicator that resolves event $E_3$ in
+Section~\ref{sec:vri:formal} is carried as a protocol-class signal
+with a dedicated \texttt{type} discriminant and inherits the same
+\texttt{prov\_root} provenance contract; its row in
+Table~\ref{tab:scoring-features} states the cross-source redundancy
+features that populate it.
 
 \subsection{Canary Layer Definition}
 
@@ -706,27 +721,39 @@ against a resolver, but it does so over named scores whose feature
 inputs the prose has so far left implicit.
 Table~\ref{tab:scoring-features} enumerates the feature inputs that
 feed each named score on the canary layer and labels which channel of
-the validator loss the score contributes to. Three design choices
+the validator loss the score contributes to. Four design choices
 warrant explicit naming. First, each row binds to a concrete score
 that lands in the wire envelope of Section~\ref{sec:arch}
-(\texttt{value\_bps}, \texttt{confidence\_q7}) or to a validator-loss
-component, not to abstract risk concepts; this lets a reviewer audit
-the methodology by reading the IDL and the table together. Second,
-off-chain and grey-literature feeds are admitted only in the
-market-level signal class, where narrative-shock fusion divergence is
-empirically informative~\cite{cong2022crypto}; wallet- and
-protocol-level scores are restricted to on-chain inputs to keep the
-load-bearing scoring path Sybil-resistant. Third, the validator-loss
-components are flagged \textsc{deferred} consistently with the
-layer-2 honesty split of Section~\ref{sec:vri}: the Brier,
-Inconsistency, and Calibration channels are specified
+(\texttt{value\_bps}, \texttt{confidence\_q7}) or to a resolver event
+or validator-loss component, not to abstract risk concepts; this lets
+a reviewer audit the methodology by reading the IDL and the table
+together. Second, off-chain and grey-literature feeds are admitted
+only in the market-level signal class, where narrative-shock fusion
+divergence is empirically
+informative~\cite{cong2022crypto}; wallet- and protocol-level scores
+are restricted to on-chain inputs to keep the load-bearing scoring
+path Sybil-resistant. Third, several feature classes are deliberately
+excluded: centralized-exchange order-book microstructure (not
+robust to the agent-as-adversary threat model of
+Table~\ref{tab:threat-model}, since the venue itself is the
+adversary), gas-price and mempool microstructure (trivially gameable
+by an MEV-active miner~\cite{daian2020flash}), and price-only
+technical indicators (already covered by the underlying
+forecast pipeline of the Bittensor financial-prediction
+precedent~\cite{taoshi2024ptn}, and not informative for the cross-chain
+risk-and-credit propagation problem this layer is for).
+Fourth, the validator-loss components are flagged \textsc{deferred}
+consistently with the layer-2 honesty split of Section~\ref{sec:vri}:
+the Brier, Inconsistency, and Calibration channels are specified
 architecturally and not yet measured against a live multi-miner
-metagraph. Downstream, the \texttt{value\_bps} score feeds anomaly
-haircuts and routing decisions for autonomous agents, while
-\texttt{confidence\_q7} gates the agent's constitutional action
-surface: an agent declares a per-signal-type minimum confidence,
-below which a propagated signal is silently downweighted rather than
-acted upon~\cite{bai2022constitutional}.
+metagraph. Downstream, the \texttt{value\_bps} score feeds collateral
+haircuts (Section~\ref{sec:uc:credit}) and routing decisions for
+autonomous agents; the bridge/oracle anomaly indicator gates the
+exploit-propagation circuit breaker of Section~\ref{sec:uc:exploit};
+and \texttt{confidence\_q7} gates the agent's constitutional action
+surface, with each agent declaring a per-signal-type minimum
+confidence below which a propagated signal is silently downweighted
+rather than acted upon~\cite{bai2022constitutional}.
 
 \begin{table*}[t]
 \centering
