@@ -52,13 +52,14 @@ University Dublin, Dublin, Ireland (e-mail: basel.magableh@tudublin.ie).
 ORCID: 0000-0003-2337-637X.}%
 \thanks{A. Alghuried is with the College of Computer Engineering and
 Sciences, Prince Sattam bin Abdulaziz University, Al-Kharj 16278,
-Kingdom of Saudi Arabia (e-mail: [email TBD]).}%
+Kingdom of Saudi Arabia (e-mail: a.alghareed@psau.edu.sa).}%
 \thanks{Manuscript received May~7,~2026.}}
 
 \markboth{IEEE Transactions on [venue~TBD],~Vol.~XX, No.~X, May~2026}%
 {Magableh \MakeLowercase{\textit{et al.}}: RayaChain Omnichain Canary Layer}
 
-\IEEEpubid{0000--0000/00\$00.00~\copyright~2026 IEEE}
+%% IEEEpubid removed per CEO directive 2026-05-07; placeholder line not needed pre-acceptance.
+%% \IEEEpubid{0000--0000/00\$00.00~\copyright~2026 IEEE}
 
 \begin{document}
 
@@ -554,6 +555,20 @@ market-level signal classes; the \texttt{prov\_root} field is the hook
 that lets a verifying consumer chase signal provenance back to an
 attestation set without re-deriving the signal value itself.
 
+Each field in \texttt{WalletSignal} maps onto a row of the
+feature-inputs table introduced later
+(Table~\ref{tab:scoring-features}, Section~\ref{sec:vri:features}).
+The \texttt{value\_bps} field carries the wallet-class anomaly score
+whose feature inputs are enumerated in the first row of that table;
+\texttt{confidence\_q7} carries the calibration-channel score of the
+fourth row. The \texttt{type} field selects which row the consumer
+dereferences: a wallet-class signal points the consumer at the
+wallet row of Table~\ref{tab:scoring-features}, while protocol- and
+market-class signals point at the protocol and market rows under
+their equivalent IDL structures. The \texttt{prov\_root} field is
+therefore the audit hook by which a verifying consumer reaches the
+underlying feature evidence set without re-deriving the score.
+
 \subsection{Canary Layer Definition}
 
 \textbf{Definition (Canary Layer).} A canary layer is an
@@ -683,6 +698,111 @@ active miners has too high a variance over a fixed validation window,
 the operator can disable the subnet path without losing the production
 signal surface. This bounds the worst-case verification regression to
 the signal-generation engine's standalone calibration error.
+
+\subsection{Feature Inputs and Signal-Score Mapping}\label{sec:vri:features}
+
+The validator loss of Section~\ref{sec:vri:formal} prices a forecast
+against a resolver, but it does so over named scores whose feature
+inputs the prose has so far left implicit.
+Table~\ref{tab:scoring-features} enumerates the feature inputs that
+feed each named score on the canary layer and labels which channel of
+the validator loss the score contributes to. Three design choices
+warrant explicit naming. First, each row binds to a concrete score
+that lands in the wire envelope of Section~\ref{sec:arch}
+(\texttt{value\_bps}, \texttt{confidence\_q7}) or to a validator-loss
+component, not to abstract risk concepts; this lets a reviewer audit
+the methodology by reading the IDL and the table together. Second,
+off-chain and grey-literature feeds are admitted only in the
+market-level signal class, where narrative-shock fusion divergence is
+empirically informative~\cite{cong2022crypto}; wallet- and
+protocol-level scores are restricted to on-chain inputs to keep the
+load-bearing scoring path Sybil-resistant. Third, the validator-loss
+components are flagged \textsc{deferred} consistently with the
+layer-2 honesty split of Section~\ref{sec:vri}: the Brier,
+Inconsistency, and Calibration channels are specified
+architecturally and not yet measured against a live multi-miner
+metagraph. Downstream, the \texttt{value\_bps} score feeds anomaly
+haircuts and routing decisions for autonomous agents, while
+\texttt{confidence\_q7} gates the agent's constitutional action
+surface: an agent declares a per-signal-type minimum confidence,
+below which a propagated signal is silently downweighted rather than
+acted upon~\cite{bai2022constitutional}.
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\caption{Feature inputs and validator-loss channel for each named
+score on the canary layer. Each row corresponds to a score that lands
+in the wire envelope (\texttt{value\_bps}, \texttt{confidence\_q7})
+of Section~\ref{sec:arch} or to a component of the validator loss of
+Section~\ref{sec:vri:formal}. \textsc{wired} denotes a score the
+production signal-generation engine emits today; \textsc{deferred}
+denotes an architectural specification not yet measured against a
+live metagraph, consistent with the layer-1 / layer-2 split of
+Section~\ref{sec:vri}.}
+\label{tab:scoring-features}
+\renewcommand{\arraystretch}{1.20}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth} >{\raggedright\arraybackslash}p{0.26\linewidth} >{\raggedright\arraybackslash}p{0.09\linewidth} >{\raggedright\arraybackslash}p{0.08\linewidth} >{\raggedright\arraybackslash}p{0.13\linewidth} >{\raggedright\arraybackslash}p{0.09\linewidth} >{\raggedright\arraybackslash}p{0.07\linewidth}@{}}
+\toprule
+\textbf{Score (field / channel)} &
+\textbf{Feature inputs} & \textbf{Source} & \textbf{Range} &
+\textbf{Prior work} & \textbf{VL channel} & \textbf{Status} \\
+\midrule
+\texttt{value\_bps} (wallet) &
+exploit-contract interaction history; liquidity-withdrawal cascade
+fingerprints; repayment-failure flags; transaction-graph centrality
+drift &
+on-chain & int16 bps, signed &
+\cite{ChenLZCLLLZ20,MotamedB19,palaiokrassas2023multichain} &
+Brier & \textsc{wired} \\
+\texttt{value\_bps} (protocol) &
+TVL contraction rate; oracle divergence; bridge-flow asymmetry;
+utilization spikes &
+on-chain, cross-chain aggregate & int16 bps, signed &
+\cite{ZhangZZL24,augusto2024sok,gogol2024liquidity} &
+Brier & \textsc{wired} \\
+\texttt{value\_bps} (market) &
+cross-chain withdrawal correlation; narrative-shock fusion divergence;
+MEV / sandwich-active windows &
+on-chain, grey-literature, social streams & int16 bps, signed &
+\cite{cong2022crypto,daian2020flash} &
+Brier, Inconsistency & \textsc{wired} \\
+Bridge/oracle anomaly indicator (resolver $E_3$,
+Sec.~\ref{sec:vri:formal}) &
+cross-source redundancy disagreement on bridge-flow or oracle quote;
+LayerZero substrate divergence flags; cross-chain wallet-reputation
+mismatch on bridge counterparty &
+on-chain, cross-chain & boolean per $\Delta$ &
+\cite{augusto2024sok,ZhangZZL24,werner2022sok,palaiokrassas2023multichain}
+&
+Brier (resolver $E_3$) & \textsc{wired} \\
+\texttt{confidence\_q7} (all) &
+rolling realized accuracy of the signal class over $W$ samples;
+signal-class stability across paired queries &
+derived & Q0.7 in $[0,1]$ &
+\cite{rao2021bittensor,hanson2003combinatorial} &
+Calibration & \textsc{wired} \\
+$\mathrm{Brier}(p_i,y)$ &
+predicted probability $p_i$ and resolver event indicator
+$y \in \{0,1\}$ over $\Delta$ &
+derived (post-resolver) & $[0,1]$ &
+\cite{hanson2003combinatorial,rao2021bittensor} &
+Brier & \textsc{deferred} \\
+$\mathrm{Inconsistency}(m_i)$ &
+paired predictions on equivalent chain-state context &
+derived & $[0,1]$ &
+\cite{steeves2022incentivizing,opentensor2024yuma} &
+Inconsistency & \textsc{deferred} \\
+$\mathrm{Calibration}(c_i)$ &
+per-bin gap between miner-stated $c_i$ and realized accuracy over
+$W$ paired $(c_i,y)$ samples &
+derived & $[0,1]$ &
+\cite{hanson2003combinatorial} &
+Calibration & \textsc{deferred} \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Threat Model and Trust Assumptions}\label{sec:vri:threat}
 
@@ -1074,7 +1194,7 @@ conceptualisation, methodology, project administration, supervision,
 writing -- original draft, writing -- review and editing.
 \textbf{Ahod Alghuried:} contribution roles to be confirmed at the
 time of submission. ORCIDs: Basel Magableh,
-\texttt{0000-0003-2337-637X}; Ahod Alghuried, \texttt{[ORCID TBD]}.
+\texttt{0000-0003-2337-637X}; Ahod Alghuried, ORCID TBC.
 
 %% =====================================================================
 \section*{Funding}

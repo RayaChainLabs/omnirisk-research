@@ -12,9 +12,9 @@ authors:
     order: 1
     corresponding: true
   - name: "Ahod Alghuried"
-    email: "[email TBD]"
-    affiliation: "Prince Sattam Bin Abdulaziz University, Al-Kharj, Kingdom of Saudi Arabia"
-    orcid: "[ORCID TBD]"
+    email: "a.alghareed@psau.edu.sa"
+    affiliation: "College of Computer Engineering and Sciences, Prince Sattam bin Abdulaziz University, Al-Kharj 16278, Kingdom of Saudi Arabia"
+    orcid: "TBC"
     ieee_membership: "[membership TBD]"
     order: 2
     corresponding: false
@@ -31,12 +31,29 @@ target_venue:
   document_class: "IEEEtran[journal]"
 
 status: "draft"           # scaffold → draft (after AW first populated cut) → CEO-review → submitted
-revision: "0.6"
+revision: "0.7"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
 
 revision_log:
+  - revision: "0.7"
+    date: "2026-05-08"
+    issue: "OMN-176"
+    by: "Academic Writer (agent 06e03389-c313-44f8-846f-82f99e0b3b6c)"
+    changes:
+      - "Added §V-C Feature Inputs and Signal-Score Mapping (new subsection between §V-B Formal Validator-Loss Specification and §V-D Threat Model)."
+      - "Added Table III tab:scoring-features (table*, scriptsize, 7 rows × 7 columns): for each named score (value_bps wallet/protocol/market, confidence_q7, Brier/Inconsistency/Calibration components), enumerates feature inputs, source (on-chain / cross-chain / grey-lit / derived), units/range, prior-work citations, validator-loss channel, and a wired/deferred status flag."
+      - "Wallet- and protocol-level scores marked wired (production engine emits today); market-level score wired (off-chain and grey-lit feeds admitted only here, per the brief's Sybil-resistance rationale); validator-loss components Brier / Inconsistency / Calibration marked deferred consistent with the layer-1/layer-2 honesty split of §V."
+      - "Wrote introducing paragraph in §V-C explaining design choices: scores bind to envelope fields or loss channels (not abstract risk concepts); off-chain feeds restricted to the market class; downstream value_bps feeds anomaly haircuts and routing; downstream confidence_q7 gates the agent's constitutional action surface."
+      - "Extended §IV Schema Excerpt with a paragraph linking each WalletSignal field (value_bps, confidence_q7, type, prov_root) to its corresponding row of Table III, so a reviewer can read the IDL and trace back to the populating features."
+      - "Cross-link to OMN-175 (Designer activity diagram): table label tab:scoring-features can be referenced from the diagram caption when figures/canary-signal-flow.pdf ships; no inbound dependency from the diagram to this revision."
+      - "No new bib keys, no new numerical claims; all feature-class citations re-use existing references (ChenLZCLLLZ20, MotamedB19, palaiokrassas2023multichain, ZhangZZL24, augusto2024sok, gogol2024liquidity, cong2022crypto, daian2020flash, rao2021bittensor, hanson2003combinatorial, steeves2022incentivizing, opentensor2024yuma, bai2022constitutional)."
+      - "Compiles clean: 11 IEEEtran two-column journal pages (was 10 at v0.6; +1 page within the directive's 0.5–0.75 estimate, hard ceiling 16), zero overfull hboxes, zero warnings, zero errors."
+    pending:
+      - "Author 2 (A.~Alghuried) email, ORCID, and IEEE membership grade still TBD."
+      - "Target venue still unconfirmed; \\markboth still says [venue TBD]."
+      - "Layer-2 economic verification of validator-loss components remains the load-bearing measurement gap (now reflected explicitly in Table III status column)."
   - revision: "0.6"
     date: "2026-05-07"
     issue: "OMN-171"
