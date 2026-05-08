@@ -31,12 +31,29 @@ target_venue:
   document_class: "IEEEtran[journal]"
 
 status: "draft"           # scaffold → draft (after AW first populated cut) → CEO-review → submitted
-revision: "0.7"
+revision: "0.7.1"
 created_at: "2026-05-07"
 submitted_at: null
 published_at: null
 
 revision_log:
+  - revision: "0.7.1"
+    date: "2026-05-08"
+    issue: "OMN-177"
+    by: "Academic Writer (agent 06e03389-c313-44f8-846f-82f99e0b3b6c)"
+    changes:
+      - "Added §III-B Cross-Chain Interoperability Approaches and Exploit-Risk Propagation (new subsection between §III-A Cross-Chain Interoperability Protocols and §III-B Blockchain Analytics Platforms, which is now §III-C; subsequent Related Work subsections shift down by one)."
+      - "Added Table I tab:exploit-propagation-comparison (table*, scriptsize, 5 rows × 7 columns): rows = lock-and-mint bridge, burn-and-mint bridge, light-client relay, validator-set messaging (LayerZero V1, Wormhole, Axelar), RayaChain canary; columns = approach class, detection point, propagation latency, mitigation surface, verifiability, post-exploit blast radius, evidence."
+      - "Wrote introducing paragraph in §III-B explaining (a) the four traditional transport classes the comparison decomposes into, (b) the six selected dimensions, and (c) why each dimension is chosen — each corresponds to an architectural decision the canary layer makes differently (detection point shifts pre-settlement; latency decouples from asset-bridge finality and tracks τ_R; mitigation surface widens to typed confidence-bearing consumer actions; verifiability moves from black-box / quorum-attested toward economic bonding; blast radius is bounded by per-signal-type confidence bands and consumer-side circuit breakers)."
+      - "Wrote follow-up paragraph naming the load-bearing limit: the 'verifiability' column for the canary layer reads 'designed; layer-1 orchestration validated, layer-2 deferred', tied to the §V honesty split — the row states architectural intent, not measured economic bonding. Hedge-light, no overclaim."
+      - "Added two new bib entries to local references.bib (ported from _bib/references.bib master): zhang2023sok (Zhang et al., SoK Cross-chain Bridge Security, arXiv:2312.12573) and wu2025safeguarding (Wu et al., BridgeGuard, WWW '25, 49 incidents / 203 attack txns). All other citations re-used from existing keys (augusto2024sok, werner2022sok, palaiokrassas2023multichain, daian2020flash, abs-2110-13871, rao2021bittensor, opentensor2024yuma)."
+      - "No new numerical claims, no fabricated benchmarks; the Evidence column points to representative incident analyses or surveys, not to measurements taken in this paper."
+      - "Cross-link to OMN-175 (Designer activity diagram): the 'mitigation surface' column for RayaChain (collateral haircut, route refusal, circuit breaker before settlement) aligns with the consumer-side activities the OMN-175 diagram surfaces; the table label tab:exploit-propagation-comparison is stable and can be referenced from the diagram caption when figures/canary-signal-flow.pdf ships."
+      - "Compiles clean: 12 IEEEtran two-column journal pages (was 11 at v0.7; +1 page within the brief's 0.5–0.75 estimate, hard ceiling 16), zero overfull hboxes, zero undefined references, zero undefined citations, no new warnings beyond the longstanding T1/lmr/m/scit font-shape note for small-caps-italic in caption italics (predates this revision)."
+    pending:
+      - "Author 2 (A.~Alghuried) ORCID and IEEE membership grade still TBD."
+      - "Target venue still unconfirmed; \\markboth still says [venue TBD]. Brief notes CEO leans TDSC; comparison-table format works across all three IEEEtran[journal] candidates."
+      - "Layer-2 economic verification of validator-loss components remains the load-bearing measurement gap (now reflected in two tables: tab:scoring-features status column and tab:exploit-propagation-comparison verifiability column)."
   - revision: "0.7"
     date: "2026-05-08"
     issue: "OMN-176"

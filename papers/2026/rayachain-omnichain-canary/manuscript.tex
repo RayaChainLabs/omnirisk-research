@@ -354,6 +354,124 @@ organizing, and visualizing cross-chain operations at
 scale~\cite{SantosAVC25}, constraining security analysis and timely
 understanding of bridge activity.
 
+\subsection{Cross-Chain Interoperability Approaches and Exploit-Risk
+Propagation}\label{sec:rw:exploit-prop}
+
+The interoperability protocols above decompose, for the purpose of
+risk propagation, into four well-studied transport classes: lock-and-mint
+bridges that escrow on the origin and mint a wrapped representation on
+the destination; burn-and-mint bridges that destroy native supply on
+the origin and reissue on the destination; light-client relays that
+verify origin consensus proofs on the destination; and validator-set
+messaging in which a fixed quorum signs cross-chain payloads, as in
+LayerZero V1, Wormhole Guardian, and
+Axelar~\cite{abs-2110-13871,zhang2023sok,augusto2024sok}.
+Table~\ref{tab:exploit-propagation-comparison} contrasts each class
+with the canary layer of Section~\ref{sec:arch} on six dimensions:
+where in the message lifecycle a risk signal can fire
+(\emph{detection point}); the typical block-time floor for that signal
+to reach a remote consumer (\emph{propagation latency}); what the
+recipient chain can do once a risk signal lands (\emph{mitigation
+surface}); whether the signal is opaque, quorum-attested, or
+economically bonded (\emph{verifiability}); whether an exploit is
+contained to a single route, a single chain, or fans out across every
+chain on which a wrapped or messaged artifact is in circulation
+(\emph{post-exploit blast radius}); and a representative incident or
+survey grounding the row (\emph{evidence}). The six dimensions are
+chosen because each corresponds to an architectural decision the
+canary layer makes differently: detection point shifts from
+post-settlement to pre-settlement; propagation latency decouples from
+asset-bridge finality and instead tracks the relayer hop $\tau_R$ of
+Section~\ref{sec:uc:exploit}; the mitigation surface widens from
+contract-pause primitives to typed, confidence-bearing consumer-side
+actions; verifiability moves from black-box or quorum-attested toward
+economic bonding under a Bittensor-style validator
+loss~\cite{rao2021bittensor,opentensor2024yuma}; and the blast radius
+is bounded by per-signal-type confidence bands and consumer-side
+circuit breakers rather than by the topology of wrapped-asset issuance
+or by a shared validator
+set~\cite{augusto2024sok,zhang2023sok,wu2025safeguarding,werner2022sok,palaiokrassas2023multichain,daian2020flash}.
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\caption{Cross-chain interoperability classes and the canary layer,
+compared on six exploit-risk-propagation dimensions. Rows are the four
+well-studied transport classes plus the canary layer of
+Section~\ref{sec:arch}; columns are the dimensions defined in the
+prose. Citations in the \emph{evidence} column point to representative
+incident analyses or surveys, not to new measurements taken in this
+paper.}
+\label{tab:exploit-propagation-comparison}
+\renewcommand{\arraystretch}{1.20}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.13\linewidth} >{\raggedright\arraybackslash}p{0.13\linewidth} >{\raggedright\arraybackslash}p{0.11\linewidth} >{\raggedright\arraybackslash}p{0.16\linewidth} >{\raggedright\arraybackslash}p{0.14\linewidth} >{\raggedright\arraybackslash}p{0.14\linewidth} >{\raggedright\arraybackslash}p{0.10\linewidth}@{}}
+\toprule
+\textbf{Approach class} &
+\textbf{Detection point} &
+\textbf{Propagation latency} &
+\textbf{Mitigation surface} &
+\textbf{Verifiability} &
+\textbf{Post-exploit blast radius} &
+\textbf{Evidence} \\
+\midrule
+Lock-and-mint bridge &
+Post-settlement on destination; vault drain visible only on origin &
+Origin finality + relayer delay (minutes) &
+Pause or freeze the wrapped-asset contract; cannot un-mint already issued supply &
+Black-box; relayer attestation, no risk semantics &
+Fans out across every chain on which the wrapped asset is in circulation &
+\cite{augusto2024sok,zhang2023sok} \\
+\midrule
+Burn-and-mint bridge &
+Post-burn / post-mint at message verification on destination &
+Origin finality + attester-quorum collection (minutes) &
+Native asset reissue on destination; no automatic risk halt at the message level &
+Quorum-attested by a fixed attester set; not bonded to risk evaluation &
+Contained to the asset-flow channel; smaller fan-out than wrapped issuance &
+\cite{augusto2024sok,wu2025safeguarding} \\
+\midrule
+Light-client relay &
+At consensus-proof verification on destination; no risk-signal channel &
+Source finality (epoch-level for PoS) &
+Reject messages whose origin state proof fails; no risk-aware policy primitive &
+Cryptographically attested at the consensus layer; no risk semantics &
+Limited to the exploited route if a state proof is malformed; otherwise unbounded for app-layer compromise &
+\cite{zhang2023sok,werner2022sok} \\
+\midrule
+Validator-set messaging (LayerZero V1, Wormhole, Axelar) &
+At validator-quorum signature verification on destination &
+Validator-set quorum collection (seconds to minutes) &
+Pause individual application endpoints; no cross-application risk halt &
+Quorum-attested by the validator set; not bonded to risk evaluation &
+Route-to-route fan-out across every application sharing the validator set &
+\cite{abs-2110-13871,zhang2023sok,wu2025safeguarding} \\
+\midrule
+RayaChain canary layer (this paper) &
+At signal-emission time on origin, pre-settlement on destination &
+Relayer hop $\tau_R$, decoupled from asset-bridge finality &
+Typed, confidence-bearing consumer actions: collateral haircut, route refusal, circuit breaker before settlement &
+Designed; layer-1 orchestration validated, layer-2 (validator-loss) deferred (Sec.~\ref{sec:vri}) &
+Bounded by per-signal-type confidence band and consumer-side circuit breakers &
+This paper; \cite{daian2020flash,palaiokrassas2023multichain} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The comparison admits one explicit limit. The \emph{verifiability}
+column for the RayaChain canary layer reads ``designed; layer-1
+orchestration validated, layer-2 deferred'', consistent with the
+honest split of Section~\ref{sec:vri}: the orchestration path has
+been measured under continuous unattended operation
+(Table~\ref{tab:soak-telemetry}), but the three-component validator
+loss has not yet been measured against a live multi-miner metagraph.
+The row therefore states architectural intent rather than realized
+economic bonding, and the load-bearing contrast with the four
+traditional classes is the move from black-box or quorum-attested
+verification toward an economically-scoreable
+substrate~\cite{rao2021bittensor,opentensor2024yuma}---not a
+present-tense claim of measured economic guarantees.
+
 \subsection{Blockchain Analytics Platforms}
 
 Blockchain analytics platforms have emerged as critical tools for
