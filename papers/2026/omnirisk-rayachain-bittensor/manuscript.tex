@@ -36,7 +36,7 @@
   \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
   \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{2026-05-07 \\ \textbf{Working paper, v0.22 (internal review)}}
+\date{2026-05-08 \\ \textbf{Working paper, v0.23 (internal review)}}
 
 \begin{document}
 \maketitle
@@ -2575,10 +2575,22 @@ testnet vs.\ mainnet), what is in active hardening, and what remains a design
 proposal (Table~\ref{tab:status}). We then list the operationally-known gaps
 that two consecutive engineering audits surfaced --- the system summary
 of 2026-05-03 and the mainnet-readiness audit posted on this issue the same
-day --- in Section~\ref{sec:status:gaps}. As of submission-draft date, RayaChain
-has \emph{zero mainnet deployments}; the engineering estimate to mainnet-ready is
-four to eight weeks. Every quantitative claim in this paper that depends on
-mainnet-scale flows is therefore deferred to follow-up work.
+day --- in Section~\ref{sec:status:gaps}. As of 2026-05-08 the RYA token
+itself is deployed on seven mainnets --- Solana mainnet (SPL mint
+\texttt{Eebqv\dots susV}, the same mint exercised in the
+Section~\ref{sec:case-study} RYA defence cycle) and six EVM mainnets
+(Ethereum, Arbitrum, Base, Polygon, Optimism, BSC, single canonical OFT
+address \texttt{0x1a281E61\dots} produced by \texttt{CREATE2} via the
+Arachnid factory \texttt{0x4e59b448\dots} on 2026-05-04 in a tight
+multi-chain coordination window) --- but the operational fabric that would
+turn those contracts into a production canary lane is incomplete: peer
+wiring across the full directional matrix on the new mainnet OFTs, the
+Solana-leg executor sidecar, the on-disk canonical registry commit for the
+mainnet entries, and a third-party security audit are all outstanding.
+Every quantitative claim in this paper that depends on mainnet-scale flows
+through a fully-wired canary lane is therefore still deferred to follow-up
+work; what has changed since v0.22 is that the contract deployments are no
+longer pending.
 
 \begin{table}[h]
 \centering
@@ -2613,12 +2625,21 @@ RayaChain testnet lanes
     testnet, Polygon Amoy, Solana devnet); only 3 of 20 directional
     EVM$\leftrightarrow$EVM peer routes pass on-chain peer verification
   & \S\ref{sec:status:gaps} \\
-RayaChain mainnet lanes
-  & \emph{Zero mainnet deployments}; mainnet RPC, EID, registry, program
-    ID, runbooks all absent; engineering estimate 4--8 weeks to ready
+RayaChain mainnet token deployments
+  & RYA token deployed on Solana mainnet (SPL mint \texttt{Eebqv\dots
+    susV}, 2026-05-05 Raydium CPMM) and six EVM mainnets (Ethereum,
+    Arbitrum, Base, Polygon, Optimism, BSC) at single CREATE2 OFT address
+    \texttt{0x1a281E61\dots}, 2026-05-04. Five of six EVM chains directly
+    verified via block explorer 2026-05-08; Arbitrum inferred from the
+    CREATE2 determinism of the Arachnid factory and identical salt /
+    initcode (independent verification recommended before submission).
+    Operational fabric (peer wiring on new mainnet OFTs, Solana executor
+    sidecar, on-disk registry commit, third-party audit) still
+    outstanding (Section~\ref{sec:status:gaps})
   & \S\ref{sec:status:gaps} \\
 Subtensor EVM lane (chain~945)
-  & Design proposal; sequenced after mainnet cutover, not before
+  & Still planned, not deployed; sequenced after closure of the mainnet
+    RayaChain operational fabric, not before
   & \cite{opentensor2024evm} \\
 Cross-chain risk subnet (Bittensor)
   & Design proposal; testnet shadow deployment of the validator+miner
@@ -2649,27 +2670,50 @@ depends on them being closed; each is concrete and falsifiable, and the
 companion engineering tracks should re-verify them against a fresh audit
 immediately before any future mainnet-scale claim.
 
-\paragraph{Mainnet readiness.} The \texttt{rayachain-oft} repository contains
-zero mainnet deployment artefacts: no mainnet program ID, no mainnet keypair,
-no mainnet OFT contract on any of the five EVM chains, and no mainnet registry
-entry; the registry's canonical origin still resolves to \texttt{solana-devnet}
-(LayerZero V2 EID 40168), and \texttt{chain/evm/hardhat.config.ts} declares
-only the five testnet EIDs (\texttt{SEPOLIA\_V2\_TESTNET},
-\texttt{ARBSEP\_V2\_TESTNET}, \texttt{BASESEP\_V2\_TESTNET},
-\texttt{BSC\_V2\_TESTNET}, \texttt{AMOY\_V2\_TESTNET}). The on-chain
-\texttt{peer-verification.generated.json} artefact (2026-03-27) records 20
-directional EVM$\leftrightarrow$EVM peer checks of which only three pass
-(Arbitrum~Sepolia~$\to$~Base/Ethereum~Sepolia and Ethereum~Sepolia~$\to$~Arbitrum~Sepolia);
-the other 17 return \texttt{NoPeer(uint32)} on send. A separate
-\texttt{docs/raya-evm-oft-owner-audit.md} flags a Base~Sepolia OFT owner / deployer
-mismatch (\texttt{0x958f\dots} vs.\ \texttt{0xE60c\dots}) that blocks Base peer
-wiring. There is no mainnet governance (no multisig, no timelock, no key-rotation
-plan), no third-party audit of either \texttt{RayaChainOFT.sol} or the Solana
-program, and no mainnet runbook --- a configuration that the bridge-security
-literature documents as the dominant failure
-mode~\cite{zhang2023sok,augusto2024sok}. Engineering estimates four to eight
-weeks to mainnet-ready and the engineering surface is owned outside this paper
-(see \texttt{meta.yaml}.\texttt{pending\_before\_submission\_engineering}).
+\paragraph{Mainnet readiness.} The mainnet-readiness picture has two
+distinct layers as of 2026-05-08, and an honest review of the paper
+should not collapse them. The first layer is the RYA \emph{token}
+itself: SPL mint \texttt{Eebqv\dots susV} is live on Solana mainnet
+(the same mint the Section~\ref{sec:case-study} defence cycle is
+exercised against), and on 2026-05-04 a single canonical RYA OFT
+contract at \texttt{0x1a281E61\dots} was deployed across six EVM
+mainnets --- Ethereum, Arbitrum, Base, Polygon, Optimism, BSC --- via
+\texttt{CREATE2} through the Arachnid deterministic-deployment factory
+\texttt{0x4e59b448\dots} in a tight coordination window. Five of the
+six EVM deployments (all except Arbitrum) were directly verified
+against the block explorer on 2026-05-08; Etherscan resolves the
+contract name as \texttt{RayaChain (RYA)}. The Arbitrum entry was not
+directly verified due to anti-scrape on \texttt{arbiscan.io} during the
+audit, but the CREATE2 determinism of the Arachnid factory plus
+identical salt and init-code across the six chains is a strong (not
+independent) basis to assert the same address there. A reviewer should
+re-verify Arbitrum independently before any mainnet-scale claim is
+loaded onto it. The second layer is the operational fabric that turns
+those token contracts into a working canary lane, and it is
+\emph{not} closed by the 2026-05-04 deployment. The on-disk canonical
+registry at \texttt{packages/config/rayachain.registry.json} (last
+modified 2026-05-02) does not yet carry the mainnet entries; until the
+sister engineering issue commits them, the on-disk state and the
+operator-asserted state diverge --- this paper should not be read as
+asserting registry parity. Peer wiring across the full directional
+matrix on the new mainnet OFTs has not yet been re-run and signed off
+(the testnet artefact \texttt{peer-verification.generated.json},
+2026-03-27, recorded only 3-of-20 directional Sepolia peer routes
+passing, and the mainnet equivalent has not yet been generated). The
+Solana-leg executor sidecar that lifts the Risk Broadcast readiness
+flag from \texttt{false} to \texttt{true} has not yet shipped. There
+is no third-party security audit of either \texttt{RayaChainOFT.sol}
+or the Solana program, and no mainnet runbook; this combination is
+the configuration the bridge-security literature documents as the
+dominant failure
+mode~\cite{zhang2023sok,augusto2024sok}. The mainnet-readiness audit
+of 2026-05-03 also recorded plaintext private-key and Alchemy-API-key
+exposures in tracked files (see the security-incident paragraph
+below); those are owned by the engineering security track, must be
+rotated and migrated to a CI/CD secret store, and remain blocking for
+any new mainnet operation regardless of contract-deployment state. The
+engineering surface is owned outside this paper (see
+\texttt{meta.yaml}.\texttt{pending\_before\_submission\_engineering}).
 
 \paragraph{Operational state on the testnet integrations.} The Transfer Engine
 does not yet persist in-flight or settled transfer records; until it ships, the
@@ -2710,10 +2754,19 @@ and the shadow-soak open issues of Section~\ref{sec:arch:bittensor} is, in order
 (i)~close the security incident (rotate the three exposed deployer keys, rotate
 the exposed Alchemy key, move secrets out of tracked files) and adopt mainnet
 governance (multisig + timelock);
-(ii)~bring up the mainnet RayaChain deployment surface (mainnet RPC, mainnet
-EIDs, mainnet registry entries, mainnet OFT and Solana-program deployments,
-peer wiring across the full 20-direction matrix) and run a third-party security
-audit;
+(ii)~close out the mainnet RayaChain deployment surface. The contract
+deployments themselves are now complete --- RYA on Solana mainnet, plus a
+single canonical OFT address across six EVM mainnets via CREATE2 on
+2026-05-04 (Section~\ref{sec:status:gaps}, Mainnet readiness) --- so what
+remains in this step is the operational fabric that turns those contracts
+into a wired canary lane: independent re-verification of the Arbitrum
+deployment (anti-scrape blocked the 2026-05-08 audit), commit of the
+mainnet entries to the on-disk canonical
+registry~\cite{rayachain2026registry}, regeneration of the mainnet
+\texttt{peer-verification.generated.json} artefact and peer wiring across
+the full directional matrix on the new mainnet OFTs, the Solana-leg
+executor sidecar, and a third-party security audit of
+\texttt{RayaChainOFT.sol} and the Solana program;
 (iii)~complete the shadow-soak open items~\cite{omnirisk2026soak}: root-cause the
 validator-service \texttt{NRestarts}~$=$~9 regression observed in the
 2026-05-06 / 07 window, ship a non-\texttt{None} \texttt{requestId} on the
