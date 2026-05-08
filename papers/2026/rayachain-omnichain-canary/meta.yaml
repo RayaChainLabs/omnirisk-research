@@ -50,8 +50,9 @@ revision_log:
       - "Cross-link to OMN-175 (Designer activity diagram): table label tab:scoring-features can be referenced from the diagram caption when figures/canary-signal-flow.pdf ships; no inbound dependency from the diagram to this revision."
       - "No new bib keys, no new numerical claims; all feature-class citations re-use existing references (ChenLZCLLLZ20, MotamedB19, palaiokrassas2023multichain, ZhangZZL24, augusto2024sok, gogol2024liquidity, cong2022crypto, daian2020flash, rao2021bittensor, hanson2003combinatorial, steeves2022incentivizing, opentensor2024yuma, bai2022constitutional)."
       - "Compiles clean: 11 IEEEtran two-column journal pages (was 10 at v0.6; +1 page within the directive's 0.5–0.75 estimate, hard ceiling 16), zero overfull hboxes, zero warnings, zero errors."
+      - "Out-of-band edits bundled into the v0.7 commit (initiated by local-board, not AW): Author 2 email filled in (a.alghareed@psau.edu.sa); Author 2 ORCID placeholder relabelled to TBC; \\IEEEpubid line commented out per CEO directive 2026-05-07 (placeholder not needed pre-acceptance)."
     pending:
-      - "Author 2 (A.~Alghuried) email, ORCID, and IEEE membership grade still TBD."
+      - "Author 2 (A.~Alghuried) ORCID and IEEE membership grade still TBD (email filled by local-board, 2026-05-08)."
       - "Target venue still unconfirmed; \\markboth still says [venue TBD]."
       - "Layer-2 economic verification of validator-loss components remains the load-bearing measurement gap (now reflected explicitly in Table III status column)."
   - revision: "0.6"
