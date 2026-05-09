@@ -754,3 +754,51 @@
   doi          = {10.1007/s11704-024-40231-1},
   note         = {Unified construction-evaluation-application framework for LLM-based autonomous agents; this manuscript adopts its profile/memory/planning/action decomposition as the engineering vocabulary against which the agentic-engine design is described.}
 }
+
+% =============================================================================
+% Verified 2026-05-09 by Academic Writer for OMN-188 (aisoftsys-agentic-risk
+% v0.2). CEO redirected target venue to Wiley Software: Practice and
+% Experience and asked for a focus on cost-aware AI and self-adaptive agentic
+% AI. References below ground those two pillars; each was confirmed against
+% the publisher / arXiv abstract page on 2026-05-09.
+% =============================================================================
+
+@misc{chen2023frugalgpt,
+  author       = {Chen, Lingjiao and Zaharia, Matei and Zou, James},
+  title        = {{FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance}},
+  howpublished = {arXiv preprint},
+  year         = {2023},
+  eprint       = {2305.05176},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.LG},
+  doi          = {10.48550/arXiv.2305.05176},
+  url          = {https://arxiv.org/abs/2305.05176},
+  urldate      = {2026-05-09},
+  note         = {Introduces an LLM cascade and prompt-adaptation strategy that reduces per-query cost by routing to cheaper models when confidence permits; the canonical citation for ``cost-aware'' inference design in modern LLM systems.}
+}
+
+@misc{ong2024routellm,
+  author       = {Ong, Isaac and Almahairi, Amjad and Wu, Vincent and Chiang, Wei-Lin and Wu, Tianhao and Gonzalez, Joseph E. and Kadous, M. Waleed and Stoica, Ion},
+  title        = {{RouteLLM: Learning to Route LLMs with Preference Data}},
+  howpublished = {arXiv preprint},
+  year         = {2024},
+  eprint       = {2406.18665},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.LG},
+  doi          = {10.48550/arXiv.2406.18665},
+  url          = {https://arxiv.org/abs/2406.18665},
+  urldate      = {2026-05-09},
+  note         = {Trains a router over a pool of LLMs using human preference data so that easy queries go to small/cheap models and hard queries are escalated to large/expensive ones; methodologically adjacent to OmniRisk's prediction-router cost gate.}
+}
+
+@book{weyns2020introduction,
+  author       = {Weyns, Danny},
+  title        = {{An Introduction to Self-Adaptive Systems: A Contemporary Software Engineering Perspective}},
+  publisher    = {Wiley-IEEE Press},
+  year         = {2020},
+  isbn         = {978-1-119-57494-1},
+  doi          = {10.1002/9781119574910},
+  url          = {https://onlinelibrary.wiley.com/doi/book/10.1002/9781119574910},
+  urldate      = {2026-05-09},
+  note         = {Textbook treatment of self-adaptive software, generalising MAPE-K with explicit treatment of uncertainty management, feedback control, and online learning; this manuscript adopts its perspective for the agentic-engine adaptation loop.}
+}

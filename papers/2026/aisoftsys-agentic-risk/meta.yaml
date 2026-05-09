@@ -1,6 +1,6 @@
-title: "Engineering an Agentic, Context-Aware Risk Intelligence System for the Internet of Value"
+title: "A Cost-Aware, Self-Adaptive Agentic AI Engine for Risk Intelligence in the Internet of Value: An Engineering Case Study"
 slug: "aisoftsys-agentic-risk"
-companion_to: "agentic-iov-risk-focused"   # security-leaning IEEE-TIFS cut, same architecture; this is the SE/AI-systems reframing requested by the board on 2026-05-09
+companion_to: "agentic-iov-risk-focused"   # security-leaning IEEE-TIFS cut, same architecture; this is the SE/AI-systems reframing the CEO requested on 2026-05-09
 authors:
   - name: "Basel Magableh"
     email: "basel.magableh@tudublin.ie"
@@ -12,34 +12,35 @@ authors:
     affiliation: "Rayachain Lab, Dublin, Ireland"
     order: 2
 
-target_venue: "Journal of Systems and Software (Elsevier) primary; Engineering Applications of Artificial Intelligence (Elsevier) and Software: Practice and Experience (Wiley) as fallbacks; arXiv cs.SE preprint in parallel"
+target_venue: "Software: Practice and Experience (Wiley) -- confirmed by CEO on 2026-05-09 (former editor of the journal); arXiv cs.SE preprint in parallel. Document class wileyNJD-v2.cls deferred to camera-ready cut; v0.2 draft uses the article class to keep content review independent of class wrangling."
 status: "draft"
-revision: "0.1"
+revision: "0.2"
 created_at: "2026-05-09"
 submitted_at: null
 published_at: null
 doi: null
 arxiv_id: null
 canonical_url: null
-tags: ["software-engineering-for-ai","agentic-systems","self-adaptive-systems","llm-systems","mlops","risk-intelligence","blockchain","internet-of-value","case-study"]
+tags: ["software-engineering-for-ai","cost-aware-ai","self-adaptive-systems","agentic-systems","mape-k","llm-systems","mlops","risk-intelligence","blockchain","internet-of-value","case-study"]
 
 scope:
   in: |
-    A software-engineering perspective on the OmniRisk five-engine
-    architecture: how prediction, decentralised verification, sentiment
-    fusion, constitutional agentic action, and scenario API compose into
-    one operational risk intelligence system.
-    Engineering decisions and tradeoffs (modularity, monitoring,
-    observability, calibration, policy constraints) under adversarial,
-    partially-trusted operating conditions.
+    Two engineering pillars confirmed by CEO 2026-05-09:
+      (1) cost-aware AI engine -- prediction-router, verification subnet,
+          constitutional-agent token budgets, tiered sentiment ingestion
+          treated as one cost-management discipline;
+      (2) self-adaptive agentic AI -- MAPE-K-style adaptation in which
+          the agent observes its own miss-rate and reconfigures models,
+          ensemble weights, and action thresholds on a versioned
+          calibration manifest.
     The 27-hour Solana liquidity stress experiment and the 168-hour
-    prediction-router calibration arc as systems-engineering case studies
-    (not as security or finance results).
-    Lessons applicable beyond blockchain to any agentic AI system that
-    monitors and acts on a partially-trusted environment.
+    prediction-router calibration arc are recast as evidence that the
+    two pillars work in production, not as security or finance results.
+    Lessons applicable beyond blockchain to any agentic AI system whose
+    inputs and actions share a partially-trusted environment.
   out: |
-    Threat-model / attacker analysis (those belong in the IEEE-TIFS
-    companion paper agentic-iov-risk-focused).
+    Threat-model / attacker analysis (companion paper
+    agentic-iov-risk-focused targets IEEE TIFS for that material).
     DeFi market microstructure, financial-economics arguments, or any
     investment / financial-advice claim.
     Bittensor / RayaChain protocol or tokenomics deep-dive (covered in
@@ -47,8 +48,8 @@ scope:
     Validator-loss-decomposition formalism (cited only).
 
 next_action: |
-  Board (CEO) to confirm the primary venue choice (Journal of Systems and
-  Software vs Engineering Applications of Artificial Intelligence vs
-  Software: Practice and Experience). Switching to elsarticle / Wiley
-  document classes is mechanical once confirmed; manuscript content is
-  venue-agnostic.
+  Internal review by CEO of v0.2 manuscript ahead of camera-ready cut.
+  Open follow-ups for the camera-ready: (a) port preamble to Wiley's
+  wileyNJD-v2.cls (template not yet present in _templates/); (b) add a
+  cost-vs-quality figure for the prediction-router cascade. Both are
+  mechanical and can be deferred until v0.3 review notes come back.

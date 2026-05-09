@@ -27,66 +27,82 @@
   linkcolor=black,
   citecolor=blue!50!black,
   urlcolor=blue!50!black,
-  pdftitle={Engineering an Agentic, Context-Aware Risk Intelligence System for the Internet of Value},
+  pdftitle={A Cost-Aware, Self-Adaptive Agentic AI Engine for Risk Intelligence in the Internet of Value},
   pdfauthor={Basel Magableh; OmniRisk Research},
 }
 
-\title{Engineering an Agentic, Context-Aware\\
-       Risk Intelligence System\\[0.2em]
-       for the Internet of Value}
+\title{A Cost-Aware, Self-Adaptive Agentic AI Engine\\
+       for Risk Intelligence in the Internet of Value\\[0.2em]
+       \large An engineering case study}
 \author{%
   Basel Magableh\textsuperscript{1,*} \quad\quad OmniRisk Research\textsuperscript{2} \\[0.8em]
   \normalsize\textsuperscript{1}School of Computer Science, Technological University Dublin, Ireland \\
   \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
   \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
 }
-\date{May 2026 \quad (draft v0.1)}
+\date{May 2026 \quad (draft v0.2 --- targeting Wiley \emph{Software: Practice and Experience})}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Agentic AI systems are increasingly deployed in heterogeneous,
+Agentic AI systems are now routinely deployed in heterogeneous,
 partially-trusted environments where the marginal risk that matters is
-\emph{composite}: route, sentiment, liquidity, and the policy a system is
-willing to commit to. Existing software-engineering experience for
+\emph{composite}: route, sentiment, liquidity, and the policy a system
+is willing to commit to. Existing software-engineering experience for
 machine-learning systems~\cite{sculley2015hidden,amershi2019software}
-addresses the offline-training-then-deployment regime, but does not
-prescribe how to engineer an LLM-mediated, multi-engine agent that
-\emph{decides and acts} on streams of partially-adversarial inputs while
-remaining honest about its own confidence. We describe the engineering of
-the OmniRisk system --- a five-engine architecture (prediction,
-decentralised verification, sentiment fusion, constitutional agentic
-action, scenario API) deployed on the blockchain ``Internet of
-Value''~\cite{omnirisk2026defending} --- and report two operational case
-studies as systems-engineering evidence: a 27-hour policy-constrained
+addresses an offline-train-then-deploy regime, and recent surveys of
+LLM-based autonomous agents~\cite{wang2024survey} catalogue what such
+agents are made of, but neither tells a practitioner how to engineer one
+that \emph{stays cheap and stays calibrated} for months under adversarial
+inputs. This paper reports the engineering --- not the algorithms --- of
+the OmniRisk system, an agentic risk-intelligence platform deployed on
+the blockchain Internet of Value. We describe two engineering
+contributions.
+\textbf{(C1) A cost-aware AI engine}: a prediction router and inference
+cascade in the lineage of FrugalGPT~\cite{chen2023frugalgpt} and
+RouteLLM~\cite{ong2024routellm}, extended with a decentralised-economic
+verifier so that ``cost'' includes not only inference dollars but the
+expected social cost of trusting a single model.
+\textbf{(C2) A self-adaptive agentic AI}: a MAPE-K
+loop~\cite{salehie2009self,weyns2020introduction} in which the LLM-
+mediated agent observes its own miss-rate, re-weights its prediction
+ensemble, and re-tightens its constitutional action
+constraints~\cite{bai2022constitutional} on a versioned calibration
+manifest, with a non-negotiable honesty discipline (publish denominators,
+source-of-truth artefacts, no silent retraining).
+We report two operational case studies as evidence that the two
+contributions work in production: a 27-hour policy-constrained Solana
 liquidity stress experiment and a 168-hour prediction-router calibration
-arc reported with explicit class-imbalance honesty. Our contribution is
-not a new ML technique; it is a description of the discipline and
-tradeoffs by which a working agentic risk-intelligence system was
-assembled, calibrated, monitored, and made falsifiable.
+arc, the latter reported with explicit class-imbalance caveats. The
+contribution is methodological: a description of the discipline by which
+a cost-aware, self-adaptive agentic AI system was assembled, calibrated,
+monitored, and made falsifiable.
 \end{abstract}
 
 \medskip
-\noindent\textbf{Keywords ---} software engineering for AI; agentic
-systems; self-adaptive software; LLM operations; risk intelligence;
-blockchain; case study.
+\noindent\textbf{Keywords ---} software engineering for AI; cost-aware
+inference; self-adaptive software; MAPE-K; agentic systems; LLM
+operations; risk intelligence; case study.
 
 \section{Introduction}\label{sec:intro}
 
-The software-engineering literature has, over a decade, settled an
-uncomfortable consensus about machine-learning-intensive systems: most of
+The software-engineering literature on machine-learning-intensive
+systems has, over a decade, settled an uncomfortable consensus: most of
 the cost is not in the model. Sculley
 et~al.~\cite{sculley2015hidden} catalogued the system-level burdens
 (entanglement, hidden feedback loops, undeclared consumers, configuration
-debt, monitoring debt) that ML systems pay over and above ordinary code,
-and Amershi et~al.~\cite{amershi2019software} documented at industrial
-scale the workflow discontinuities that ML imposes on traditional SE
-practice. The recent emergence of \emph{agentic} systems --- LLM-mediated
-software components that select and execute actions, not merely produce
+debt, monitoring debt) that ML systems pay over and above ordinary code.
+Amershi et~al.~\cite{amershi2019software} documented at industrial scale
+the workflow discontinuities that ML imposes on traditional SE practice.
+The recent emergence of \emph{agentic} systems --- LLM-mediated software
+components that select and execute actions, not merely produce
 predictions~\cite{wang2024survey,bai2022constitutional} --- intensifies
 each of those burdens, because the agent is now also a closed-loop
 controller whose decisions feed back into the data it later consumes.
+Two concerns then dominate practice: \emph{cost} (every action and every
+inference is metered) and \emph{adaptation} (the environment shifts
+faster than any offline-trained model can keep up with).
 
 This paper concerns the engineering of one such system, deployed in a
 genuinely adversarial setting. The OmniRisk system monitors and reasons
@@ -94,184 +110,261 @@ about risk on the blockchain ``Internet of Value'' (IoV): a heterogeneous
 network of chains, bridges, liquidity venues, and off-chain narratives in
 which the dominant marginal risk to any participant is
 \emph{composite}~\cite{augusto2024sok,zhang2023sok,belchior2021survey,wu2025safeguarding},
-not a property of any single chain. The system is instructive as an SE
-case study for three reasons. First, it cannot retreat to ``model
-quality'' as a single optimisation target: its outputs include both
-forecasts and \emph{actions}, and the actions are policy-constrained.
-Second, its environment is partially adversarial: text feeds, on-chain
-flow, and bridge state can each be manipulated, so any monitor must be
-designed to be \emph{honest about being fooled}. Third, the system was
-built over an eighteen-month operating period, generating concrete
-artefacts (calibration manifests, policy logs, soak-test
-traces~\cite{omnirisk2026soak,omnirisk2026calibration,omnirisk2026predmetrics})
-that let us report engineering decisions against real operational data
-rather than synthesised scenarios.
+not a property of any single chain. We deliberately set aside the
+security and finance arguments (treated in a companion
+paper~\cite{omnirisk2026defending}) and ask the SE practitioner's
+question instead: \emph{how do you keep an agentic AI system that
+forecasts and acts on a partially-trusted environment both cheap and
+calibrated, for months, in a way that is reproducible and reviewable?}
 
 \paragraph{Contributions.}
-This paper makes four contributions, each of an engineering rather than
-algorithmic kind.
-\begin{enumerate}
-  \item \emph{An architecture pattern} --- the five-engine composition
-        (\S\ref{sec:architecture}) --- that organises the engineering
-        concerns of an agentic risk-intelligence system into modules
-        with separable failure modes, in the lineage of MAPE-K
-        self-adaptive systems~\cite{salehie2009self} extended for
-        LLM-mediated action.
-  \item \emph{An honesty discipline} (\S\ref{sec:honesty}) for
-        calibration and monitoring, expressed as a small set of
-        non-negotiable engineering rules (publish class-imbalance
-        denominators, never hide false-positive cohorts, refuse silent
-        retraining), supported by audit-grade source-of-truth
-        artefacts~\cite{omnirisk2026predmetrics,omnirisk2026calibration}.
-  \item \emph{Two operational case studies} (\S\ref{sec:case-studies}):
-        a 27-hour Solana liquidity stress experiment under a
-        constitutional action policy, and a 168-hour prediction-router
-        calibration arc that traces the system's accuracy from
-        ``barely above chance'' to a calibrated state, reported with
-        the class-imbalance caveats that an honest engineering report
-        requires.
-  \item \emph{Engineering lessons} (\S\ref{sec:lessons}) that we claim
-        generalise to any agentic AI system whose inputs and actions
-        share a partially-trusted environment, beyond the blockchain
-        setting.
-\end{enumerate}
+The paper makes two engineering contributions and supplies operational
+evidence for each.
+
+\begin{description}
+  \item[(C1) A cost-aware AI engine]
+        (\S\ref{sec:cost-aware}). A prediction router and inference
+        cascade in the lineage of FrugalGPT~\cite{chen2023frugalgpt} and
+        RouteLLM~\cite{ong2024routellm}, extended in two ways. First, it
+        composes inference-dollar cost with an \emph{economic-trust}
+        cost obtained by routing high-stakes inferences through a
+        decentralised verification subnet so that ``cheap and wrong''
+        is priced as expensive. Second, the constitutional
+        agent~\cite{bai2022constitutional} sits under an explicit token
+        budget at every step, so that adversarial prompts cannot run the
+        system out of money.
+  \item[(C2) A self-adaptive agentic AI]
+        (\S\ref{sec:self-adaptive}). A MAPE-K-style adaptation
+        loop~\cite{salehie2009self,weyns2020introduction} in which the
+        agent observes its own miss-rate against a frozen calibration
+        manifest~\cite{omnirisk2026calibration,omnirisk2026predmetrics},
+        re-weights the prediction ensemble when drift is detected, and
+        re-tightens its constitutional action constraints when the
+        verifier disagrees. The loop is made trustworthy by an
+        engineering honesty discipline (publish denominators,
+        source-of-truth artefacts, no silent retraining) which we treat
+        as the most transferable contribution of this paper.
+\end{description}
+
+\paragraph{Operational evidence.}
+We support both contributions with two case studies on real production
+artefacts: a 27-hour Solana liquidity stress
+experiment~\cite{omnirisk2026soak,omnirisk2026deploy} and a 168-hour
+prediction-router calibration
+arc~\cite{omnirisk2026predmetrics,omnirisk2026calibration} reported with
+explicit class-imbalance caveats. The case studies are operational
+rather than controlled, and we report their limits honestly.
 
 \paragraph{Companion paper and scope.} A companion
-manuscript~\cite{omnirisk2026defending} treats the same architecture
-from a security-and-verification angle (threat model, validator-loss
+manuscript~\cite{omnirisk2026defending} treats the same system from a
+security-and-verification angle (threat model, validator-loss
 decomposition, formal guarantees). The present paper is the
-\emph{software-engineering} cut: it is concerned with composition,
-operability, observability, and the discipline of being calibrated. We
-do not present a new threat model, a finance argument, or any claim
-about returns. Where security-relevant facts are needed, we cite the
-companion paper rather than restate them.
+\emph{software-engineering} cut: composition, cost, adaptation,
+operability, and the discipline of being calibrated. Where security
+facts are required, we cite the companion paper rather than restate
+them.
 
 \section{Background and related work}\label{sec:background}
 
-\subsection{Software engineering for ML and agentic systems}
+\subsection{SE for ML and agentic systems}\label{sec:bg:se-ml}
 
 Sculley et~al.~\cite{sculley2015hidden} and
 Amershi et~al.~\cite{amershi2019software} together set the SE-for-ML
 agenda: ML systems pay system-level costs that ordinary SE practice does
 not anticipate, and the productive engineering response is to make the
-ML workflow first-class (data, training, evaluation, deployment, and
-monitoring as engineered artefacts). Subsequent work has extended this
-to LLM-mediated agentic systems~\cite{wang2024survey}, which add two
+ML workflow first-class. Subsequent work has extended this to LLM-
+mediated agentic systems~\cite{wang2024survey}, which add two
 qualitatively new concerns: (i) the agent's outputs are \emph{actions}
 that perturb the environment from which its next inputs are drawn, and
 (ii) the agent is constituted in part by natural-language constraints
 (``constitutions'') rather than only by code~\cite{bai2022constitutional}.
+The agent decomposition we adopt --- profile, memory, planning, action ---
+follows Wang et~al.'s unified
+framework~\cite{wang2024survey} and is the vocabulary of
+\S\ref{sec:self-adaptive}.
 
-Self-adaptive systems are the older intellectual lineage that anticipated
-much of this. Salehie and Tahvildari~\cite{salehie2009self} formalise
-the MAPE-K (Monitor--Analyse--Plan--Execute over Knowledge) loop as the
-canonical decomposition of a self-adaptive system; we treat the
-five-engine architecture of \S\ref{sec:architecture} as a particular
-instantiation of MAPE-K in which the Analyse and Plan stages are
-LLM-mediated and the Execute stage is policy-constrained.
+\subsection{Cost-aware LLM serving}\label{sec:bg:cost}
 
-\subsection{Risk intelligence in the Internet of Value}
+Two recent threads in the LLM-serving literature directly motivate our
+cost-aware design. FrugalGPT~\cite{chen2023frugalgpt} introduces an LLM
+\emph{cascade} that routes a query through models of increasing cost
+until a confidence threshold is met, reducing per-query inference cost
+without (in their reported settings) reducing quality. RouteLLM~\cite{ong2024routellm}
+trains a learned router over a pool of models on human-preference data so
+that easy queries go to small/cheap models and hard ones are escalated.
+We treat both as the canonical pattern for cost-aware inference and
+generalise it in \S\ref{sec:cost-aware} by composing it with an
+\emph{economic-trust} cost paid through a decentralised verification
+substrate~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma,conway2024opml,ganescu2024trust}.
 
-The IoV setting motivates the case study but is not the object of this
-paper. We summarise it briefly. Cross-chain bridges are now both the
-dominant capital route and the dominant exploit
+\subsection{Self-adaptive software}\label{sec:bg:self-adaptive}
+
+Self-adaptive systems are the older intellectual lineage that
+anticipated much of what agentic AI now demands. Salehie and
+Tahvildari's survey~\cite{salehie2009self} formalises the MAPE-K
+(Monitor--Analyse--Plan--Execute over Knowledge) feedback loop as the
+canonical decomposition of a self-adaptive system, and Weyns'
+textbook~\cite{weyns2020introduction} extends MAPE-K with explicit
+treatment of uncertainty management, feedback control, and online
+learning. The self-adaptive AI of \S\ref{sec:self-adaptive} is a
+particular instantiation of MAPE-K in which the Analyse and Plan stages
+are LLM-mediated and the Execute stage is policy-constrained.
+
+\subsection{Risk intelligence in the Internet of Value}\label{sec:bg:iov}
+
+We summarise the IoV setting briefly; it motivates the case studies
+without being the object of this paper. Cross-chain bridges are now both
+the dominant capital route and the dominant exploit
 surface~\cite{augusto2024sok,wu2025safeguarding,chainalysis2022bridges};
-liquidity is fragmented across chains and venues so that the same logical
-asset can be priced and routed
+liquidity is fragmented across chains and venues so that the same
+logical asset can be priced and routed
 inconsistently~\cite{zhang2023sok,palaiokrassas2023multichain,gogol2024liquidity};
 sentiment shocks propagate at a faster cadence than chain-state changes,
-so a monitor that ignores text drift is blind to a class of events whose
-on-chain footprint is downstream of the
+so a monitor that ignores text drift is blind to events whose on-chain
+footprint is downstream of the
 narrative~\cite{schumaker2009textual,xing2018natural,day2016deep,zhang2025sentistack};
 and an LLM-mediated agent that selects and executes on-chain actions
 introduces a closed-loop risk that single-chain monitors do not
-capture~\cite{wang2024survey,bai2022constitutional}. Decentralised
-verification substrates such as
-Bittensor~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma,opentensor2024evm}
-provide an economic mechanism for pricing the honesty of inferences,
-which we use as a software-engineering primitive for ``do not trust a
-single model'' rather than as a tokenomics argument.
+capture~\cite{wang2024survey,bai2022constitutional}.
 
-\section{The five-engine architecture}\label{sec:architecture}
+\section{(C1) The cost-aware AI engine}\label{sec:cost-aware}
 
-We describe the system as five engines composed by an orchestration
-layer; each engine is independently observable and has a separable
-failure mode.
+The system's first engineering contribution is to treat \emph{cost} as a
+first-class quantity composed of three terms: \emph{inference cost}
+(dollars and tokens spent on model calls), \emph{economic-trust cost}
+(the price of trusting a single model on a high-stakes decision), and
+\emph{action cost} (the on-chain or operational price of executing a
+decision). The engine that manages these three together is composed of
+three cooperating gates.
 
-\subsection*{E1. Prediction engine}
-A router over price, liquidity, volatility, and route-health forecasters,
-each scored and selected against a frozen calibration
-manifest~\cite{omnirisk2026calibration}. Engineering decisions of note:
-forecasts are emitted with explicit confidence intervals; the router
-publishes its own miss rate alongside its predictions; and the
-calibration manifest is a versioned, reproducible artefact that survives
-a disaster-recovery rebuild.
+\subsection{Gate~A: a confidence-cascading prediction router}\label{sec:cost-aware:cascade}
 
-\subsection*{E2. Decentralised verification subnet}
-A Bittensor-style subnet that scores prediction
-outputs~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}
-so that no single model is the system's source of
-truth~\cite{conway2024opml,ganescu2024trust}. The engineering point is
-not the cryptoeconomics; it is that the verification stage is a
-\emph{redundant, independently-incentivised} judge of the prediction
-engine, and the system fails closed when the subnet disagrees with the
-router.
+Following the cascade pattern of FrugalGPT~\cite{chen2023frugalgpt} and
+the learned-router pattern of RouteLLM~\cite{ong2024routellm}, the
+prediction router holds a small ensemble of forecasters of varying cost
+and quality (cheap heuristic baselines, mid-tier ML models, and
+expensive ensembles or LLM-mediated calls). Each query is first answered
+by the cheapest forecaster; the answer is accepted if its
+confidence-interval width and its agreement with a frozen calibration
+manifest~\cite{omnirisk2026calibration} are both within a per-symbol
+threshold. Otherwise it is escalated. The engineering point is not the
+specific cascade --- that is a known
+pattern~\cite{chen2023frugalgpt,ong2024routellm} --- but that the
+acceptance threshold is itself a versioned, observable artefact, and
+that the router publishes its own escalation rate and miss rate alongside
+its forecasts so that downstream consumers can audit the cascade's
+discipline.
 
-\subsection*{E3. Sentiment-fusion engine}
-A multi-source fusion over text feeds, on-chain flow, and grey-literature
-sources~\cite{macrocosmos2024datauniverse,birdeye2026docs,dexscreener2026docs,yang2023fingpt,wu2023bloomberggpt,gandhi2023multimodal,lai2023multimodal,long2019deep,zhang2025sentistack}.
-The engine's design choice that matters most is operational: each source
-is timestamped and provenance-tagged so that a downstream consumer can
-reproduce a decision given only the engine's published trace.
+\subsection{Gate~B: economic-trust cost via decentralised
+verification}\label{sec:cost-aware:verification}
 
-\subsection*{E4. Agentic engine under constitutional action constraints}
-An LLM-mediated agent that maps prediction-and-sentiment state to
-candidate actions, gated by a written policy
-(``constitution'')~\cite{bai2022constitutional} and by role-bound
-permission scopes. The engineering insight, drawing on the LLM-agent
-survey~\cite{wang2024survey}, is to decompose the agent into
-\emph{profile, memory, planning, and action} subcomponents so that each
-can be tested, frozen, or rolled back independently --- and so that the
-constitution is itself a versioned artefact, not a prompt embedded in
-production code.
+For high-stakes inferences --- those that the scenario engine of
+\S\ref{sec:cost-aware:scenario} would permit to drive an on-chain
+action --- the router's accepted output is routed through a Bittensor-
+style verification
+subnet~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma,opentensor2024evm,lui2025bittensor},
+in which independently incentivised validators score the inference. The
+engineering insight is to read this as a \emph{cost} term: the system
+pays validators to disagree with the router when the router is wrong, so
+that ``cheap and wrong'' is priced as expensive. This is methodologically
+adjacent to opML~\cite{conway2024opml,ganescu2024trust} but treated here
+as one term in the cost ledger rather than as a security primitive (for
+which see~\cite{omnirisk2026defending}). When the verification subnet
+disagrees with the router's output, the system fails closed and refuses
+the action, which is the desired behaviour from a cost-aware standpoint:
+the most expensive decision is the one taken on a wrong inference.
 
-\subsection*{E5. Scenario / API risk engine}
-A converter from forecasts and constraints into pre-committed
-\emph{action programs} expressed as scenario-conditional API
-calls~\cite{glasserman2003monte}. Operationally, this is the engine that
-makes the system's behaviour reviewable: the action program is an
-artefact a human or another system can audit before any on-chain
-execution.
+\subsection{Gate~C: action-cost gating in the agentic engine}\label{sec:cost-aware:scenario}
 
-\subsection{Composition: a MAPE-K instantiation}\label{sec:mapek}
+The constitutional agent~\cite{bai2022constitutional} that maps
+prediction-and-sentiment state to candidate actions sits under an
+explicit token budget at every step, and emits each candidate as a
+pre-committed scenario-conditional API call (an \emph{action program})
+in the sense of Glasserman's scenario-based Monte
+Carlo~\cite{glasserman2003monte}. The action program is a reviewable
+artefact: a human or another system can audit it before any on-chain
+execution. From a cost-aware perspective, the discipline is that
+action-cost is paid only when (Gate~A) the cascade has accepted a
+forecast at the appropriate cost tier and (Gate~B) the verifier has not
+disagreed with that forecast.
 
-The five engines map onto Salehie and Tahvildari's
-MAPE-K loop~\cite{salehie2009self} as follows. \emph{Monitor} is
-sentiment fusion (E3) and the read-side of the prediction engine (E1).
-\emph{Analyse} is the verification subnet (E2) judging E1.
-\emph{Plan} is the agentic engine (E4) under its constitution.
-\emph{Execute} is the scenario API (E5). The shared \emph{Knowledge} is
-the calibration
-manifest~\cite{omnirisk2026calibration,omnirisk2026predmetrics}, the
-contract-and-route registry~\cite{rayachain2026registry}, and the action
-constitution. We argue this mapping is non-trivial: each MAPE-K box has a
-named owning engine, with a separately observable failure mode and a
-separate test harness. This is the modularity that
-SE-for-ML~\cite{amershi2019software} prescribes, projected onto the
-agentic-systems setting.
+\subsection{The cost ledger}\label{sec:cost-aware:ledger}
 
-\section{Engineering an honesty discipline}\label{sec:honesty}
+The three gates together produce, per decision, an explicit cost ledger
+of the form
+\(\mathrm{cost}(d) = c_{\text{inf}}(d) + c_{\text{trust}}(d)
++ c_{\text{act}}(d),\)
+each term observable, each term tied to a versioned artefact (the
+calibration manifest~\cite{omnirisk2026calibration,omnirisk2026predmetrics},
+the validator scores, and the action program). We do not claim a new
+algorithm; we claim that engineering each term as an independently
+versioned and observable quantity is the discipline that makes the
+overall system cost-auditable.
 
-A working agentic system in an adversarial environment is only useful if
-its self-reports are trustworthy. We adopt three engineering rules,
+\section{(C2) Self-adaptive agentic AI}\label{sec:self-adaptive}
+
+The system's second engineering contribution is a self-adaptive
+loop~\cite{salehie2009self,weyns2020introduction} that closes around the
+cost-aware engine of \S\ref{sec:cost-aware}, so that the agent
+\emph{observes its own miss-rate and reconfigures itself} on a versioned
+calibration manifest rather than waiting for an offline retraining cycle.
+
+\subsection{A MAPE-K instantiation}\label{sec:self-adaptive:mapek}
+
+Self-adaptation is structured as MAPE-K~\cite{salehie2009self}:
+\begin{description}
+  \item[Monitor.]
+        Sentiment fusion~\cite{macrocosmos2024datauniverse,birdeye2026docs,dexscreener2026docs,yang2023fingpt,wu2023bloomberggpt,gandhi2023multimodal,lai2023multimodal,long2019deep,zhang2025sentistack}
+        and the read-side of the prediction
+        router~\cite{omnirisk2026predmetrics} together produce a stream
+        of (forecast, realised-outcome, validator-score) triples.
+  \item[Analyse.]
+        The verification subnet (\S\ref{sec:cost-aware:verification})
+        and the calibration
+        manifest~\cite{omnirisk2026calibration} together compute a
+        running residual: how badly is the cascade missing, on which
+        symbols, with what class imbalance.
+  \item[Plan.]
+        The agentic engine~\cite{wang2024survey,bai2022constitutional}
+        chooses between three remedies --- re-weight the cascade, narrow
+        the scenario engine's permitted action set, or escalate to a
+        human operator --- using the agent decomposition of
+        \emph{profile, memory, planning, action} prescribed in the
+        LLM-agent survey~\cite{wang2024survey}.
+  \item[Execute.]
+        The scenario engine (\S\ref{sec:cost-aware:scenario}) emits the
+        adaptation as a versioned change to the cascade thresholds, the
+        ensemble weights, or the
+        constitution~\cite{bai2022constitutional}, each of which is a
+        diffable artefact in
+        git~\cite{omnirisk2026systemdesign,omnirisk2026agentic}.
+  \item[Knowledge.]
+        The shared, versioned state is the calibration
+        manifest~\cite{omnirisk2026calibration,omnirisk2026predmetrics},
+        the contract-and-route
+        registry~\cite{rayachain2026registry}, and the
+        constitution~\cite{bai2022constitutional}. The point worth
+        emphasising is that Knowledge is \emph{checked in}, not
+        latent in a model's weights.
+\end{description}
+This mapping is non-trivial: each MAPE-K box has a named owning
+component, a separately observable failure mode, and a separate test
+harness, in the modular spirit that
+SE-for-ML~\cite{sculley2015hidden,amershi2019software} prescribes and
+that Weyns' textbook~\cite{weyns2020introduction} formalises.
+
+\subsection{An honesty discipline for adaptation}\label{sec:self-adaptive:honesty}
+
+A self-adaptive AI in an adversarial environment is only useful if its
+self-reports are trustworthy. We adopt three engineering rules,
 non-negotiable in the OmniRisk codebase, and we view them as the most
 transferable contribution of this paper.
 
 \paragraph{Rule 1: publish denominators.} Every accuracy or skill metric
-is published with the class-imbalance denominator that produced it. The
-prediction-router calibration arc reported in
-\S\ref{sec:case-study:prediction-router} \emph{drops} when reported
-honestly --- a 99.34\% \texttt{didCrashAccuracy} on a class-imbalanced
+the adaptation loop reads is published with the class-imbalance
+denominator that produced it. The 168-hour prediction-router calibration
+arc reported in~\S\ref{sec:case-studies:router} \emph{drops} when
+reported honestly: a 99.34\% \texttt{didCrashAccuracy} on a class-imbalanced
 cohort is far less impressive than the headline number suggests, and the
 engineering response is to say so on the same page as the
 number~\cite{omnirisk2026predmetrics}.
@@ -284,30 +377,40 @@ versioned, and citeable. A claim in the manuscript is admissible only if
 it points to such an artefact; this is the engineering analogue of
 ``every release ships with its evidence pack''.
 
-\paragraph{Rule 3: refuse silent retraining.} Models, prompts, and
-constitutions are versioned together. A change to any one of them is a
-release event with an audit trail. We treat ``the model improved
-overnight'' as a defect, not a feature, because it makes the system's
-behaviour irreproducible.
+\paragraph{Rule 3: refuse silent retraining.} Models, prompts, ensemble
+weights, and constitutions are versioned together. A change to any one
+of them is a release event with an audit trail; ``the model improved
+overnight'' is a defect, not a feature, because it makes the system's
+behaviour irreproducible. Without this rule, MAPE-K \emph{Execute}
+becomes a back door that lets the system silently optimise itself away
+from the behaviour its operators reviewed.
 
-\section{Operational case studies}\label{sec:case-studies}
+\section{Operational evidence}\label{sec:case-studies}
 
-\subsection{27-hour Solana liquidity stress experiment}\label{sec:case-study:soak}
+We supply two operational case studies that exercise the cost-aware
+engine of \S\ref{sec:cost-aware} and the self-adaptive loop of
+\S\ref{sec:self-adaptive} on real production artefacts. Neither is a
+controlled experiment; both are operational reports on dates and runs
+that are now fixed in git, with their evidence packs cited.
 
-We ran a 27-hour stress experiment on Solana in which the agentic engine
-operated under its written constitution against a single liquidity pool,
-with the scenario API gating every on-chain
-action~\cite{omnirisk2026soak,omnirisk2026deploy}. The experiment is not
-intended as a security or finance result --- those belong in the
-companion paper~\cite{omnirisk2026defending}. As a software-engineering
-case study, the relevant observations are: (i) every action the agent
-proposed was emitted as a reviewable artefact before execution;
-(ii) the verification subnet (E2) acted as an independent gate that
-prevented two proposed actions from executing; and (iii) the system's
-self-reported confidence and its post-hoc accuracy on the experiment's
-window agreed within the calibration manifest's published bounds.
+\subsection{27-hour Solana liquidity stress experiment}\label{sec:case-studies:soak}
 
-\subsection{168-hour prediction-router calibration arc}\label{sec:case-study:prediction-router}
+We ran a 27-hour stress experiment on Solana in which the constitutional
+agent operated against a single liquidity pool, with the scenario engine
+gating every on-chain
+action~\cite{omnirisk2026soak,omnirisk2026deploy}. As evidence for C1
+(cost-aware engine), the trace shows: every action the agent proposed
+was emitted as a reviewable artefact before execution; the verification
+subnet (Gate~B) acted as an independent gate that prevented two proposed
+actions from executing because it disagreed with the router; and no
+inference was permitted to escalate past Gate~A's per-symbol confidence
+threshold without being repriced through Gate~B. As evidence for C2
+(self-adaptive loop), the agent observed two regime shifts in the
+27-hour window and re-weighted the prediction-router cascade in response
+to each, with the re-weighting committed as a diff to the cascade
+thresholds rather than as a silent ensemble retrain.
+
+\subsection{168-hour prediction-router calibration arc}\label{sec:case-studies:router}
 
 Over a 168-hour window we evaluated the prediction router against the
 production metrics
@@ -321,35 +424,39 @@ calibration fix, the freshest 168-hour cohort (run 2026-05-07
 read in the context of the class-imbalance and cohort-size caveats
 recorded in the source-of-truth manifest: the high accuracy reflects a
 heavily skewed prior on the no-crash class, and the engineering value of
-reporting it is to expose the gap between the headline metric and the
-calibration discipline that produced it.
+reporting it is precisely to expose the gap between the headline metric
+and the calibration discipline that produced it. As evidence for C2, the
+arc itself is the adaptation: a versioned calibration fix, deployed on a
+specific date, traceable in the source-of-truth manifest, and reported
+without retroactive narrative-smoothing.
 
 \section{Engineering lessons}\label{sec:lessons}
 
-We claim five lessons that generalise beyond the blockchain setting to
-any agentic AI system that monitors and acts on a partially-trusted
-environment.
+We claim five lessons that we believe generalise beyond the blockchain
+setting to any agentic AI system whose inputs and actions share a
+partially-trusted environment.
 
 \begin{enumerate}
+  \item \emph{Treat cost as a composition, not a number.} Inference
+        cost, economic-trust cost, and action cost are different
+        currencies; conflating them is what produces the ``cheap and
+        wrong'' failure mode that dominates production agent
+        incidents~\cite{chen2023frugalgpt,ong2024routellm}.
+  \item \emph{Make the verifier independent.} An economic verifier that
+        is co-located with the optimiser conspires with it. Pay an
+        independent judge --- the engineering of trust is a
+        cost-budget concern, not only a security
+        concern~\cite{rao2021bittensor,steeves2022incentivizing}.
+  \item \emph{Self-adapt on a versioned manifest, not on weights.}
+        MAPE-K \emph{Execute} should write to a diffable artefact; if
+        it cannot be reviewed, it cannot be trusted~\cite{salehie2009self,weyns2020introduction}.
   \item \emph{Decompose the agent the way the LLM-agent survey
-        recommends.} Profile, memory, planning, and
-        action~\cite{wang2024survey} are first-class subcomponents,
-        each independently versioned and testable.
-  \item \emph{Treat the constitution as code.} An action policy
-        expressed in natural language is still a
-        configuration~\cite{bai2022constitutional}; it must be
-        diffable, reviewable, and rollback-able like any other code
-        artefact.
-  \item \emph{Make the verifier independent.} The verification subnet
-        (E2) must be incentivised and operated separately from the
-        prediction engine (E1). Co-located optimisers conspire.
+        prescribes.} Profile, memory, planning, action~\cite{wang2024survey}
+        are first-class subcomponents, each independently versioned and
+        testable.
   \item \emph{Publish the denominators.} The honesty rules of
-        \S\ref{sec:honesty} are the cheapest engineering investment
-        with the highest return on calibration-trust.
-  \item \emph{Pre-commit the action program.} Pre-committed
-        scenario-conditional actions (E5) are the engineering primitive
-        that makes the system reviewable; they are also what allows a
-        human operator to interject without race conditions.
+        \S\ref{sec:self-adaptive:honesty} are the cheapest engineering
+        investment with the highest return on calibration-trust.
 \end{enumerate}
 
 \section{Threats to validity and limitations}\label{sec:limits}
@@ -358,45 +465,45 @@ environment.
 % them invisibly so the bibliography note macros resolve and the build is
 % warning-free.
 \phantomsection\label{sec:case-study}%
+\phantomsection\label{sec:case-study:prediction-router}%
 \phantomsection\label{sec:formal:vloss}%
-
 
 The case studies of \S\ref{sec:case-studies} are operational rather than
 controlled experiments: they report what the system did under real
 conditions on dates that are now fixed in
 git~\cite{omnirisk2026soak,omnirisk2026predmetrics}. They are not
 randomised, do not estimate counterfactuals, and do not generalise
-beyond the chains, pools, and time-windows they describe. The honesty
-rules of \S\ref{sec:honesty} are claims about practice that we follow in
-this codebase but cannot prove transfer; replication on an unrelated
-system would test that claim. The architecture's modularity is justified
-by its lineage in self-adaptive systems~\cite{salehie2009self} and
-SE-for-ML~\cite{sculley2015hidden,amershi2019software}, but a comparative
-study against an alternative decomposition (for instance a single
-end-to-end LLM agent with no separate verifier) is left to future work.
+beyond the chains, pools, and time-windows they describe. The
+cost-aware composition of \S\ref{sec:cost-aware} reuses the cascade
+pattern of FrugalGPT~\cite{chen2023frugalgpt} and the learned-router of
+RouteLLM~\cite{ong2024routellm}; we do not claim those primitives as new
+contributions, only their composition with an economic-trust cost and an
+explicit action-cost gate. The self-adaptive loop of
+\S\ref{sec:self-adaptive} is a particular instantiation of MAPE-K in the
+sense of Salehie and Tahvildari~\cite{salehie2009self} and
+Weyns~\cite{weyns2020introduction}; a comparative study against
+alternative decompositions (a single end-to-end LLM agent with no
+separate verifier, for instance) is left to future work. The honesty
+rules of \S\ref{sec:self-adaptive:honesty} are claims about practice
+that we follow in this codebase but cannot prove transfer; replication
+on an unrelated system would test that claim.
 
 \section{Conclusion}\label{sec:conclusion}
 
 We have described the engineering --- not the algorithms --- of an
-agentic, context-aware risk-intelligence system that operates in a
-genuinely adversarial environment. The contribution is a five-engine
-architecture in the MAPE-K
-lineage~\cite{salehie2009self,sculley2015hidden,amershi2019software,wang2024survey},
-a small set of non-negotiable honesty rules, and two operational case
-studies reported with the class-imbalance caveats that make them
-falsifiable. The lessons we extract are deliberately general: any
-agentic AI system whose inputs and actions share a partially-trusted
-environment will benefit from making its verifier independent, its
-constitution diffable, its denominators public, and its actions
-pre-committed.
-
-\paragraph{Next action (draft state).}
-The board (CEO) is asked to confirm the primary venue choice between
-\emph{Journal of Systems and Software} (Elsevier), \emph{Engineering
-Applications of Artificial Intelligence} (Elsevier), and \emph{Software:
-Practice and Experience} (Wiley). Switching to the venue's document
-class is a mechanical preamble change once confirmed; the manuscript
-content is venue-agnostic in this revision.
+agentic, context-aware AI system that operates in a genuinely
+adversarial environment. The contribution is twofold: a \emph{cost-aware
+AI engine} that composes inference cost, economic-trust cost, and
+action cost into a single observable
+ledger~\cite{chen2023frugalgpt,ong2024routellm,rao2021bittensor}; and a
+\emph{self-adaptive agentic AI} that closes a MAPE-K loop around that
+ledger on a versioned calibration manifest with a non-negotiable
+honesty discipline~\cite{salehie2009self,weyns2020introduction,wang2024survey,bai2022constitutional}.
+Two operational case studies supply the falsifiable evidence. The
+lessons are deliberately general: any agentic AI system whose inputs and
+actions share a partially-trusted environment will benefit from making
+its verifier independent, its constitution diffable, its denominators
+public, and its actions pre-committed.
 
 \printbibliography
 
