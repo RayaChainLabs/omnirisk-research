@@ -1,0 +1,74 @@
+title: "RayaChain: The Intelligence Layer for the Internet of Value"
+slug: "rayachain-iov-intelligence-layer"
+companion_to: "rayachain-omnichain-canary"
+target_length_pages: 8           # accessible register, article-class; target 6–8, hard ceiling 10
+
+authors:
+  - name: "Basel Magableh"
+    email: "basel.magableh@tudublin.ie"
+    affiliation: "School of Computer Science, Technological University Dublin, Ireland"
+    orcid: "0000-0003-2337-637X"
+    order: 1
+    corresponding: true
+  - name: "RayaChain Research"
+    affiliation: "Rayachain Lab, Dublin, Ireland"
+    order: 2
+
+target_venue: "paragraph or arxiv-position-paper"   # CEO call before publish
+status: "draft"                  # scaffold → draft → CEO-review → published
+revision: "0.5"
+created_at: "2026-05-09"
+deadline: "2026-05-10"           # CEO directive verbatim: "finish it by tomorrow"
+submitted_at: null
+published_at: null
+
+revision_log:
+  - revision: "0.5"
+    date: "2026-05-09"
+    issue: "OMN-183"
+    author: "AW"
+    note: |
+      First populated draft. Seven sections populated from SEED.md:
+      abstract, thesis (IoV reframe + 5 axes), comparator paragraphs
+      for LayerZero / Chainlink CCIP / Axelar / Bittensor /
+      EigenLayer-EigenCloud, 5-axis differentiation matrix
+      (booktabs/tabularx, ✓/~/X with one-line justification per cell),
+      mainnet implementation bullets traced to Solana mint, EVM OFT
+      CREATE2 address, registry-v3 OMN-181 commit, RAYA defence bot
+      and 5,097-round Bittensor subnet soak, narrative-vs-visible
+      caveat (uses CEO seed phrase verbatim, lists 5 closing
+      deliverables), three "not claiming" disclaimers, read-more
+      links to canary / long / focused papers and on-chain artefacts.
+      No \cite calls; in-text URLs only. No new figures.
+
+scope:
+  in: |
+    A positioning paper. RayaChain reframed as the intelligence layer for
+    the Internet of Value, anchored on five differentiators (cross-chain
+    coordination, semantic risk propagation, AI/agentic reasoning,
+    predictive infrastructure, portable financial context) compared
+    head-to-head against LayerZero, Chainlink CCIP, Axelar, Bittensor,
+    and EigenLayer/EigenCloud. Mainnet implementation status (Solana
+    SPL mint + 6 EVM OFT contracts, registry v3 commit, RAYA defence
+    bot, Bittensor subnet soak) reported with public artefact references.
+    Honesty caveat — narrative ahead of visible product — explicit.
+  out: |
+    No deep-dive on any one comparator. No tokenomics restatement
+    (existing Paragraph article carries that). No mathematical
+    formalisation (canary paper §V already has it).
+
+provenance:
+  ceo_directive: "2026-05-09 — i want a new paper to explain those remmebr that all features are implemented on mainnet ... the narrative is ahead of the visible product. ... finish it by tomorrow add enough context to support the thesis"
+  seed_brief: "papers/2026/rayachain-iov-intelligence-layer/SEED.md"
+  lift_sources:
+    - "papers/2026/agentic-iov-risk-focused/manuscript.tex (v1.2 — IoV reframe)"
+    - "papers/2026/rayachain-omnichain-canary/manuscript.tex (v0.7.2 — §III-B comparison)"
+    - "papers/2026/omnirisk-rayachain-bittensor/manuscript.tex (v0.23 — §17 mainnet)"
+    - "/Users/bazmini/rayachain-oft/packages/config/rayachain.registry.json (v3, OMN-181)"
+
+pending_before_ceo_review:
+  - "AW first populated draft (v0.5): all 6 sections populated from SEED.md"
+  - "5-axis comparison table: every cell with one-line justification"
+  - "Mainnet implementation claims trace to verifiable artefacts (mint, OFT, registry, soak)"
+  - "Honesty caveat (§narrative vs visible product) lists 5 closing deliverables"
+  - "Compile clean: zero warnings, 6–10 pages"

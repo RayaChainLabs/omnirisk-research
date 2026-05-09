@@ -1,0 +1,387 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\PassOptionsToPackage{hyphens}{url}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\setlength{\emergencystretch}{3em}
+\widowpenalty=10000
+\clubpenalty=10000
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={RayaChain --- The Intelligence Layer for the Internet of Value},
+  pdfauthor={Basel Magableh},
+}
+
+\newcommand{\yes}{\textcolor{green!55!black}{\textbf{\checkmark}}}
+\newcommand{\no}{\textcolor{red!70!black}{\textbf{\textsf{X}}}}
+\newcommand{\partialmark}{\textcolor{orange!85!black}{\textbf{\textasciitilde}}}
+
+\title{RayaChain: The Intelligence Layer\\
+       for the Internet of Value}
+\author{%
+  Basel Magableh\textsuperscript{1,*} \quad\quad RayaChain Research\textsuperscript{2} \\[0.8em]
+  \normalsize\textsuperscript{1}School of Computer Science, Technological University Dublin, Ireland \\
+  \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
+  \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
+}
+\date{May 2026 \\ \textbf{v0.5 (positioning draft)}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The Internet of Value moves capital, but not the context that capital
+needs to be safe: counterparty reputation, route health, sentiment,
+liquidity stress, and the policy a system is willing to commit to.
+Bridges, oracles, and interoperability networks transport bytes and
+balances across chains; none of them propagate evaluated risk. This
+paper positions \emph{RayaChain} as the missing intelligence layer for
+that fabric, and differentiates it on five axes ---
+cross-chain coordination, semantic risk propagation, AI/agentic
+reasoning, predictive infrastructure, and portable financial context ---
+against LayerZero, Chainlink~CCIP, Axelar, Bittensor, and
+EigenLayer/EigenCloud. We anchor the position in artefacts already on
+mainnet: the Solana SPL canonical mint, six EVM OFT contracts at a
+deterministic CREATE2 address, a registry-v3 commit recording the
+canonical-origin flip to Solana mainnet, a continuously-running
+liquidity-defence agent, and a Bittensor verification subnet with
+5{,}097 successful soak rounds. We are explicit about what is not yet
+shipped and list the five deliverables that close the gap between the
+narrative and the visible product.
+\end{abstract}
+
+\section*{The thesis}
+\label{sec:thesis}
+
+The reframe is small in words and load-bearing in consequence: the
+Internet of Value will not be safe until \emph{capital carries
+evaluated risk and credit context with it across chains}. Today, value
+moves freely; intelligence does not. A token bridged from Ethereum to
+Solana arrives stripped of every signal that mattered on the way out
+--- the route the swap took, the sentiment around the asset that
+hour, the liquidity stress on the destination venue, the reputation of
+the receiving wallet, the policy the sending protocol committed to.
+Bridges deliver bytes and balances. They do not deliver \emph{meaning}.
+
+RayaChain is the intelligence layer for that fabric. The unique angle
+is not bridge, not oracle, not interoperability network: it is the
+substrate that propagates \emph{semantic} risk and credit signals
+alongside the value flows themselves. Five differentiators define the
+position taken in this paper. (1)~Cross-chain coordination of risk
+state, not just message transport. (2)~Semantic risk
+propagation --- signals that mean something to a downstream protocol,
+not raw oracle reads. (3)~AI / agentic reasoning over those signals,
+constitutionally constrained so the agent cannot exceed a human-set
+policy. (4)~Predictive infrastructure (forecasts of price, liquidity,
+volatility, route health) rather than only post-hoc reporting.
+(5)~Portable financial context --- wallet reputation and credit
+posture that survives a cross-chain transfer. Each axis is necessary;
+the combination is what no project listed in this paper composes
+today.
+
+\section*{Where everyone else stops}
+\label{sec:comparators}
+
+Each comparator below has shipped infrastructure we respect, and each
+covers \emph{some} of the five axes. None covers all five, and most
+were not designed to.
+
+\paragraph{LayerZero.} Closest on value/message transport. LayerZero
+moves arbitrary cross-chain messages, including OFT-format token
+transfers, between dozens of chains. Every cross-chain RYA transfer in
+this paper rides LayerZero's V2 endpoints; we depend on it operationally
+and credit it as part of our substrate. What LayerZero does not do is
+make the messages \emph{mean} something --- packets are opaque to the
+relayer and the protocol that receives them. RayaChain adds the
+semantic and risk-aware layer above the transport, so a downstream
+contract sees not only ``X tokens arrived'' but ``X tokens with
+sentiment $s$, route health $h$, and reputation $r$.''
+
+\paragraph{Chainlink CCIP.} A general cross-chain communication layer
+plus oracle messaging. CCIP is the strongest competitor on
+\emph{infrastructure transport reliability} and on the oracle adjacency
+that lets a developer attach a price read to a cross-chain message.
+What CCIP is not is predictive AI risk coordination: a CCIP message
+carries data but does not reason about the data, and the surrounding
+oracle network is read-oriented, not policy-oriented. RayaChain treats
+the oracle read as one input among five, and acts on the composed
+signal under a constitutional policy.
+
+\paragraph{Axelar.} A cross-chain interoperability network with a proof
+of stake validator set that brokers connectivity and routing across a
+large surface of chains. Axelar's strength is generality of
+connectivity. It is not an agentic risk-intelligence layer: it does
+not produce forecasts, does not reason about counterparty reputation,
+and does not propagate semantic context. The relationship is the same
+as with LayerZero --- Axelar can be one of the transports beneath
+RayaChain, but the intelligence layer is a different problem.
+
+\paragraph{Bittensor.} Philosophically the closest. Bittensor builds a
+distributed, incentive-aligned intelligence economy: subnets compete
+to produce validated outputs, and stake-weighted scoring rewards
+miners that are right and consistent. RayaChain reuses that
+verification primitive: our Bittensor subnet (currently shadowing on
+testnet) is the validator-loss substrate for cross-chain risk scoring.
+What Bittensor lacks for our purposes is a \emph{cross-chain financial
+signaling layer}; subnets verify generic miner outputs but do not
+themselves coordinate value-flow risk between Ethereum, Solana, and
+Bitcoin-adjacent venues. RayaChain composes Bittensor's verification
+with the cross-chain transport so that the validated signal lands on
+the chain where the capital is.
+
+\paragraph{EigenLayer / EigenCloud.} Trust markets, restaking, and
+shared-security verification. EigenLayer makes restaked ETH economic
+collateral for arbitrary Actively Validated Services; EigenCloud
+extends this towards verifiable off-chain compute. This is the most
+plausibly adjacent project: \emph{could become adjacent eventually},
+in the CEO's framing. A future RayaChain could publish its scoring
+verification as an AVS, paid for in restaked stake. We do not claim
+that integration today; we note the seam.
+
+\section*{The 5-axis differentiation matrix}
+\label{sec:matrix}
+
+Table~\ref{tab:matrix} compares the five comparators and RayaChain on
+the five axes from \S\,\nameref{sec:thesis}. Cells are \yes\ (shipped and
+load-bearing for the project), \partialmark\ (partial --- adjacent or
+in-progress), or \no\ (out of scope for the project). Each cell is a
+one-line justification, not an opinion. RayaChain's row is calibrated
+to what is on mainnet today (\S\,\nameref{sec:mainnet}); axes that depend on
+the operational fabric are marked partial accordingly
+(\S\,\nameref{sec:gap}).
+
+\renewcommand{\arraystretch}{1.25}
+\begin{table}[ht]
+\centering
+\small
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\begin{tabularx}{\textwidth}{@{}l Y Y Y Y Y@{}}
+\toprule
+ & \textbf{Cross-chain coord.} & \textbf{Semantic risk prop.}
+ & \textbf{AI / agentic reasoning} & \textbf{Predictive infra.}
+ & \textbf{Portable financial context} \\
+\midrule
+\textbf{LayerZero}
+ & \yes\ V2 endpoints move messages and OFT tokens across many chains
+ & \no\ payloads are opaque to the protocol; no risk semantics
+ & \no\ relayers do not reason
+ & \no\ no forecasts emitted
+ & \no\ token state ports; reputation does not \\
+\textbf{Chainlink CCIP}
+ & \yes\ general cross-chain messaging plus oracle adjacency
+ & \partialmark\ price feeds attach as data, not as risk signals
+ & \no\ no agentic reasoning layer
+ & \partialmark\ feeds are forecasts of \emph{prices}, not route health or contagion
+ & \no\ no portable reputation primitive \\
+\textbf{Axelar}
+ & \yes\ PoS validator set brokers connectivity and routing
+ & \no\ payloads carry no risk semantics
+ & \no\ no reasoning layer
+ & \no\ no forecasts emitted
+ & \no\ no portable reputation primitive \\
+\textbf{Bittensor}
+ & \no\ subnets do not coordinate cross-chain financial state
+ & \partialmark\ subnet outputs can encode semantics but not financial signaling
+ & \yes\ stake-weighted incentive layer over miner reasoning
+ & \partialmark\ subnets exist for forecasting, but not as a cross-chain primitive
+ & \no\ no cross-chain wallet reputation primitive \\
+\textbf{EigenLayer / EigenCloud}
+ & \partialmark\ AVSs can be cross-chain but EigenLayer itself is L1-anchored
+ & \no\ shared-security primitive, not a semantics primitive
+ & \no\ no agentic reasoning layer
+ & \no\ no forecasts emitted
+ & \partialmark\ restaked-stake reputation, not portable wallet credit \\
+\midrule
+\textbf{RayaChain}
+ & \yes\ canonical Solana mainnet mint plus six EVM OFT peers at one CREATE2 address
+ & \partialmark\ semantic signals encoded; live cross-chain propagation pending (\S\,\nameref{sec:gap})
+ & \yes\ constitutional agent (RAYA defence bot) firing under written policy since 2026-05-06
+ & \partialmark\ five-engine architecture shipped; live downstream consumers pending
+ & \partialmark\ wallet-reputation primitive specified; portability across chains is the next gap \\
+\bottomrule
+\end{tabularx}
+\caption{Five-axis differentiation matrix. Justifications are
+one-liners; deeper architectural claims live in the canary paper and
+the long technical report (links in \S\,\nameref{sec:read-more}).
+RayaChain's partial cells are the same five deliverables enumerated in
+\S\,\nameref{sec:gap}.}
+\label{tab:matrix}
+\end{table}
+
+The table reads cleanly along two diagonals. Horizontally, no
+comparator covers all five axes. Vertically, the axes that no
+non-RayaChain project marks \yes\ are \emph{semantic risk propagation}
+and \emph{portable financial context} --- the two axes that follow
+from the thesis that capital should carry context. Those are the axes
+we own.
+
+\section*{What is shipped on mainnet}
+\label{sec:mainnet}
+
+The CEO directive that motivates this paper is also a constraint:
+\emph{all features are implemented on mainnet}. Every claim below
+traces to a public artefact a reader can verify themselves.
+
+\begin{itemize}
+  \item \textbf{Solana mainnet RYA SPL mint}, live since 2026-05-04:%
+    \\[0.15em]
+    \mbox{\texttt{EebqvpbYoJYQLzeUfjVoHWopogSE6ECRX5HJmBr6susV}}.
+    Defended by the OmniRisk hot-wallet bot since 2026-05-06;
+    explorer-verifiable on Solscan.
+  \item \textbf{EVM OFT contracts} at the deterministic CREATE2
+    address%
+    \\[0.15em]
+    \mbox{\texttt{0x1a281E61ed9f16D325D93d50a50D008b3d141676}}
+    on Ethereum, Base, Polygon, Optimism, and BSC mainnet
+    (\texttt{name()=RayaChain}, \texttt{symbol()=RYA} verified on
+    each chain's explorer); the same CREATE2 address is inferred for
+    Arbitrum mainnet pending re-verification --- 5 of 6 chains
+    explorer-confirmed today.
+  \item \textbf{Registry v3} (committed 2026-05-08, OmniRisk
+    issue OMN-181) records the canonical-origin flip from
+    \texttt{solana-devnet} to \texttt{solana-mainnet} and lists eight
+    mainnet entries, making the on-disk source of truth match the
+    on-chain reality.
+  \item \textbf{RAYA defence bot}: a \emph{buy-only}
+    liquidity-defence agent operating under written policy since
+    2026-05-06. The bot is the agentic-engine demonstration; the
+    cross-chain canary layer is the substrate it sits on. The
+    canary paper documents the 2026-05-08 to 2026-05-09 defence
+    cycle as a case study, not as a market-manipulation product.
+  \item \textbf{Bittensor verification subnet} (shadow deployment on
+    testnet metagraph): \textbf{5{,}097} successful rounds with
+    \textbf{0} authentication failures. This validates layer-1
+    orchestration; layer-2 economic verification under real metagraph
+    stakes is deferred per the canary paper's honesty split, and is
+    the fifth deliverable in \S\,\nameref{sec:gap}.
+\end{itemize}
+
+These five artefacts are the empirical floor of the position. Nothing
+above the floor depends on a fact we cannot point at.
+
+\section*{Narrative vs visible product}
+\label{sec:gap}
+
+To use the CEO's phrase verbatim: \emph{the narrative is ahead of the
+visible product}. We say this not to retreat from the position but to
+mark it precisely. The contracts have shipped; the operational fabric
+that turns shipped contracts into visible cross-chain risk
+intelligence has not yet closed. This is the deliberate engineering
+order of operations, not an oversight.
+
+Five deliverables close the gap. None is speculative; each has an
+issue and an owner.
+
+\begin{enumerate}
+  \item \textbf{Live cross-chain risk-signal propagation}, not just
+    SPL transfers. A risk message published on the canary substrate
+    must arrive at a downstream chain and be readable as
+    \emph{semantics}, not as opaque bytes.
+  \item \textbf{Predictive alerts consumed by downstream protocols},
+    not just rendered on the OmniRisk dashboard. The forecast must
+    cross a protocol boundary and change a third party's behaviour.
+  \item \textbf{Portable wallet-reputation across cross-chain
+    transfers.} A wallet's credit posture on Ethereum must survive
+    its appearance on Solana --- the load-bearing primitive for
+    \emph{capital carrying context}.
+  \item \textbf{Third-party audit} of the EVM OFT contracts and the
+    Bittensor scoring code. Internal verification is not enough for
+    the trust boundary the system claims.
+  \item \textbf{Subtensor mainnet deployment} of the verification
+    subnet. The 5{,}097-round soak demonstrates layer-1 correctness;
+    economic verification under real metagraph stakes is what closes
+    the loop.
+\end{enumerate}
+
+We are not asking the reader to take any of the five on faith. We are
+asking the reader to read this paper as the position taken at the
+contract-shipped, fabric-pending boundary --- because that is exactly
+where the project is.
+
+\section*{What this paper is not claiming}
+\label{sec:not-claiming}
+
+Three disclaimers, in plain English.
+
+\begin{enumerate}
+  \item \textbf{Not Bittensor-style economic verification under real
+    metagraph stakes today.} The verification subnet has soaked on
+    testnet (5{,}097 rounds, 0 auth failures); a Subtensor mainnet
+    deployment under real stake is deferred and explicit, per the
+    canary paper's layer-1/layer-2 honesty split.
+  \item \textbf{Not a finished operational fabric.} The contracts
+    are deployed. Peer-wiring across all six EVM chains, the executor
+    sidecar, and the third-party audit are work in progress and are
+    explicitly listed in \S\,\nameref{sec:gap}. Anything above ``contracts
+    deployed and registry coherent'' is being closed, not claimed
+    closed.
+  \item \textbf{Not a generic agentic-engine product.} The RAYA
+    defence bot is a single-token, buy-only liquidity defence run
+    under a written policy. It is the agentic-engine demonstration on
+    mainnet; it is not a product offered to other protocols today,
+    and the bot's policy is not a substitute for protocol-level risk
+    intelligence. The product surface is the intelligence layer; the
+    bot is one of its first concrete users.
+\end{enumerate}
+
+\section*{Read more}
+\label{sec:read-more}
+
+This positioning paper deliberately leaves the technical depth to its
+companion documents.
+
+\begingroup
+\sloppy
+\hbadness=10000
+\begin{itemize}
+  \item \textbf{Canary paper} --- \emph{The RayaChain Omnichain
+    Canary: Validator-Loss Verification for Cross-Chain Risk
+    Signaling}. The architectural source of the layer-1/layer-2
+    honesty split and the validator-loss decomposition. URL:
+    \url{https://green.omnirisk.io/media/papers/2026/rayachain-omnichain-canary/manuscript.pdf}.
+  \item \textbf{Long technical report} --- \emph{OmniRisk $\times$
+    RayaChain $\times$ Bittensor: An End-to-End Risk-Intelligence
+    Stack for the Internet of Value}. The full mainnet implementation
+    record (\S17), and the migration plan to multisig ownership.
+    URL:
+    \url{https://green.omnirisk.io/media/papers/2026/omnirisk-rayachain-bittensor/manuscript.pdf}.
+  \item \textbf{Focused architecture paper} --- \emph{Agentic,
+    Context-Aware Risk Intelligence in the Internet of Value}. The
+    five-engine architecture and the constitutional-agent rule.
+    URL:
+    \url{https://green.omnirisk.io/media/papers/2026/agentic-iov-risk-focused/manuscript.pdf}.
+  \item \textbf{RYA tokenomics} --- on Paragraph at
+    \url{https://paragraph.com/@omnirisk}. This paper does not
+    restate tokenomics.
+  \item \textbf{On-chain artefacts.} Solana mint on Solscan:%
+    \\[0.15em]
+    \href{https://solscan.io/token/EebqvpbYoJYQLzeUfjVoHWopogSE6ECRX5HJmBr6susV}%
+         {\texttt{solscan.io/token/Eebqvpb\dots susV}}.
+    EVM OFT (Ethereum, Base, Polygon, Optimism, BSC, and inferred
+    Arbitrum) at CREATE2 address
+    \mbox{\texttt{0x1a281E61ed9f16D325D93d50a50D008b3d141676}};
+    Etherscan / Basescan / Polygonscan / Optimistic Etherscan /
+    BscScan listings carry the deployment.
+\end{itemize}
+\endgroup
+
+\noindent\textit{Status note:} this paper is the v0.5 first populated
+draft per OMN-183 (2026-05-09), pending CEO sign-off on venue. No
+external publication has been made.
+
+\end{document}
