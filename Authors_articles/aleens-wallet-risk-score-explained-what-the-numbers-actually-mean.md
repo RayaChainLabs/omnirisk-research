@@ -134,6 +134,6 @@ Single-chain analysis misses cross-chain laundering. Retroactive re-scoring puni
 The exploiters moved to cross-chain years ago. The models scoring your wallet are still catching up.
 
 **Ready to see the risk picture that single-chain tools miss?**\
-[<u>OmniRisk</u>](https://omnirisk.io/dashboard) traces wallet behavior across EVM, Solana, and cross-chain systems. With Raya Chain, your wallet risk score follows your wallet wherever it goes.
+[<u>OmniRisk</u>](https://omnirisk.io) traces wallet behavior across EVM, Solana, and cross-chain systems. With Raya Chain, your wallet risk score follows your wallet wherever it goes.
 
 **\[Get Early Access → [<u>omnirisk.io</u>](http://omnirisk.io)\]**
