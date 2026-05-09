@@ -701,3 +701,56 @@
   urldate      = {2026-05-07},
   note         = {Thirty-one metric rows scanned from the production \texttt{RiskIntelPredictionMetrics} DynamoDB table in the Blue \texttt{us-east-1} region (PK \texttt{REPORT\#YYYY-MM-DD}, SK \texttt{RUN\#timestamp\#hash}). Producer: Lambda \texttt{RiskIntelBlueJobs-Predict\-ionRouterJobHandler667809-9O8cpekSNzqz} on EventBridge schedule. Consumer: Lambda \texttt{RiskIntelBlueApi-Predict\-ionRouterReportJsonHandler}. Spans 24-hour and 168-hour evaluation cohorts before and after the 2026-04-21 horizon-aware crash-probability calibration fix. The freshest 168-hour cohort (run 2026-05-07 01:41:09~UTC, 915 samples) reports \texttt{didCrashAccuracy} 99.34\% and crash-probability Brier 0.1335; the headline arc must be read in the context of the class-imbalance and cohort-size caveats discussed in Section~\ref{sec:case-study:prediction-router}. Committed in \texttt{omnirisk-papers} as \texttt{b419338}.}
 }
+
+% =============================================================================
+% Verified 2026-05-09 by Academic Writer for OMN-188 (aisoftsys-agentic-risk).
+% Added canonical software-engineering-for-AI references for the
+% Journal-of-Systems-and-Software-targeted manuscript. Each entry's DOI or
+% canonical URL was confirmed against the publisher record on 2026-05-09.
+% =============================================================================
+
+@inproceedings{sculley2015hidden,
+  author       = {Sculley, D. and Holt, Gary and Golovin, Daniel and Davydov, Eugene and Phillips, Todd and Ebner, Dietmar and Chaudhary, Vinay and Young, Michael and Crespo, Jean-Fran\c{c}ois and Dennison, Dan},
+  title        = {{Hidden Technical Debt in Machine Learning Systems}},
+  booktitle    = {Advances in Neural Information Processing Systems 28 (NeurIPS 2015)},
+  year         = {2015},
+  pages        = {2503--2511},
+  url          = {https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html},
+  urldate      = {2026-05-09},
+  note         = {Catalogues the system-level costs that production ML systems pay (entanglement, hidden feedback loops, undeclared consumers, configuration debt, monitoring debt) over and above traditional code-level technical debt; widely cited as the foundational artefact for ``software engineering for ML''.}
+}
+
+@inproceedings{amershi2019software,
+  author       = {Amershi, Saleema and Begel, Andrew and Bird, Christian and DeLine, Robert and Gall, Harald C. and Kamar, Ece and Nagappan, Nachiappan and Nushi, Besmira and Zimmermann, Thomas},
+  title        = {{Software Engineering for Machine Learning: A Case Study}},
+  booktitle    = {Proceedings of the 41st International Conference on Software Engineering: Software Engineering in Practice (ICSE-SEIP)},
+  publisher    = {IEEE},
+  year         = {2019},
+  pages        = {291--300},
+  doi          = {10.1109/ICSE-SEIP.2019.00042},
+  note         = {Empirical study at Microsoft of the workflow and process changes required to engineer ML-intensive software at scale; identifies a nine-stage ML workflow and the discontinuities (data management, model evaluation, model deployment) where SE practice diverges from non-ML systems.}
+}
+
+@article{salehie2009self,
+  author       = {Salehie, Mazeiar and Tahvildari, Ladan},
+  title        = {{Self-adaptive software: Landscape and research challenges}},
+  journal      = {ACM Transactions on Autonomous and Adaptive Systems},
+  volume       = {4},
+  number       = {2},
+  pages        = {14:1--14:42},
+  year         = {2009},
+  doi          = {10.1145/1516533.1516538},
+  note         = {Canonical survey of self-adaptive software architectures; the MAPE-K (Monitor-Analyse-Plan-Execute over Knowledge) feedback loop it formalises is the lineage that the OmniRisk five-engine architecture extends to LLM-mediated agentic operation.}
+}
+
+@article{wang2024survey,
+  author       = {Wang, Lei and Ma, Chen and Feng, Xueyang and Zhang, Zeyu and Yang, Hao and Zhang, Jingsen and Chen, Zhiyuan and Tang, Jiakai and Chen, Xu and Lin, Yankai and Zhao, Wayne Xin and Wei, Zhewei and Wen, Ji-Rong},
+  title        = {{A Survey on Large Language Model Based Autonomous Agents}},
+  journal      = {Frontiers of Computer Science},
+  volume       = {18},
+  number       = {6},
+  pages        = {186345},
+  year         = {2024},
+  doi          = {10.1007/s11704-024-40231-1},
+  note         = {Unified construction-evaluation-application framework for LLM-based autonomous agents; this manuscript adopts its profile/memory/planning/action decomposition as the engineering vocabulary against which the agentic-engine design is described.}
+}

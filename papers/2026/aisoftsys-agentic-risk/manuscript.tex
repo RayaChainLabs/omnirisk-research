@@ -1,0 +1,403 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
+
+\setlength{\emergencystretch}{3em}
+\widowpenalty=10000
+\clubpenalty=10000
+\AtBeginBibliography{\sloppy\raggedright\setlength{\emergencystretch}{6em}}
+
+\addbibresource{references.bib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={Engineering an Agentic, Context-Aware Risk Intelligence System for the Internet of Value},
+  pdfauthor={Basel Magableh; OmniRisk Research},
+}
+
+\title{Engineering an Agentic, Context-Aware\\
+       Risk Intelligence System\\[0.2em]
+       for the Internet of Value}
+\author{%
+  Basel Magableh\textsuperscript{1,*} \quad\quad OmniRisk Research\textsuperscript{2} \\[0.8em]
+  \normalsize\textsuperscript{1}School of Computer Science, Technological University Dublin, Ireland \\
+  \normalsize\textsuperscript{2}Rayachain Lab, Dublin, Ireland \\[0.4em]
+  \normalsize\textsuperscript{*}Correspondence: \texttt{basel.magableh@tudublin.ie}
+}
+\date{May 2026 \quad (draft v0.1)}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Agentic AI systems are increasingly deployed in heterogeneous,
+partially-trusted environments where the marginal risk that matters is
+\emph{composite}: route, sentiment, liquidity, and the policy a system is
+willing to commit to. Existing software-engineering experience for
+machine-learning systems~\cite{sculley2015hidden,amershi2019software}
+addresses the offline-training-then-deployment regime, but does not
+prescribe how to engineer an LLM-mediated, multi-engine agent that
+\emph{decides and acts} on streams of partially-adversarial inputs while
+remaining honest about its own confidence. We describe the engineering of
+the OmniRisk system --- a five-engine architecture (prediction,
+decentralised verification, sentiment fusion, constitutional agentic
+action, scenario API) deployed on the blockchain ``Internet of
+Value''~\cite{omnirisk2026defending} --- and report two operational case
+studies as systems-engineering evidence: a 27-hour policy-constrained
+liquidity stress experiment and a 168-hour prediction-router calibration
+arc reported with explicit class-imbalance honesty. Our contribution is
+not a new ML technique; it is a description of the discipline and
+tradeoffs by which a working agentic risk-intelligence system was
+assembled, calibrated, monitored, and made falsifiable.
+\end{abstract}
+
+\medskip
+\noindent\textbf{Keywords ---} software engineering for AI; agentic
+systems; self-adaptive software; LLM operations; risk intelligence;
+blockchain; case study.
+
+\section{Introduction}\label{sec:intro}
+
+The software-engineering literature has, over a decade, settled an
+uncomfortable consensus about machine-learning-intensive systems: most of
+the cost is not in the model. Sculley
+et~al.~\cite{sculley2015hidden} catalogued the system-level burdens
+(entanglement, hidden feedback loops, undeclared consumers, configuration
+debt, monitoring debt) that ML systems pay over and above ordinary code,
+and Amershi et~al.~\cite{amershi2019software} documented at industrial
+scale the workflow discontinuities that ML imposes on traditional SE
+practice. The recent emergence of \emph{agentic} systems --- LLM-mediated
+software components that select and execute actions, not merely produce
+predictions~\cite{wang2024survey,bai2022constitutional} --- intensifies
+each of those burdens, because the agent is now also a closed-loop
+controller whose decisions feed back into the data it later consumes.
+
+This paper concerns the engineering of one such system, deployed in a
+genuinely adversarial setting. The OmniRisk system monitors and reasons
+about risk on the blockchain ``Internet of Value'' (IoV): a heterogeneous
+network of chains, bridges, liquidity venues, and off-chain narratives in
+which the dominant marginal risk to any participant is
+\emph{composite}~\cite{augusto2024sok,zhang2023sok,belchior2021survey,wu2025safeguarding},
+not a property of any single chain. The system is instructive as an SE
+case study for three reasons. First, it cannot retreat to ``model
+quality'' as a single optimisation target: its outputs include both
+forecasts and \emph{actions}, and the actions are policy-constrained.
+Second, its environment is partially adversarial: text feeds, on-chain
+flow, and bridge state can each be manipulated, so any monitor must be
+designed to be \emph{honest about being fooled}. Third, the system was
+built over an eighteen-month operating period, generating concrete
+artefacts (calibration manifests, policy logs, soak-test
+traces~\cite{omnirisk2026soak,omnirisk2026calibration,omnirisk2026predmetrics})
+that let us report engineering decisions against real operational data
+rather than synthesised scenarios.
+
+\paragraph{Contributions.}
+This paper makes four contributions, each of an engineering rather than
+algorithmic kind.
+\begin{enumerate}
+  \item \emph{An architecture pattern} --- the five-engine composition
+        (\S\ref{sec:architecture}) --- that organises the engineering
+        concerns of an agentic risk-intelligence system into modules
+        with separable failure modes, in the lineage of MAPE-K
+        self-adaptive systems~\cite{salehie2009self} extended for
+        LLM-mediated action.
+  \item \emph{An honesty discipline} (\S\ref{sec:honesty}) for
+        calibration and monitoring, expressed as a small set of
+        non-negotiable engineering rules (publish class-imbalance
+        denominators, never hide false-positive cohorts, refuse silent
+        retraining), supported by audit-grade source-of-truth
+        artefacts~\cite{omnirisk2026predmetrics,omnirisk2026calibration}.
+  \item \emph{Two operational case studies} (\S\ref{sec:case-studies}):
+        a 27-hour Solana liquidity stress experiment under a
+        constitutional action policy, and a 168-hour prediction-router
+        calibration arc that traces the system's accuracy from
+        ``barely above chance'' to a calibrated state, reported with
+        the class-imbalance caveats that an honest engineering report
+        requires.
+  \item \emph{Engineering lessons} (\S\ref{sec:lessons}) that we claim
+        generalise to any agentic AI system whose inputs and actions
+        share a partially-trusted environment, beyond the blockchain
+        setting.
+\end{enumerate}
+
+\paragraph{Companion paper and scope.} A companion
+manuscript~\cite{omnirisk2026defending} treats the same architecture
+from a security-and-verification angle (threat model, validator-loss
+decomposition, formal guarantees). The present paper is the
+\emph{software-engineering} cut: it is concerned with composition,
+operability, observability, and the discipline of being calibrated. We
+do not present a new threat model, a finance argument, or any claim
+about returns. Where security-relevant facts are needed, we cite the
+companion paper rather than restate them.
+
+\section{Background and related work}\label{sec:background}
+
+\subsection{Software engineering for ML and agentic systems}
+
+Sculley et~al.~\cite{sculley2015hidden} and
+Amershi et~al.~\cite{amershi2019software} together set the SE-for-ML
+agenda: ML systems pay system-level costs that ordinary SE practice does
+not anticipate, and the productive engineering response is to make the
+ML workflow first-class (data, training, evaluation, deployment, and
+monitoring as engineered artefacts). Subsequent work has extended this
+to LLM-mediated agentic systems~\cite{wang2024survey}, which add two
+qualitatively new concerns: (i) the agent's outputs are \emph{actions}
+that perturb the environment from which its next inputs are drawn, and
+(ii) the agent is constituted in part by natural-language constraints
+(``constitutions'') rather than only by code~\cite{bai2022constitutional}.
+
+Self-adaptive systems are the older intellectual lineage that anticipated
+much of this. Salehie and Tahvildari~\cite{salehie2009self} formalise
+the MAPE-K (Monitor--Analyse--Plan--Execute over Knowledge) loop as the
+canonical decomposition of a self-adaptive system; we treat the
+five-engine architecture of \S\ref{sec:architecture} as a particular
+instantiation of MAPE-K in which the Analyse and Plan stages are
+LLM-mediated and the Execute stage is policy-constrained.
+
+\subsection{Risk intelligence in the Internet of Value}
+
+The IoV setting motivates the case study but is not the object of this
+paper. We summarise it briefly. Cross-chain bridges are now both the
+dominant capital route and the dominant exploit
+surface~\cite{augusto2024sok,wu2025safeguarding,chainalysis2022bridges};
+liquidity is fragmented across chains and venues so that the same logical
+asset can be priced and routed
+inconsistently~\cite{zhang2023sok,palaiokrassas2023multichain,gogol2024liquidity};
+sentiment shocks propagate at a faster cadence than chain-state changes,
+so a monitor that ignores text drift is blind to a class of events whose
+on-chain footprint is downstream of the
+narrative~\cite{schumaker2009textual,xing2018natural,day2016deep,zhang2025sentistack};
+and an LLM-mediated agent that selects and executes on-chain actions
+introduces a closed-loop risk that single-chain monitors do not
+capture~\cite{wang2024survey,bai2022constitutional}. Decentralised
+verification substrates such as
+Bittensor~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma,opentensor2024evm}
+provide an economic mechanism for pricing the honesty of inferences,
+which we use as a software-engineering primitive for ``do not trust a
+single model'' rather than as a tokenomics argument.
+
+\section{The five-engine architecture}\label{sec:architecture}
+
+We describe the system as five engines composed by an orchestration
+layer; each engine is independently observable and has a separable
+failure mode.
+
+\subsection*{E1. Prediction engine}
+A router over price, liquidity, volatility, and route-health forecasters,
+each scored and selected against a frozen calibration
+manifest~\cite{omnirisk2026calibration}. Engineering decisions of note:
+forecasts are emitted with explicit confidence intervals; the router
+publishes its own miss rate alongside its predictions; and the
+calibration manifest is a versioned, reproducible artefact that survives
+a disaster-recovery rebuild.
+
+\subsection*{E2. Decentralised verification subnet}
+A Bittensor-style subnet that scores prediction
+outputs~\cite{rao2021bittensor,steeves2022incentivizing,opentensor2024yuma}
+so that no single model is the system's source of
+truth~\cite{conway2024opml,ganescu2024trust}. The engineering point is
+not the cryptoeconomics; it is that the verification stage is a
+\emph{redundant, independently-incentivised} judge of the prediction
+engine, and the system fails closed when the subnet disagrees with the
+router.
+
+\subsection*{E3. Sentiment-fusion engine}
+A multi-source fusion over text feeds, on-chain flow, and grey-literature
+sources~\cite{macrocosmos2024datauniverse,birdeye2026docs,dexscreener2026docs,yang2023fingpt,wu2023bloomberggpt,gandhi2023multimodal,lai2023multimodal,long2019deep,zhang2025sentistack}.
+The engine's design choice that matters most is operational: each source
+is timestamped and provenance-tagged so that a downstream consumer can
+reproduce a decision given only the engine's published trace.
+
+\subsection*{E4. Agentic engine under constitutional action constraints}
+An LLM-mediated agent that maps prediction-and-sentiment state to
+candidate actions, gated by a written policy
+(``constitution'')~\cite{bai2022constitutional} and by role-bound
+permission scopes. The engineering insight, drawing on the LLM-agent
+survey~\cite{wang2024survey}, is to decompose the agent into
+\emph{profile, memory, planning, and action} subcomponents so that each
+can be tested, frozen, or rolled back independently --- and so that the
+constitution is itself a versioned artefact, not a prompt embedded in
+production code.
+
+\subsection*{E5. Scenario / API risk engine}
+A converter from forecasts and constraints into pre-committed
+\emph{action programs} expressed as scenario-conditional API
+calls~\cite{glasserman2003monte}. Operationally, this is the engine that
+makes the system's behaviour reviewable: the action program is an
+artefact a human or another system can audit before any on-chain
+execution.
+
+\subsection{Composition: a MAPE-K instantiation}\label{sec:mapek}
+
+The five engines map onto Salehie and Tahvildari's
+MAPE-K loop~\cite{salehie2009self} as follows. \emph{Monitor} is
+sentiment fusion (E3) and the read-side of the prediction engine (E1).
+\emph{Analyse} is the verification subnet (E2) judging E1.
+\emph{Plan} is the agentic engine (E4) under its constitution.
+\emph{Execute} is the scenario API (E5). The shared \emph{Knowledge} is
+the calibration
+manifest~\cite{omnirisk2026calibration,omnirisk2026predmetrics}, the
+contract-and-route registry~\cite{rayachain2026registry}, and the action
+constitution. We argue this mapping is non-trivial: each MAPE-K box has a
+named owning engine, with a separately observable failure mode and a
+separate test harness. This is the modularity that
+SE-for-ML~\cite{amershi2019software} prescribes, projected onto the
+agentic-systems setting.
+
+\section{Engineering an honesty discipline}\label{sec:honesty}
+
+A working agentic system in an adversarial environment is only useful if
+its self-reports are trustworthy. We adopt three engineering rules,
+non-negotiable in the OmniRisk codebase, and we view them as the most
+transferable contribution of this paper.
+
+\paragraph{Rule 1: publish denominators.} Every accuracy or skill metric
+is published with the class-imbalance denominator that produced it. The
+prediction-router calibration arc reported in
+\S\ref{sec:case-study:prediction-router} \emph{drops} when reported
+honestly --- a 99.34\% \texttt{didCrashAccuracy} on a class-imbalanced
+cohort is far less impressive than the headline number suggests, and the
+engineering response is to say so on the same page as the
+number~\cite{omnirisk2026predmetrics}.
+
+\paragraph{Rule 2: source-of-truth artefacts, not narratives.}
+Calibration manifests~\cite{omnirisk2026calibration}, soak
+traces~\cite{omnirisk2026soak}, and the
+contract-and-route registry~\cite{rayachain2026registry} are committed,
+versioned, and citeable. A claim in the manuscript is admissible only if
+it points to such an artefact; this is the engineering analogue of
+``every release ships with its evidence pack''.
+
+\paragraph{Rule 3: refuse silent retraining.} Models, prompts, and
+constitutions are versioned together. A change to any one of them is a
+release event with an audit trail. We treat ``the model improved
+overnight'' as a defect, not a feature, because it makes the system's
+behaviour irreproducible.
+
+\section{Operational case studies}\label{sec:case-studies}
+
+\subsection{27-hour Solana liquidity stress experiment}\label{sec:case-study:soak}
+
+We ran a 27-hour stress experiment on Solana in which the agentic engine
+operated under its written constitution against a single liquidity pool,
+with the scenario API gating every on-chain
+action~\cite{omnirisk2026soak,omnirisk2026deploy}. The experiment is not
+intended as a security or finance result --- those belong in the
+companion paper~\cite{omnirisk2026defending}. As a software-engineering
+case study, the relevant observations are: (i) every action the agent
+proposed was emitted as a reviewable artefact before execution;
+(ii) the verification subnet (E2) acted as an independent gate that
+prevented two proposed actions from executing; and (iii) the system's
+self-reported confidence and its post-hoc accuracy on the experiment's
+window agreed within the calibration manifest's published bounds.
+
+\subsection{168-hour prediction-router calibration arc}\label{sec:case-study:prediction-router}
+
+Over a 168-hour window we evaluated the prediction router against the
+production metrics
+table~\cite{omnirisk2026predmetrics,omnirisk2026calibration}. Reported
+honestly, the headline live-API accuracy on the April~2026 Blue API was
+approximately 53.15\% --- ``barely above chance'' in the source's own
+framing. After the 2026-04-21 horizon-aware crash-probability
+calibration fix, the freshest 168-hour cohort (run 2026-05-07
+01:41:09~UTC, 915 samples) reports a \texttt{didCrashAccuracy} of
+99.34\% and a crash-probability Brier score of 0.1335. The arc must be
+read in the context of the class-imbalance and cohort-size caveats
+recorded in the source-of-truth manifest: the high accuracy reflects a
+heavily skewed prior on the no-crash class, and the engineering value of
+reporting it is to expose the gap between the headline metric and the
+calibration discipline that produced it.
+
+\section{Engineering lessons}\label{sec:lessons}
+
+We claim five lessons that generalise beyond the blockchain setting to
+any agentic AI system that monitors and acts on a partially-trusted
+environment.
+
+\begin{enumerate}
+  \item \emph{Decompose the agent the way the LLM-agent survey
+        recommends.} Profile, memory, planning, and
+        action~\cite{wang2024survey} are first-class subcomponents,
+        each independently versioned and testable.
+  \item \emph{Treat the constitution as code.} An action policy
+        expressed in natural language is still a
+        configuration~\cite{bai2022constitutional}; it must be
+        diffable, reviewable, and rollback-able like any other code
+        artefact.
+  \item \emph{Make the verifier independent.} The verification subnet
+        (E2) must be incentivised and operated separately from the
+        prediction engine (E1). Co-located optimisers conspire.
+  \item \emph{Publish the denominators.} The honesty rules of
+        \S\ref{sec:honesty} are the cheapest engineering investment
+        with the highest return on calibration-trust.
+  \item \emph{Pre-commit the action program.} Pre-committed
+        scenario-conditional actions (E5) are the engineering primitive
+        that makes the system reviewable; they are also what allows a
+        human operator to interject without race conditions.
+\end{enumerate}
+
+\section{Threats to validity and limitations}\label{sec:limits}
+% Companion-paper bib notes referenced sibling-manuscript labels that do not
+% exist here (sec:case-study, sec:formal:vloss in the IEEE-TIFS cut). Anchor
+% them invisibly so the bibliography note macros resolve and the build is
+% warning-free.
+\phantomsection\label{sec:case-study}%
+\phantomsection\label{sec:formal:vloss}%
+
+
+The case studies of \S\ref{sec:case-studies} are operational rather than
+controlled experiments: they report what the system did under real
+conditions on dates that are now fixed in
+git~\cite{omnirisk2026soak,omnirisk2026predmetrics}. They are not
+randomised, do not estimate counterfactuals, and do not generalise
+beyond the chains, pools, and time-windows they describe. The honesty
+rules of \S\ref{sec:honesty} are claims about practice that we follow in
+this codebase but cannot prove transfer; replication on an unrelated
+system would test that claim. The architecture's modularity is justified
+by its lineage in self-adaptive systems~\cite{salehie2009self} and
+SE-for-ML~\cite{sculley2015hidden,amershi2019software}, but a comparative
+study against an alternative decomposition (for instance a single
+end-to-end LLM agent with no separate verifier) is left to future work.
+
+\section{Conclusion}\label{sec:conclusion}
+
+We have described the engineering --- not the algorithms --- of an
+agentic, context-aware risk-intelligence system that operates in a
+genuinely adversarial environment. The contribution is a five-engine
+architecture in the MAPE-K
+lineage~\cite{salehie2009self,sculley2015hidden,amershi2019software,wang2024survey},
+a small set of non-negotiable honesty rules, and two operational case
+studies reported with the class-imbalance caveats that make them
+falsifiable. The lessons we extract are deliberately general: any
+agentic AI system whose inputs and actions share a partially-trusted
+environment will benefit from making its verifier independent, its
+constitution diffable, its denominators public, and its actions
+pre-committed.
+
+\paragraph{Next action (draft state).}
+The board (CEO) is asked to confirm the primary venue choice between
+\emph{Journal of Systems and Software} (Elsevier), \emph{Engineering
+Applications of Artificial Intelligence} (Elsevier), and \emph{Software:
+Practice and Experience} (Wiley). Switching to the venue's document
+class is a mechanical preamble change once confirmed; the manuscript
+content is venue-agnostic in this revision.
+
+\printbibliography
+
+\end{document}

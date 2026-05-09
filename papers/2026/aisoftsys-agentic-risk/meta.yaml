@@ -1,0 +1,54 @@
+title: "Engineering an Agentic, Context-Aware Risk Intelligence System for the Internet of Value"
+slug: "aisoftsys-agentic-risk"
+companion_to: "agentic-iov-risk-focused"   # security-leaning IEEE-TIFS cut, same architecture; this is the SE/AI-systems reframing requested by the board on 2026-05-09
+authors:
+  - name: "Basel Magableh"
+    email: "basel.magableh@tudublin.ie"
+    affiliation: "School of Computer Science, Technological University Dublin, Ireland"
+    order: 1
+    corresponding: true
+  - name: "OmniRisk Research"
+    email: "research@omnirisk.io"
+    affiliation: "Rayachain Lab, Dublin, Ireland"
+    order: 2
+
+target_venue: "Journal of Systems and Software (Elsevier) primary; Engineering Applications of Artificial Intelligence (Elsevier) and Software: Practice and Experience (Wiley) as fallbacks; arXiv cs.SE preprint in parallel"
+status: "draft"
+revision: "0.1"
+created_at: "2026-05-09"
+submitted_at: null
+published_at: null
+doi: null
+arxiv_id: null
+canonical_url: null
+tags: ["software-engineering-for-ai","agentic-systems","self-adaptive-systems","llm-systems","mlops","risk-intelligence","blockchain","internet-of-value","case-study"]
+
+scope:
+  in: |
+    A software-engineering perspective on the OmniRisk five-engine
+    architecture: how prediction, decentralised verification, sentiment
+    fusion, constitutional agentic action, and scenario API compose into
+    one operational risk intelligence system.
+    Engineering decisions and tradeoffs (modularity, monitoring,
+    observability, calibration, policy constraints) under adversarial,
+    partially-trusted operating conditions.
+    The 27-hour Solana liquidity stress experiment and the 168-hour
+    prediction-router calibration arc as systems-engineering case studies
+    (not as security or finance results).
+    Lessons applicable beyond blockchain to any agentic AI system that
+    monitors and acts on a partially-trusted environment.
+  out: |
+    Threat-model / attacker analysis (those belong in the IEEE-TIFS
+    companion paper agentic-iov-risk-focused).
+    DeFi market microstructure, financial-economics arguments, or any
+    investment / financial-advice claim.
+    Bittensor / RayaChain protocol or tokenomics deep-dive (covered in
+    omnirisk-rayachain-bittensor and rayachain-iov-intelligence-layer).
+    Validator-loss-decomposition formalism (cited only).
+
+next_action: |
+  Board (CEO) to confirm the primary venue choice (Journal of Systems and
+  Software vs Engineering Applications of Artificial Intelligence vs
+  Software: Practice and Experience). Switching to elsarticle / Wiley
+  document classes is mechanical once confirmed; manuscript content is
+  venue-agnostic.
